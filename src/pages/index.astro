@@ -1,16 +1,320 @@
 ---
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout
+title="InfoLoker — Informasi Lowongan Kerja Indonesia"
+description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan lokasi. Periksa sumber resmi sebelum melamar."
+
+>
+
+  <header class="site-header">
+    <div class="container navbar">
+      <a class="brand" href="/" aria-label="InfoLoker beranda">
+        <span class="brand-mark">I</span>
+        <span>Info<span>Loker</span></span>
+      </a>  <nav class="nav-links" aria-label="Navigasi utama">
+    <a href="#lowongan">Lowongan</a>
+    <a href="#tentang">Tentang</a>
+    <a href="#panduan">Panduan</a>
+    <a class="nav-cta" href="#lowongan">Cari Kerja ↗</a>
+  </nav>
+</div>
+
+  </header>  <main>
+    <section class="hero">
+      <div class="container hero-content">
+        <div class="eyebrow">
+          <span class="eyebrow-dot"></span>
+          INFORMASI KERJA DALAM SATU TEMPAT
+        </div>    <h1>
+      Temukan pekerjaan<br />
+      yang <span>tepat untukmu.</span>
+    </h1>
+
+    <p class="hero-description">
+      Cari informasi lowongan kerja berdasarkan posisi dan lokasi.
+      Periksa persyaratan serta sumber resmi perusahaan sebelum melamar.
+    </p>
+
+    <form class="search-panel" id="search-form">
+      <div class="search-field">
+        <label for="keyword">Posisi atau perusahaan</label>
+        <input
+          id="keyword"
+          name="q"
+          type="search"
+          placeholder="Contoh: Operator Produksi"
+        />
+      </div>
+
+      <div class="search-field">
+        <label for="lokasi">Lokasi kerja</label>
+        <select id="lokasi" name="lokasi">
+          <option value="">Semua lokasi</option>
+          <option value="cikarang">Cikarang</option>
+          <option value="cibitung">Cibitung</option>
+          <option value="bekasi">Bekasi</option>
+          <option value="karawang">Karawang</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" type="submit">
+        Cari Lowongan ↗
+      </button>
+    </form>
+
+    <p class="hero-note">
+      Selalu periksa informasi dan tautan rekrutmen resmi sebelum melamar.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="lowongan">
+  <div class="container">
+    <div class="section-heading">
+      <div>
+        <h2>Lowongan terbaru</h2>
+        <p>Informasi lowongan yang tersedia di database InfoLoker.</p>
+      </div>
+    </div>
+
+    <p id="job-status" role="status" aria-live="polite">
+      Menghubungkan ke database...
+    </p>
+
+    <div id="job-list" class="job-grid"></div>
+  </div>
+</section>
+
+<section class="section" id="tentang">
+  <div class="container">
+    <div class="section-heading">
+      <div>
+        <h2>Mencari kerja lebih terarah</h2>
+        <p>
+          Informasi disusun supaya pencari kerja lebih mudah menemukan
+          peluang yang relevan.
+        </p>
+      </div>
+    </div>
+
+    <div class="feature-grid">
+      <article class="feature-card">
+        <div class="feature-icon" aria-hidden="true">⌕</div>
+        <h3>Pencarian terarah</h3>
+        <p>Temukan lowongan berdasarkan kata kunci dan lokasi kerja.</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon" aria-hidden="true">✓</div>
+        <h3>Sumber rekrutmen</h3>
+        <p>Periksa sumber dan tautan rekrutmen asli sebelum melamar.</p>
+      </article>
+
+      <article class="feature-card">
+        <div class="feature-icon" aria-hidden="true">◷</div>
+        <h3>Tanggal yang jelas</h3>
+        <p>Periksa tanggal publikasi dan batas pendaftaran lowongan.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="panduan">
+  <div class="container">
+    <div class="trust-banner">
+      <div>
+        <h2>Periksa sebelum melamar</h2>
+        <p>
+          Pastikan lowongan masih dibuka. Waspadai permintaan uang,
+          biaya rekrutmen mencurigakan, dan tautan tidak resmi.
+        </p>
+      </div>
+
+      <a
+        class="btn"
+        href="https://kemnaker.go.id/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Situs Kemnaker ↗
+      </a>
+    </div>
+  </div>
+</section>
+
+  </main>  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <a class="brand" href="/">
+            <span class="brand-mark">I</span>
+            <span>Info<span>Loker</span></span>
+          </a>
+          <p class="footer-description">
+            Informasi lowongan kerja yang terstruktur dan mudah ditelusuri.
+          </p>
+        </div>    <nav class="footer-links" aria-label="Navigasi footer">
+      <a href="#tentang">Tentang</a>
+      <a href="#panduan">Panduan Melamar</a>
+    </nav>
+  </div>
+
+  <div class="footer-bottom">
+    © {new Date().getFullYear()} InfoLoker. Periksa informasi melalui
+    sumber rekrutmen resmi.
+  </div>
+</div>
+
+  </footer>  <script>
+    import { supabase } from "../lib/supabase";
+
+    type Job = {
+      id: string;
+      slug: string;
+      title: string;
+      company_name: string;
+      location: string;
+      employment_type: string | null;
+      description: string;
+      source_url: string;
+      apply_url: string | null;
+      published_at: string | null;
+      deadline: string | null;
+    };
+
+    const form = document.querySelector<HTMLFormElement>("#search-form");
+    const keywordInput = document.querySelector<HTMLInputElement>("#keyword");
+    const locationInput = document.querySelector<HTMLSelectElement>("#lokasi");
+    const jobList = document.querySelector<HTMLDivElement>("#job-list");
+    const jobStatus = document.querySelector<HTMLParagraphElement>("#job-status");
+
+    let jobs: Job[] = [];
+
+    function formatDate(value: string | null): string {
+      if (!value) return "Tanggal tidak tersedia";
+
+      return new Date(value).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    }
+
+    function renderJobs(items: Job[]) {
+      if (!jobList || !jobStatus) return;
+
+      jobList.replaceChildren();
+
+      if (items.length === 0) {
+        jobStatus.textContent =
+          "Belum ada lowongan yang cocok. Coba kata kunci atau lokasi lain.";
+        return;
+      }
+
+      jobStatus.textContent = `${items.length} lowongan ditemukan.`;
+
+      for (const job of items) {
+        const card = document.createElement("article");
+        card.className = "job-card";
+
+        const title = document.createElement("h3");
+        title.textContent = job.title;
+
+        const company = document.createElement("p");
+        company.className = "job-company";
+        company.textContent = job.company_name;
+
+        const location = document.createElement("p");
+        location.textContent = `📍 ${job.location}`;
+
+        const type = document.createElement("p");
+        type.textContent = job.employment_type || "Jenis pekerjaan tidak dicantumkan";
+
+        const date = document.createElement("p");
+        date.textContent = `Dipublikasikan: ${formatDate(job.published_at)}`;
+
+        const description = document.createElement("p");
+        description.textContent =
+          job.description.length > 180
+            ? `${job.description.slice(0, 180)}…`
+            : job.description;
+
+        const source = document.createElement("a");
+        source.href = job.source_url;
+        source.target = "_blank";
+        source.rel = "noopener noreferrer";
+        source.textContent = "Periksa sumber resmi ↗";
+        source.className = "job-source";
+
+        card.append(title, company, location, type, date, description, source);
+
+        if (job.apply_url) {
+          const apply = document.createElement("a");
+          apply.href = job.apply_url;
+          apply.target = "_blank";
+          apply.rel = "noopener noreferrer";
+          apply.textContent = "Lamar sekarang";
+          apply.className = "btn btn-primary";
+          card.append(apply);
+        }
+
+        jobList.append(card);
+      }
+    }
+
+    function filterJobs() {
+      const keyword = (keywordInput?.value || "").trim().toLowerCase();
+      const location = (locationInput?.value || "").trim().toLowerCase();
+
+      const filtered = jobs.filter((job) => {
+        const searchable = [
+          job.title,
+          job.company_name,
+          job.location,
+          job.description,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        const matchesKeyword = !keyword || searchable.includes(keyword);
+        const matchesLocation = !location || job.location.toLowerCase().includes(location);
+
+        return matchesKeyword && matchesLocation;
+      });
+
+      renderJobs(filtered);
+    }
+
+    async function loadJobs() {
+      if (!jobStatus) return;
+
+      const { data, error } = await supabase
+        .from("jobs")
+        .select(
+          "id,slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at,deadline"
+        )
+        .eq("status", "published")
+        .or(`deadline.is.null,deadline.gte.${new Date().toISOString().slice(0, 10)}`)
+        .order("published_at", { ascending: false });
+
+      if (error) {
+        console.error("Gagal mengambil lowongan:", error.message);
+        jobStatus.textContent =
+          "Lowongan belum dapat dimuat. Periksa konfigurasi Supabase dan kebijakan akses tabel jobs.";
+        return;
+      }
+
+      jobs = (data || []) as Job[];
+      filterJobs();
+    }
+
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      filterJobs();
+      document.querySelector("#lowongan")?.scrollIntoView({ behavior: "smooth" });
+    });
+
+    void loadJobs();
+  </script></BaseLayout>

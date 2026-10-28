@@ -1,0 +1,121 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout
+title="Detail Lowongan Kerja | InfoLoker"
+description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
+
+>
+
+  <header class="site-header">
+    <div class="container navbar">
+      <a class="brand" href="/">
+        <span class="brand-mark">I</span>
+        <span>Info<span>Loker</span></span>
+      </a>
+      <nav class="nav-links">
+        <a href="/">Beranda</a>
+        <a href="/lowongan">Daftar Lowongan</a>
+      </nav>
+    </div>
+  </header>  <main class="section">
+    <div class="container">
+      <article class="job-card">
+        <p id="status" role="status">Memuat detail lowongan...</p>
+        <div id="job-detail"></div>
+      </article>  <p style="margin-top:24px">
+    <a href="/lowongan">← Kembali ke daftar lowongan</a>
+  </p>
+</div>
+
+  </main>  <script>
+    import { supabase } from "../../lib/supabase";
+
+    const status = document.querySelector<HTMLParagraphElement>("#status");
+    const detail = document.querySelector<HTMLDivElement>("#job-detail");
+
+    function addText(parent: HTMLElement, tag: string, value: string) {
+      const element = document.createElement(tag);
+      element.textContent = value;
+      parent.append(element);
+      return element;
+    }
+
+    async function loadDetail() {
+      if (!status || !detail) return;
+
+      const slug = new URLSearchParams(window.location.search).get("slug") || "";
+
+      const today = new Date().toISOString().slice(0, 10);
+
+      const { data: job, error } = await supabase
+        .from("jobs")
+        .select("title,company_name,location,employment_type,education,experience,salary_min,salary_max,description,requirements,benefits,source_url,apply_url,published_at,deadline")
+        .eq("slug", slug)
+        .eq("status", "published")
+        .or(`deadline.is.null,deadline.gte.${today}`)
+        .maybeSingle();
+
+      if (error || !job) {
+        status.textContent = "Lowongan tidak ditemukan atau sudah tidak tersedia.";
+        return;
+      }
+
+      status.textContent = "";
+
+      addText(detail, "h1", job.title);
+      addText(detail, "h2", job.company_name);
+      addText(detail, "p", `Lokasi: ${job.location}`);
+
+      if (job.employment_type) addText(detail, "p", `Jenis pekerjaan: ${job.employment_type}`);
+      if (job.education) addText(detail, "p", `Pendidikan: ${job.education}`);
+      if (job.experience) addText(detail, "p", `Pengalaman: ${job.experience}`);
+
+      if (job.salary_min != null || job.salary_max != null) {
+        const min = job.salary_min != null ? `Rp${Number(job.salary_min).toLocaleString("id-ID")}` : "";
+        const max = job.salary_max != null ? `Rp${Number(job.salary_max).toLocaleString("id-ID")}` : "";
+        addText(detail, "p", `Perkiraan gaji: ${min}${min && max ? " – " : ""}${max}`);
+      }
+
+      addText(detail, "h2", "Deskripsi pekerjaan");
+      addText(detail, "p", job.description);
+
+      if (job.requirements?.length) {
+        addText(detail, "h2", "Persyaratan");
+        const list = document.createElement("ul");
+        for (const requirement of job.requirements) {
+          addText(list, "li", requirement);
+        }
+        detail.append(list);
+      }
+
+      if (job.benefits) {
+        addText(detail, "h2", "Benefit");
+        addText(detail, "p", job.benefits);
+      }
+
+      if (job.deadline) {
+        addText(detail, "p", `Batas pendaftaran: ${new Date(`${job.deadline}T00:00:00`).toLocaleDateString("id-ID")}`);
+      }
+
+      const source = document.createElement("a");
+      source.href = job.source_url;
+      source.target = "_blank";
+      source.rel = "noopener noreferrer";
+      source.className = "job-source";
+      source.textContent = "Buka sumber rekrutmen resmi ↗";
+      detail.append(source);
+
+      if (job.apply_url) {
+        const apply = document.createElement("a");
+        apply.href = job.apply_url;
+        apply.target = "_blank";
+        apply.rel = "noopener noreferrer";
+        apply.className = "btn btn-primary";
+        apply.textContent = "Lamar sekarang";
+        detail.append(apply);
+      }
+    }
+
+    void loadDetail();
+  </script></BaseLayout>

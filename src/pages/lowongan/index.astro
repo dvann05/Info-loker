@@ -1,0 +1,193 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout
+title="Daftar Lowongan Kerja Terbaru | InfoLoker"
+description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di Indonesia."
+
+>
+
+  <header class="site-header">
+    <div class="container navbar">
+      <a class="brand" href="/" aria-label="InfoLoker beranda">
+        <span class="brand-mark">I</span>
+        <span>Info<span>Loker</span></span>
+      </a>  <nav class="nav-links" aria-label="Navigasi utama">
+    <a href="/">Beranda</a>
+    <a href="/lowongan">Lowongan</a>
+  </nav>
+</div>
+
+  </header>  <main class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h1>Daftar lowongan kerja</h1>
+          <p>Temukan peluang kerja dan periksa sumber rekrutmen resminya.</p>
+        </div>
+      </div>  <form id="search-form" class="search-panel">
+    <div class="search-field">
+      <label for="keyword">Posisi atau perusahaan</label>
+      <input
+        id="keyword"
+        type="search"
+        placeholder="Contoh: Operator Produksi"
+      />
+    </div>
+
+    <div class="search-field">
+      <label for="lokasi">Lokasi kerja</label>
+      <select id="lokasi">
+        <option value="">Semua lokasi</option>
+        <option value="cikarang">Cikarang</option>
+        <option value="cibitung">Cibitung</option>
+        <option value="bekasi">Bekasi</option>
+        <option value="karawang">Karawang</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" type="submit">Cari ↗</button>
+  </form>
+
+  <p id="job-status" role="status" aria-live="polite">
+    Memuat lowongan...
+  </p>
+
+  <div id="job-list" class="job-grid"></div>
+
+  <p style="margin-top:32px">
+    <a href="/">← Kembali ke beranda</a>
+  </p>
+</div>
+
+  </main>  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        © {new Date().getFullYear()} InfoLoker. Periksa informasi melalui sumber resmi.
+      </div>
+    </div>
+  </footer>  <script>
+    import { supabase } from "../../lib/supabase";
+
+    type Job = {
+      slug: string;
+      title: string;
+      company_name: string;
+      location: string;
+      employment_type: string | null;
+      description: string;
+      source_url: string;
+      apply_url: string | null;
+      published_at: string | null;
+      deadline: string | null;
+    };
+
+    const form = document.querySelector<HTMLFormElement>("#search-form");
+    const keywordInput = document.querySelector<HTMLInputElement>("#keyword");
+    const locationInput = document.querySelector<HTMLSelectElement>("#lokasi");
+    const jobList = document.querySelector<HTMLDivElement>("#job-list");
+    const jobStatus = document.querySelector<HTMLParagraphElement>("#job-status");
+
+    let jobs: Job[] = [];
+
+    function render(items: Job[]) {
+      if (!jobList || !jobStatus) return;
+
+      jobList.replaceChildren();
+
+      if (!items.length) {
+        jobStatus.textContent = "Belum ada lowongan yang sesuai.";
+        return;
+      }
+
+      jobStatus.textContent = `${items.length} lowongan ditemukan.`;
+
+      for (const job of items) {
+        const card = document.createElement("article");
+        card.className = "job-card";
+
+        const title = document.createElement("h2");
+        title.textContent = job.title;
+
+        const company = document.createElement("p");
+        company.className = "job-company";
+        company.textContent = job.company_name;
+
+        const location = document.createElement("p");
+        location.textContent = `📍 ${job.location}`;
+
+        const type = document.createElement("p");
+        type.textContent = job.employment_type || "Jenis pekerjaan tidak dicantumkan";
+
+        const description = document.createElement("p");
+        description.textContent = job.description.length > 180
+          ? `${job.description.slice(0, 180)}…`
+          : job.description;
+
+        const detail = document.createElement("a");
+        detail.href = `/lowongan/detail/?slug=${encodeURIComponent(job.slug)}`;
+        detail.textContent = "Lihat detail lowongan →";
+        detail.className = "job-source";
+
+        const source = document.createElement("a");
+        source.href = job.source_url;
+        source.target = "_blank";
+        source.rel = "noopener noreferrer";
+        source.textContent = "Periksa sumber resmi ↗";
+
+        card.append(title, company, location, type, description, detail, source);
+
+        if (job.apply_url) {
+          const apply = document.createElement("a");
+          apply.href = job.apply_url;
+          apply.target = "_blank";
+          apply.rel = "noopener noreferrer";
+          apply.textContent = "Lamar sekarang";
+          apply.className = "btn btn-primary";
+          card.append(apply);
+        }
+
+        jobList.append(card);
+      }
+    }
+
+    function filterJobs() {
+      const keyword = (keywordInput?.value || "").trim().toLowerCase();
+      const location = (locationInput?.value || "").trim().toLowerCase();
+
+      render(jobs.filter((job) => {
+        const text = `${job.title} ${job.company_name} ${job.location} ${job.description}`.toLowerCase();
+        return (!keyword || text.includes(keyword))
+          && (!location || job.location.toLowerCase().includes(location));
+      }));
+    }
+
+    async function loadJobs() {
+      if (!jobStatus) return;
+
+      const today = new Date().toISOString().slice(0, 10);
+
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at,deadline")
+        .eq("status", "published")
+        .or(`deadline.is.null,deadline.gte.${today}`)
+        .order("published_at", { ascending: false });
+
+      if (error) {
+        console.error("Gagal memuat lowongan:", error.message);
+        jobStatus.textContent = "Gagal memuat lowongan. Periksa koneksi database.";
+        return;
+      }
+
+      jobs = (data || []) as Job[];
+      filterJobs();
+    }
+
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      filterJobs();
+    });
+
+    void loadJobs();
+  </script></BaseLayout>
