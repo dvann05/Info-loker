@@ -698,3 +698,107 @@ svg {
     padding: 19px;
   }
 }
+
+/* =========================================
+   HALAMAN DETAIL LOWONGAN
+   ========================================= */
+
+#job-detail {
+  width: min(900px, 100%);
+  margin: 24px auto 0;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
+  overflow-wrap: anywhere;
+}
+
+#job-detail h1 {
+  margin: 0 0 16px;
+  color: var(--text);
+  font-size: clamp(26px, 4vw, 36px);
+  line-height: 1.25;
+  letter-spacing: -0.8px;
+}
+
+#job-detail h2 {
+  margin: 28px 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 19px;
+}
+
+#job-detail h3 {
+  color: var(--text);
+  font-size: 16px;
+}
+
+#job-detail p,
+#job-detail li {
+  color: #4c5d76;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+#job-detail ul,
+#job-detail ol {
+  padding-left: 22px;
+}
+
+#job-detail li {
+  margin-bottom: 6px;
+}
+
+#job-detail a {
+  overflow-wrap: anywhere;
+}
+
+#job-detail a.btn {
+  margin-top: 16px;
+  color: #fff;
+  text-decoration: none;
+}
+
+#job-detail a.btn:hover {
+  background: var(--primary-dark);
+}
+
+#status {
+  margin: 24px auto;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+#job-detail a:not(.btn):hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  #job-detail {
+    margin-top: 16px;
+    padding: 21px 17px;
+    border-radius: 14px;
+  }
+
+  #job-detail h1 {
+    font-size: 25px;
+  }
+
+  #job-detail h2 {
+    margin-top: 23px;
+    font-size: 17px;
+  }
+
+  #job-detail p,
+  #job-detail li {
+    font-size: 13px;
+  }
+
+  #job-detail a.btn {
+    width: 100%;
+  }
+}
