@@ -248,7 +248,21 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
         source.textContent = "Periksa sumber resmi ↗";
         source.className = "job-source";
 
-        card.append(title, company, location, type, date, description, source);
+        const detail = document.createElement("a");
+        detail.href = `/lowongan/detail/?slug=${encodeURIComponent(job.slug)}`;
+        detail.textContent = "Lihat detail lowongan →";
+        detail.className = "job-source";
+
+        card.append(
+          title,
+          company,
+          location,
+          type,
+          date,
+          description,
+          detail,
+          source
+        );
 
         if (job.apply_url) {
           const apply = document.createElement("a");
