@@ -55,6 +55,8 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
 
   <div id="job-list" class="job-grid"></div>
 
+  <nav id="pagination" aria-label="Navigasi halaman" style="display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:28px 0;"></nav>
+
   <p style="margin-top:32px">
     <a href="/">← Kembali ke beranda</a>
   </p>
@@ -82,15 +84,94 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
       deadline: string | null;
     };
 
+    const PAGE_SIZE = 9;
     const form = document.querySelector<HTMLFormElement>("#search-form");
     const keywordInput = document.querySelector<HTMLInputElement>("#keyword");
     const locationInput = document.querySelector<HTMLSelectElement>("#lokasi");
     const jobList = document.querySelector<HTMLDivElement>("#job-list");
     const jobStatus = document.querySelector<HTMLParagraphElement>("#job-status");
+    const pagination = document.querySelector<HTMLElement>("#pagination");
 
-    let jobs: Job[] = [];
+    const initialParams = new URLSearchParams(window.location.search);
+    if (keywordInput) keywordInput.value = initialParams.get("q") || "";
+    if (locationInput) locationInput.value = initialParams.get("lokasi") || "";
 
-    function render(items: Job[]) {
+    let currentPage = Math.max(1, Number(initialParams.get("page")) || 1);
+
+    function localToday() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function escapeLike(value: string) {
+      return value.replace(/[\\%_]/g, "\\$&");
+    }
+
+    function makePageUrl(page: number) {
+      const params = new URLSearchParams();
+      const keyword = (keywordInput?.value || "").trim();
+      const location = (locationInput?.value || "").trim();
+
+      if (page > 1) params.set("page", String(page));
+      if (keyword) params.set("q", keyword);
+      if (location) params.set("lokasi", location);
+
+      const query = params.toString();
+      return query ? `/lowongan/?${query}` : "/lowongan/";
+    }
+
+    function addPageButton(label: string, page: number, active = false, disabled = false) {
+      if (!pagination) return;
+
+      const link = document.createElement("a");
+      link.textContent = label;
+      link.href = disabled ? "#" : makePageUrl(page);
+      link.style.cssText = [
+        "display:inline-flex",
+        "align-items:center",
+        "justify-content:center",
+        "min-width:38px",
+        "height:38px",
+        "padding:0 10px",
+        "border:1px solid var(--border, #ddd)",
+        "border-radius:8px",
+        "text-decoration:none",
+        "font-weight:600",
+        active ? "background:var(--primary, #2563eb);color:white;border-color:var(--primary, #2563eb)" : "color:inherit",
+        disabled ? "opacity:.4;pointer-events:none" : ""
+      ].join(";");
+
+      if (active) link.setAttribute("aria-current", "page");
+      if (disabled) link.setAttribute("aria-disabled", "true");
+
+      pagination.append(link);
+    }
+
+    function renderPagination(totalPages: number) {
+      if (!pagination) return;
+      pagination.replaceChildren();
+
+      if (totalPages <= 1) return;
+
+      addPageButton("<<", currentPage - 1, false, currentPage === 1);
+
+      const start = Math.max(
+        1,
+        Math.min(currentPage - 2, totalPages - 4)
+      );
+      const end = Math.min(totalPages, start + 4);
+
+      for (let page = start; page <= end; page++) {
+        addPageButton(String(page), page, page === currentPage);
+      }
+
+      addPageButton(">>", currentPage + 1, false, currentPage >= totalPages);
+    }
+
+    function render(items: Job[], total: number) {
       if (!jobList || !jobStatus) return;
 
       jobList.replaceChildren();
@@ -100,7 +181,8 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
         return;
       }
 
-      jobStatus.textContent = `${items.length} lowongan ditemukan.`;
+      jobStatus.textContent =
+        `${total} lowongan ditemukan. Halaman ${currentPage}.`;
 
       for (const job of items) {
         const card = document.createElement("article");
@@ -151,42 +233,68 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
       }
     }
 
-    function filterJobs() {
-      const keyword = (keywordInput?.value || "").trim().toLowerCase();
-      const location = (locationInput?.value || "").trim().toLowerCase();
-
-      render(jobs.filter((job) => {
-        const text = `${job.title} ${job.company_name} ${job.location} ${job.description}`.toLowerCase();
-        return (!keyword || text.includes(keyword))
-          && (!location || job.location.toLowerCase().includes(location));
-      }));
-    }
-
     async function loadJobs() {
       if (!jobStatus) return;
 
-      const today = new Date().toISOString().slice(0, 10);
+      jobStatus.textContent = "Memuat lowongan...";
+      if (pagination) pagination.replaceChildren();
 
-      const { data, error } = await supabase
+      const today = localToday();
+      const keyword = (keywordInput?.value || "").trim();
+      const location = (locationInput?.value || "").trim();
+
+      let query = supabase
         .from("jobs")
-        .select("slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at,deadline")
+        .select(
+          "slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at,deadline",
+          { count: "exact" }
+        )
         .eq("status", "published")
         .or(`deadline.is.null,deadline.gte.${today}`)
-        .order("published_at", { ascending: false });
+        .order("published_at", { ascending: false })
+        .order("slug", { ascending: true });
+
+      if (keyword) {
+        const term = escapeLike(keyword).replace(/"/g, '\\"');
+        query = query.or(
+          `title.ilike."%${term}%",company_name.ilike."%${term}%",location.ilike."%${term}%",description.ilike."%${term}%"`
+        );
+      }
+
+      if (location) {
+        query = query.ilike("location", `%${escapeLike(location)}%`);
+      }
+
+      const from = (currentPage - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error, count } = await query.range(from, to);
 
       if (error) {
-        console.error("Gagal memuat lowongan:", error.message);
+        console.error("Gagal memuat lowongan:", error);
         jobStatus.textContent = "Gagal memuat lowongan. Periksa koneksi database.";
         return;
       }
 
-      jobs = (data || []) as Job[];
-      filterJobs();
+      const total = count || 0;
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+
+      if (totalPages > 0 && currentPage > totalPages) {
+        currentPage = totalPages;
+        window.location.href = makePageUrl(currentPage);
+        return;
+      }
+
+      if (totalPages === 0) currentPage = 1;
+
+      render((data || []) as Job[], total);
+      renderPagination(totalPages);
     }
 
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
-      filterJobs();
+      currentPage = 1;
+      window.location.href = makePageUrl(1);
     });
 
     void loadJobs();
