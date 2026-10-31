@@ -1,14 +1,12 @@
 ---
-import "../styles/global.css";
-
 interface Props {
   title?: string;
   description?: string;
 }
 
 const {
-  title = "InfoLoker — Temukan Pekerjaanmu",
-  description = "Temukan informasi lowongan kerja terbaru dari sumber resmi perusahaan."
+  title = "InfoLokerKita - Informasi Lowongan Kerja Terbaru",
+  description = "Temukan informasi lowongan kerja terbaru dari berbagai perusahaan."
 } = Astro.props;
 ---
 
@@ -17,52 +15,39 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b6bcb" />
     <meta name="description" content={description} />
-
     <title>{title}</title>
-
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
 
   <body>
-  <slot />
+    <slot />
 
-  <script is:inline>
-    (() => {
-      try {
-        const key = "infoloker_visit_notification_sent";
-        const lastSent = Number(localStorage.getItem(key) || "0");
+    <script is:inline>
+      (() => {
+        try {
+          const ua = navigator.userAgent;
 
-        // Maksimal satu notifikasi setiap 30 menit per browser.
-        if (Date.now() - lastSent < 30 * 60 * 1000) return;
+          const device = /tablet|ipad/i.test(ua)
+            ? "Tablet"
+            : /mobile|android|iphone/i.test(ua)
+              ? "Mobile"
+              : "Desktop";
 
-        const ua = navigator.userAgent;
-
-        const device = /tablet|ipad/i.test(ua)
-          ? "Tablet"
-          : /mobile|android|iphone/i.test(ua)
-            ? "Mobile"
-            : "Desktop";
-
-        fetch("/api/visit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            path: location.pathname,
-            referrer: document.referrer,
-            device
-          }),
-          keepalive: true
-        }).then((response) => {
-          if (response.ok) {
-            localStorage.setItem(key, String(Date.now()));
-          }
-        }).catch(() => {});
-      } catch {}
-    })();
-  </script>
-</body>
+          fetch("/api/visit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              path: location.pathname,
+              referrer: document.referrer,
+              device
+            }),
+            keepalive: true
+          }).catch(() => {});
+        } catch {}
+      })();
+    </script>
+  </body>
 </html>
