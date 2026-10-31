@@ -57,12 +57,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </p>
 
       <div id="job-list" class="job-grid"></div>
-
-      <nav
-        id="pagination"
-        class="pagination"
-        aria-label="Navigasi halaman lowongan"
-      ></nav>
+      <nav id="pagination" class="pagination" aria-label="Navigasi halaman lowongan"></nav>
 
       <p style="margin-top:32px">
         <a href="/">← Kembali ke beranda</a>
@@ -95,6 +90,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     };
 
     const PAGE_SIZE = 9;
+    const MAX_PAGE_BUTTONS = 5;
     const form = document.querySelector<HTMLFormElement>("#search-form");
     const keywordInput = document.querySelector<HTMLInputElement>("#keyword");
     const locationInput = document.querySelector<HTMLSelectElement>("#lokasi");
@@ -110,22 +106,25 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     let totalPages = 1;
 
-    function escapeLike(value: string): string {
-      return value.replace(/[\\%_]/g, "\\$&");
+    function syncInputValues() {
+      if (keywordInput) {
+        keywordInput.value = state.keyword;
+      }
+
+      if (locationInput) {
+        locationInput.value = state.location;
+      }
     }
 
     function readPageState() {
       const params = new URLSearchParams(window.location.search);
-      const rawPage = Number.parseInt(params.get("page") ?? "1", 10);
-      const keyword = (params.get("q") ?? "").trim();
-      const location = (params.get("lokasi") ?? "").trim();
+      const requestedPage = Number.parseInt(params.get("page") ?? "1", 10);
 
-      state.page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
-      state.keyword = keyword;
-      state.location = location;
+      state.keyword = (params.get("q") ?? "").trim();
+      state.location = (params.get("lokasi") ?? "").trim();
+      state.page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
-      if (keywordInput) keywordInput.value = state.keyword;
-      if (locationInput) locationInput.value = state.location;
+      syncInputValues();
     }
 
     function syncQueryParams() {
@@ -149,7 +148,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         params.delete("page");
       }
 
-      const nextUrl = `${window.location.pathname}${params.size > 0 ? `?${params.toString()}` : ""}`;
+      const queryString = params.toString();
+      const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}`;
       window.history.replaceState({}, "", nextUrl);
     }
 
@@ -163,7 +163,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         return;
       }
 
-      jobStatus.textContent = `${items.length} lowongan ditemukan untuk halaman ${state.page}.`;
+      jobStatus.textContent = `${items.length} lowongan ditampilkan pada halaman ${state.page}.`;
 
       for (const job of items) {
         const card = document.createElement("article");
@@ -216,7 +216,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     function renderPagination() {
       if (!pagination) return;
-
       pagination.replaceChildren();
 
       if (totalPages <= 1) {
@@ -230,16 +229,19 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       previousButton.setAttribute("aria-label", "Halaman sebelumnya");
       previousButton.disabled = state.page <= 1;
       previousButton.addEventListener("click", () => {
-        if (state.page > 1) {
-          state.page -= 1;
-          syncQueryParams();
-          void loadJobs();
-        }
+        if (state.page <= 1) return;
+        state.page -= 1;
+        syncQueryParams();
+        void loadJobs();
       });
       pagination.append(previousButton);
 
-      const startPage = Math.max(1, Math.min(state.page - 2, totalPages - 4));
-      const endPage = Math.min(totalPages, startPage + 4);
+      let startPage = Math.max(1, state.page - Math.floor(MAX_PAGE_BUTTONS / 2));
+      let endPage = Math.min(totalPages, startPage + MAX_PAGE_BUTTONS - 1);
+
+      if (endPage - startPage + 1 < MAX_PAGE_BUTTONS) {
+        startPage = Math.max(1, endPage - MAX_PAGE_BUTTONS + 1);
+      }
 
       for (let pageNumber = startPage; pageNumber <= endPage; pageNumber += 1) {
         const pageButton = document.createElement("button");
@@ -270,40 +272,33 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       nextButton.setAttribute("aria-label", "Halaman berikutnya");
       nextButton.disabled = state.page >= totalPages;
       nextButton.addEventListener("click", () => {
-        if (state.page < totalPages) {
-          state.page += 1;
-          syncQueryParams();
-          void loadJobs();
-        }
+        if (state.page >= totalPages) return;
+        state.page += 1;
+        syncQueryParams();
+        void loadJobs();
       });
       pagination.append(nextButton);
     }
 
-    function buildJobsQuery(keyword: string, location: string, today: string, countOnly = false) {
+    function createFilteredBaseQuery(today: string) {
       let query = supabase
         .from("jobs")
         .eq("status", "published")
         .or(`deadline.is.null,deadline.gte.${today}`);
 
-      if (keyword) {
-        const escapedKeyword = escapeLike(keyword);
+      if (state.keyword) {
+        const safeKeyword = state.keyword.replace(/[\\%_]/g, "\\$&");
         query = query.or(
-          `title.ilike.%${escapedKeyword}%,company_name.ilike.%${escapedKeyword}%,location.ilike.%${escapedKeyword}%,description.ilike.%${escapedKeyword}%`
+          `title.ilike.%${safeKeyword}%,company_name.ilike.%${safeKeyword}%,location.ilike.%${safeKeyword}%,description.ilike.%${safeKeyword}%`
         );
       }
 
-      if (location) {
-        const escapedLocation = escapeLike(location);
-        query = query.ilike("location", `%${escapedLocation}%`);
+      if (state.location) {
+        const safeLocation = state.location.replace(/[\\%_]/g, "\\$&");
+        query = query.ilike("location", `%${safeLocation}%`);
       }
 
-      if (countOnly) {
-        return query.select("id", { count: "exact", head: true });
-      }
-
-      return query.select(
-        "slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at,deadline"
-      );
+      return query;
     }
 
     async function loadJobs() {
@@ -312,8 +307,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       readPageState();
 
       const today = new Date().toISOString().slice(0, 10);
-      const countQuery = buildJobsQuery(state.keyword, state.location, today, true);
-      const { count, error: countError } = await countQuery;
+      const { count, error: countError } = await createFilteredBaseQuery(today)
+        .select("id", { count: "exact", head: true });
 
       if (countError) {
         console.error("Gagal menghitung total lowongan:", countError.message);
@@ -322,7 +317,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
 
       const totalItems = count ?? 0;
-      totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+      totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / PAGE_SIZE);
 
       if (state.page > totalPages) {
         state.page = totalPages;
@@ -334,10 +329,21 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       syncQueryParams();
 
+      if (totalItems === 0) {
+        renderJobs([]);
+        renderPagination();
+        return;
+      }
+
       const from = (state.page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
-      const dataQuery = buildJobsQuery(state.keyword, state.location, today, false);
-      const { data, error } = await dataQuery.order("published_at", { ascending: false }).range(from, to);
+
+      const { data, error } = await createFilteredBaseQuery(today)
+        .select(
+          "slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at,deadline"
+        )
+        .order("published_at", { ascending: false })
+        .range(from, to);
 
       if (error) {
         console.error("Gagal memuat lowongan:", error.message);
@@ -345,22 +351,15 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         return;
       }
 
-      const jobs = (data || []) as Job[];
-      renderJobs(jobs);
+      renderJobs((data || []) as Job[]);
       renderPagination();
     }
 
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
 
-      if (keywordInput) {
-        state.keyword = keywordInput.value.trim();
-      }
-
-      if (locationInput) {
-        state.location = locationInput.value.trim();
-      }
-
+      state.keyword = (keywordInput?.value ?? "").trim();
+      state.location = (locationInput?.value ?? "").trim();
       state.page = 1;
       syncQueryParams();
       void loadJobs();

@@ -6,7 +6,8 @@
   justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 28px;
+  margin: 28px auto 0;
+  max-width: 100%;
 }
 
 .pagination-btn {
@@ -19,12 +20,12 @@
   color: var(--text);
   font-size: 14px;
   font-weight: 700;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.pagination-btn:hover:not(:disabled) {
-  border-color: #b8d5fb;
+.pagination-btn:not(:disabled):hover {
   background: #f5f9ff;
+  border-color: #bad6fb;
   transform: translateY(-1px);
 }
 
@@ -45,13 +46,19 @@
 
 .pagination-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.58;
   transform: none;
+}
+
+#job-status {
+  margin-top: 20px;
+  line-height: 1.6;
 }
 
 @media (max-width: 560px) {
   .pagination {
     gap: 8px;
+    margin-top: 22px;
   }
 
   .pagination-btn {
@@ -62,35 +69,9 @@
   }
 
   .pagination-btn--nav {
-    min-width: 70px;
+    min-width: 68px;
     padding-inline: 12px;
   }
 }
 
 /* existing styles... */
-
-#job-status {
-  margin-top: 20px;
-  line-height: 1.6;
-}
-
-a.pagination-btn {
-  text-decoration: none;
-}
-
-@media (max-width: 560px) {
-  .job-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
-  }
-
-  .job-card {
-    padding: 19px;
-  }
-}
-
-/* rest of file */
-
-#job-detail {
-  ...
-}
