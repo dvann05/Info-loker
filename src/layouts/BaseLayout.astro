@@ -26,6 +26,43 @@ const {
   </head>
 
   <body>
-    <slot />
-  </body>
+  <slot />
+
+  <script is:inline>
+    (() => {
+      try {
+        const key = "infoloker_visit_notification_sent";
+        const lastSent = Number(localStorage.getItem(key) || "0");
+
+        // Maksimal satu notifikasi setiap 30 menit per browser.
+        if (Date.now() - lastSent < 30 * 60 * 1000) return;
+
+        const ua = navigator.userAgent;
+
+        const device = /tablet|ipad/i.test(ua)
+          ? "Tablet"
+          : /mobile|android|iphone/i.test(ua)
+            ? "Mobile"
+            : "Desktop";
+
+        fetch("/api/visit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            path: location.pathname,
+            referrer: document.referrer,
+            device
+          }),
+          keepalive: true
+        }).then((response) => {
+          if (response.ok) {
+            localStorage.setItem(key, String(Date.now()));
+          }
+        }).catch(() => {});
+      } catch {}
+    })();
+  </script>
+</body>
 </html>
