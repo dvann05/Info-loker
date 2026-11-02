@@ -802,3 +802,339 @@ svg {
     width: 100%;
   }
 }
+
+/* Navigasi Lowongan Kerja dan Berita */
+.portal-switcher {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 34px;
+}
+
+.portal-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fff;
+  text-decoration: none;
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.035);
+  transition: 0.2s ease;
+}
+
+.portal-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.portal-card.is-active {
+  border-color: var(--primary);
+  background: #f2f8ff;
+}
+
+.portal-icon {
+  display: grid;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 13px;
+  background: #eaf3ff;
+  font-size: 23px;
+}
+
+.portal-card strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.portal-card small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .portal-switcher {
+    gap: 10px;
+  }
+
+  .portal-card {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 12px;
+    border-radius: 13px;
+  }
+
+  .portal-icon {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .portal-card strong {
+    font-size: 13px;
+  }
+
+  .portal-card small {
+    font-size: 11px;
+  }
+}
+
+
+/* Halaman Berita */
+.news-intro {
+  max-width: 720px;
+  margin-bottom: 28px;
+}
+
+.news-intro h1 {
+  margin: 0 0 10px;
+  font-size: clamp(28px, 5vw, 40px);
+  letter-spacing: -1.2px;
+}
+
+.news-intro p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.news-topics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 28px 0;
+}
+
+.news-topic {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.news-topic span {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 23px;
+}
+
+.news-topic h2 {
+  margin: 0 0 7px;
+  font-size: 16px;
+}
+
+.news-topic p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.news-empty {
+  padding: 44px 24px;
+  border: 1px dashed #cbd7e6;
+  border-radius: 16px;
+  background: #fff;
+  text-align: center;
+}
+
+.news-empty h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.news-empty p {
+  max-width: 520px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+@media (max-width: 560px) {
+  .news-topics {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ======================================
+   INFOLOKER - PERBAIKAN TAMPILAN PORTAL
+   ====================================== */
+
+/* Kartu kategori Berita dan Lowongan */
+.portal-switcher {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 0 34px;
+}
+
+.portal-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 5px 18px rgba(15, 23, 42, .04);
+  transition: .2s ease;
+}
+
+.portal-card:hover {
+  transform: translateY(-2px);
+  border-color: #b9d7f8;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+}
+
+.portal-card.is-active {
+  border-color: var(--primary);
+  background: #eef6ff;
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.portal-icon {
+  display: grid;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 13px;
+  background: #eaf3ff;
+  font-size: 23px;
+}
+
+.portal-card strong,
+.portal-card small {
+  display: block;
+}
+
+.portal-card strong {
+  margin-bottom: 4px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.portal-card small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Navigasi tablet dan HP */
+@media (max-width: 800px) {
+  .navbar {
+    gap: 12px;
+  }
+
+  .nav-links {
+    display: flex;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    min-width: 0;
+    font-size: 12px;
+  }
+
+  .nav-links a:not(.nav-cta) {
+    display: inline-flex;
+  }
+
+  .nav-links a[href="#tentang"],
+  .nav-links a[href="#panduan"] {
+    display: none;
+  }
+
+  .nav-cta {
+    padding: 9px 10px;
+    white-space: nowrap;
+  }
+}
+
+/* Optimasi layar HP */
+@media (max-width: 560px) {
+  .portal-switcher {
+    gap: 10px;
+    margin-bottom: 26px;
+  }
+
+  .portal-card {
+    align-items: flex-start;
+    gap: 9px;
+    padding: 13px 11px;
+    border-radius: 13px;
+  }
+
+  .portal-icon {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 18px;
+  }
+
+  .portal-card strong {
+    font-size: 12px;
+  }
+
+  .portal-card small {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .navbar {
+    gap: 8px;
+  }
+
+  .nav-links {
+    gap: 7px;
+    font-size: 11px;
+  }
+
+  .nav-links a[href="/berita/"],
+  .nav-links a[href="/lowongan/"] {
+    white-space: nowrap;
+  }
+
+  .nav-cta {
+    padding: 8px 9px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 370px) {
+  .brand {
+    gap: 6px;
+    font-size: 16px;
+  }
+
+  .brand-mark {
+    width: 31px;
+    height: 31px;
+  }
+
+  .nav-links {
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  .nav-cta {
+    padding: 7px 8px;
+    font-size: 10px;
+  }
+}
+
