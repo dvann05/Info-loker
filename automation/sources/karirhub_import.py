@@ -59,6 +59,18 @@ def clean(value):
     return str(value or "").strip()
 
 
+
+REGION_FILE = os.path.join(
+    os.path.dirname(__file__),
+    "..",
+    "data",
+    "karirhub_regions.json"
+)
+
+with open(REGION_FILE, encoding="utf-8") as f:
+    REGION_MAP = json.load(f)
+
+
 def fetch_page(page):
     url = API + "?" + urllib.parse.urlencode({
         "page": page,
@@ -136,8 +148,30 @@ def convert(item, now):
         "title": title,
         "company_name": company,
         "company_logo": item.get("company_logo_uri"),
-        "location": clean(item.get("city_name")) or "Lokasi belum dicantumkan",
-        "province": "Belum dicantumkan",
+        "location": (
+            next(
+                (
+                    REGION_MAP[loc.split(":", 1)[1]]["city"]
+                    for loc in (item.get("locations") or [])
+                    if isinstance(loc, str)
+                    and loc.startswith("city:")
+                    and loc.split(":", 1)[1] in REGION_MAP
+                ),
+                clean(item.get("city_name")) or "Lokasi belum dicantumkan"
+            )
+        ),
+        "province": (
+            next(
+                (
+                    REGION_MAP[loc.split(":", 1)[1]]["province"]
+                    for loc in (item.get("locations") or [])
+                    if isinstance(loc, str)
+                    and loc.startswith("city:")
+                    and loc.split(":", 1)[1] in REGION_MAP
+                ),
+                "Belum dicantumkan"
+            )
+        ),
         "employment_type": clean(item.get("job_type_name")) or "Tidak dicantumkan",
         "description": "\\n\\n".join(details),
         "requirements": skills,
