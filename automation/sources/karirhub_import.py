@@ -137,7 +137,7 @@ def convert(item, now):
         "company_name": company,
         "company_logo": item.get("company_logo_uri"),
         "location": clean(item.get("city_name")) or "Lokasi belum dicantumkan",
-        "province": None,
+        "province": "Belum dicantumkan",
         "employment_type": clean(item.get("job_type_name")) or "Tidak dicantumkan",
         "description": "\\n\\n".join(details),
         "requirements": skills,
