@@ -2,12 +2,14 @@ import os
 import json
 import urllib.request
 import urllib.parse
+import urllib.error
 from datetime import datetime, timezone
 
 API = "https://api.kemnaker.go.id/karirhub/vacancy/v2/published-industrial-vacancies"
 PORTAL = "https://karirhub.kemnaker.go.id/"
 SUPABASE = os.environ["SUPABASE_URL"].rstrip("/")
 KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+
 
 def request(url, method="GET", data=None, headers=None):
     req = urllib.request.Request(
@@ -16,9 +18,17 @@ def request(url, method="GET", data=None, headers=None):
         headers=headers or {},
         method=method
     )
-    with urllib.request.urlopen(req, timeout=40) as response:
-        body = response.read().decode()
-        return json.loads(body) if body else None
+    try:
+        with urllib.request.urlopen(req, timeout=40) as response:
+            body = response.read().decode()
+            return json.loads(body) if body else None
+    except urllib.error.HTTPError as error:
+        detail = error.read().decode("utf-8", errors="replace")
+        print("HTTP ERROR:", error.code)
+        print("URL:", url)
+        print("DETAIL SERVER:", detail)
+        raise
+
 
 def epoch(value):
     try:
@@ -26,8 +36,10 @@ def epoch(value):
     except (TypeError, ValueError, OSError):
         return None
 
+
 def clean(value):
     return str(value or "").strip()
+
 
 def main():
     now = datetime.now(timezone.utc)
@@ -48,6 +60,7 @@ def main():
         print(f"Halaman {page}: {len(items)} data")
 
     rows = []
+
     for item in candidates:
         title = clean(item.get("title"))
         company = clean(item.get("company_name"))
@@ -126,6 +139,7 @@ def main():
             "Authorization": "Bearer " + KEY
         }
     )
+
     known = {row["slug"] for row in existing or []}
     new_rows = [row for row in rows if row["slug"] not in known]
 
@@ -147,6 +161,7 @@ def main():
     print("Sudah ada      :", len(known))
     print("Data baru      :", len(new_rows))
     print("Status baru    : draft")
+
 
 if __name__ == "__main__":
     try:
