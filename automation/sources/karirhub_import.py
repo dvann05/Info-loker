@@ -79,10 +79,8 @@ def convert(item, now):
 
     if not title or not company or not job_id:
         return None
-
     if title.lower() in ("ok", "test", "testing"):
         return None
-
     if item.get("canceled") or item.get("rejected"):
         return None
 
@@ -106,30 +104,47 @@ def convert(item, now):
     skills = item.get("skills") or []
     if not isinstance(skills, list):
         skills = []
-
     skills = [clean(x) for x in skills if clean(x)]
 
-    description = (
-        "Informasi lowongan ini diperoleh dari data publik "
-        "Karirhub Kemnaker. Rincian pekerjaan dan persyaratan "
-        "lengkap perlu diperiksa kembali melalui sumber lowongan."
-    )
+    details = [
+        "Ringkasan lowongan berdasarkan data publik Karirhub Kemnaker.",
+        "Periksa tautan melamar untuk informasi tugas dan persyaratan lengkap."
+    ]
 
+    job_function = clean(item.get("job_function_name"))
+    industry = clean(item.get("industry_name"))
+    quota = item.get("available_quota") or item.get("quota")
+
+    if job_function:
+        details.append("Bidang pekerjaan: " + job_function)
+    if industry:
+        details.append("Industri: " + industry)
+    if quota:
+        details.append("Kuota tersedia menurut sumber: " + str(quota))
     if skills:
-        description += "\n\nKeahlian yang tercantum: " + ", ".join(skills)
+        details.append("Keahlian: " + ", ".join(skills))
+
+    def positive_amount(value):
+        try:
+            amount = int(value)
+            return amount if amount > 0 else None
+        except (TypeError, ValueError):
+            return None
 
     return {
         "slug": "karirhub-" + job_id,
         "title": title,
         "company_name": company,
         "company_logo": item.get("company_logo_uri"),
-        "location": clean(item.get("city_name")) or "Indonesia",
-        "province": "Indonesia",
+        "location": clean(item.get("city_name")) or "Lokasi belum dicantumkan",
+        "province": None,
         "employment_type": clean(item.get("job_type_name")) or "Tidak dicantumkan",
-        "description": description,
+        "description": "\\n\\n".join(details),
         "requirements": skills,
+        "salary_min": positive_amount(item.get("min_salary_amount")),
+        "salary_max": positive_amount(item.get("max_salary_amount")),
         "source_url": PORTAL,
-        "apply_url": None,
+        "apply_url": clean(item.get("platform_link")) or None,
         "published_at": published,
         "deadline": deadline,
         "status": "draft"
@@ -165,39 +180,59 @@ def save_archive_page(page):
 
 def import_rows(rows):
     if not rows:
-        return 0, 0
+        return 0, 0, 0
 
-    unique_rows = {}
-    for row in rows:
-        unique_rows[row["slug"]] = row
-
+    unique_rows = {row["slug"]: row for row in rows}
     rows = list(unique_rows.values())
     slugs = [row["slug"] for row in rows]
 
     query = urllib.parse.urlencode({
-        "select": "slug",
+        "select": "slug,status",
         "slug": "in.(" + ",".join(slugs) + ")"
     })
 
-    existing = request(
-        SUPABASE + "/rest/v1/jobs?" + query
-    )
+    existing = request(SUPABASE + "/rest/v1/jobs?" + query)
+    known = {row["slug"]: row.get("status") for row in existing or []}
 
-    known = {row["slug"] for row in existing or []}
-    new_rows = [row for row in rows if row["slug"] not in known]
+    inserted = 0
+    updated = 0
 
-    if new_rows:
-        request(
-            SUPABASE + "/rest/v1/jobs",
-            method="POST",
-            data=new_rows,
-            extra_headers={
-                "Content-Type": "application/json",
-                "Prefer": "return=minimal"
+    for row in rows:
+        slug = row["slug"]
+
+        if slug not in known:
+            request(
+                SUPABASE + "/rest/v1/jobs",
+                method="POST",
+                data=[row],
+                extra_headers={
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal"
+                }
+            )
+            inserted += 1
+
+        elif known[slug] == "draft":
+            update_data = {
+                key: value for key, value in row.items()
+                if key not in ("slug", "status")
             }
-        )
+            filter_query = urllib.parse.urlencode({
+                "slug": "eq." + slug,
+                "status": "eq.draft"
+            })
+            request(
+                SUPABASE + "/rest/v1/jobs?" + filter_query,
+                method="PATCH",
+                data=update_data,
+                extra_headers={
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal"
+                }
+            )
+            updated += 1
 
-    return len(known), len(new_rows)
+    return len(known), inserted, updated
 
 
 def main():
@@ -247,7 +282,7 @@ def main():
         if row:
             valid_rows.append(row)
 
-    already, inserted = import_rows(valid_rows)
+    already, inserted, updated = import_rows(valid_rows)
 
     if archive_items:
         if next_archive_page > last_page:
@@ -261,6 +296,7 @@ def main():
     print("Data valid        :", len(valid_rows))
     print("Sudah ada         :", already)
     print("Data baru         :", inserted)
+    print("Draft diperbarui  :", updated)
     print("Arsip berikutnya  :", next_archive_page)
     print("Status baru       : draft")
 
