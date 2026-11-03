@@ -45,7 +45,7 @@ def main():
     now = datetime.now(timezone.utc)
     candidates = []
 
-    for page in range(1, 4):
+    for page in range(1, 21):
         url = API + "?" + urllib.parse.urlencode({
             "page": page,
             "limit": 5
