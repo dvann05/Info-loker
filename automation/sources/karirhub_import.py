@@ -48,7 +48,7 @@ def main():
     for page in range(1, 4):
         url = API + "?" + urllib.parse.urlencode({
             "page": page,
-            "limit": 100
+            "limit": 5
         })
         result = request(url, headers={"User-Agent": "Mozilla/5.0"})
         items = result.get("data", [])
