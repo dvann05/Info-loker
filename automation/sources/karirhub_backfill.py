@@ -142,7 +142,8 @@ def main():
 
     first = request(
         API + "?" + urllib.parse.urlencode({
-            "page": 1
+            "page": 1,
+            "limit": 5
         }),
         extra_headers={"User-Agent": "Mozilla/5.0"}
     )
@@ -166,7 +167,8 @@ def main():
 
         result = request(
             API + "?" + urllib.parse.urlencode({
-                "page": page
+                "page": page,
+                "limit": 5
             }),
             extra_headers={"User-Agent": "Mozilla/5.0"}
         )
