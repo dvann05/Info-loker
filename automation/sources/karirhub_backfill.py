@@ -31,21 +31,32 @@ def request(url, method="GET", data=None, extra_headers=None):
         url, data=body, headers=headers, method=method
     )
 
-    try:
-        with urllib.request.urlopen(req, timeout=30) as response:
-            raw = response.read().decode()
-            return json.loads(raw) if raw else None
+    for attempt in range(1, 6):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                raw = response.read().decode()
+                return json.loads(raw) if raw else None
 
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(
-            f"HTTP {exc.code} | URL: {exc.url} | DETAIL: {detail}"
-        ) from exc
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            if exc.code in (429, 500, 502, 503, 504) and attempt < 5:
+                delay = min(2 ** attempt, 16)
+                print(f"HTTP {exc.code}; percobaan {attempt}/5. Ulangi dalam {delay} detik...", flush=True)
+                time.sleep(delay)
+                continue
+            raise RuntimeError(
+                f"HTTP {exc.code} | URL: {exc.url} | DETAIL: {detail}"
+            ) from exc
 
-    except urllib.error.URLError as exc:
-        raise RuntimeError(
-            f"Koneksi gagal | URL: {url} | DETAIL: {exc}"
-        ) from exc
+        except urllib.error.URLError as exc:
+            if attempt < 5:
+                delay = min(2 ** attempt, 16)
+                print(f"Koneksi gagal; percobaan {attempt}/5. Ulangi dalam {delay} detik...", flush=True)
+                time.sleep(delay)
+                continue
+            raise RuntimeError(
+                f"Koneksi gagal | URL: {url} | DETAIL: {exc}"
+            ) from exc
 
 
 def epoch_iso(value):
@@ -176,9 +187,22 @@ def main():
 
     first = fetch_page(1)
     meta = first.get("meta") or {}
-    last_page = int(meta.get("last_page") or 1)
+    api_last_page = int(meta.get("last_page") or 1)
 
-    print("Total halaman API:", last_page, flush=True)
+    state_query = urllib.parse.urlencode({
+        "select": "last_page",
+        "state_key": "eq.karirhub_archive"
+    })
+    state_rows = request(SUPABASE + "/rest/v1/automation_state?" + state_query)
+
+    if not state_rows:
+        raise RuntimeError("Posisi arsip Karirhub tidak ditemukan.")
+
+    archive_next_page = int(state_rows[0].get("last_page") or 21)
+    scan_end_page = min(api_last_page, max(20, archive_next_page - 1))
+
+    print("Total halaman API:", api_last_page, flush=True)
+    print("Batas halaman backfill:", scan_end_page, flush=True)
 
     def collect(items):
         for item in items or []:
@@ -188,9 +212,9 @@ def main():
             if job_id and slug in targets:
                 matched[slug] = item
 
-    for page in range(1, last_page + 1):
+    for page in range(1, scan_end_page + 1):
         print(
-            f"Memproses halaman {page}/{last_page}...",
+            f"Memproses halaman {page}/{scan_end_page}...",
             flush=True
         )
 
