@@ -271,68 +271,43 @@ def import_rows(rows):
 
 def main():
     now = datetime.now(timezone.utc)
-    latest_items = []
-    archive_items = []
 
     first = fetch_page(1)
     meta = first.get("meta") or {}
     last_page = int(meta.get("last_page") or 1)
 
-    latest_items.extend(first.get("data") or [])
-    print(f"Halaman terbaru 1: {len(first.get('data') or [])} data")
+    items = list(first.get("data") or [])
+    print(f"Halaman 1: {len(items)} data")
 
-    for page in range(2, min(LATEST_PAGES, last_page) + 1):
+    for page in range(2, min(4, last_page) + 1):
         result = fetch_page(page)
-        items = result.get("data") or []
-        if not items:
+        page_items = result.get("data") or []
+        if not page_items:
             break
-        latest_items.extend(items)
-        print(f"Halaman terbaru {page}: {len(items)} data")
-
-    archive_start = get_archive_page()
-    archive_end = min(
-        archive_start + ARCHIVE_PAGES - 1,
-        last_page
-    )
-
-    next_archive_page = archive_start
-
-    if archive_start <= last_page:
-        for page in range(archive_start, archive_end + 1):
-            result = fetch_page(page)
-            items = result.get("data") or []
-            if not items:
-                break
-            archive_items.extend(items)
-            print(f"Halaman arsip {page}: {len(items)} data")
-            next_archive_page = page + 1
-
-    else:
-        next_archive_page = 21
+        items.extend(page_items)
+        print(f"Halaman {page}: {len(page_items)} data")
 
     valid_rows = []
-    for item in latest_items + archive_items:
+    for item in items:
         row = convert(item, now)
         if row:
             valid_rows.append(row)
 
+    valid_rows = valid_rows[:20]
+
     already, inserted, updated = import_rows(valid_rows)
 
-    if archive_items:
-        if next_archive_page > last_page:
-            next_archive_page = 21
-        save_archive_page(next_archive_page)
-
     print("--------------------------------")
-    print("Total halaman API :", last_page)
-    print("Data terbaru      :", len(latest_items))
-    print("Data arsip        :", len(archive_items))
-    print("Data valid        :", len(valid_rows))
-    print("Sudah ada         :", already)
-    print("Data baru         :", inserted)
-    print("Draft diperbarui  :", updated)
-    print("Arsip berikutnya  :", next_archive_page)
-    print("Status baru       : draft")
+    print("HASIL IMPORT KARIRHUB HARIAN")
+    print("Halaman diproses :", min(4, last_page))
+    print("Data diperiksa   :", len(items))
+    print("Data valid       :", len(valid_rows))
+    print("Sudah ada        :", already)
+    print("Data baru        :", inserted)
+    print("Draft diperbarui :", updated)
+    print("Batas harian     : 20 lowongan")
+    print("Pemindaian arsip : DINONAKTIFKAN")
+    print("Status baru      : draft")
 
 
 if __name__ == "__main__":
