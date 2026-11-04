@@ -199,7 +199,7 @@ def main():
         raise RuntimeError("Posisi arsip Karirhub tidak ditemukan.")
 
     archive_next_page = int(state_rows[0].get("last_page") or 21)
-    scan_start_page = 141
+    scan_start_page = 281
     scan_end_page = min(api_last_page, scan_start_page + 139)
 
     print("Total halaman API:", api_last_page, flush=True)
