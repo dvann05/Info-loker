@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 API = "https://api.kemnaker.go.id/karirhub/vacancy/v2/published-industrial-vacancies"
 SUPABASE = os.environ["SUPABASE_URL"].rstrip("/")
 KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-LIMIT = 5
+LIMIT = 1
 REGION_FILE = os.path.join(
     os.path.dirname(__file__), "..", "data", "karirhub_regions.json"
 )
