@@ -255,11 +255,18 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
         const date = document.createElement("p");
         date.textContent = `Dipublikasikan: ${formatDate(job.published_at)}`;
 
+        const cleanDescription = (job.description || "")
+          .replace(/\\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+
         const description = document.createElement("p");
         description.textContent =
-          job.description.length > 180
-            ? `${job.description.slice(0, 180)}…`
-            : job.description;
+          cleanDescription.length > 180
+            ? `${cleanDescription.slice(0, 180).trimEnd()}…`
+            : cleanDescription;
+        description.style.whiteSpace = "pre-line";
+        description.style.lineHeight = "1.6";
 
         const source = document.createElement("a");
         source.href = job.source_url;
