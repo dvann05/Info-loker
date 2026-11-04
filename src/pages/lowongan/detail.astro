@@ -83,7 +83,7 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
       description.style.lineHeight = "1.8";
       description.style.marginTop = "12px";
       description.style.marginBottom = "20px";
-      description.textContent = description.textContent.replace(/\\\\n/g, "\\n");
+      description.textContent = (job.description || "").replaceAll("\\n", "\n");
 
       if (job.requirements?.length) {
         addText(detail, "h2", "Persyaratan");
