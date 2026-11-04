@@ -36,7 +36,7 @@ def request(url, method="GET", data=None, extra_headers=None):
         detail = exc.read().decode("utf-8", errors="replace")
         print("URL DITOLAK:", exc.url)
         print("DETAIL SERVER:", detail)
-        raise RuntimeError(f"HTTP {exc.code}: {detail}") from exc
+        raise RuntimeError(f"HTTP {exc.code} | URL: {exc.url} | DETAIL: {detail}") from exc
 
 
 def epoch_iso(value):
