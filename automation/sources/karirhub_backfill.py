@@ -199,10 +199,11 @@ def main():
         raise RuntimeError("Posisi arsip Karirhub tidak ditemukan.")
 
     archive_next_page = int(state_rows[0].get("last_page") or 21)
-    scan_end_page = min(api_last_page, max(20, archive_next_page - 1))
+    scan_start_page = 141
+    scan_end_page = min(api_last_page, scan_start_page + 139)
 
     print("Total halaman API:", api_last_page, flush=True)
-    print("Batas halaman backfill:", scan_end_page, flush=True)
+    print("Rentang halaman backfill:", scan_start_page, "-", scan_end_page, flush=True)
 
     def collect(items):
         for item in items or []:
@@ -212,7 +213,7 @@ def main():
             if job_id and slug in targets:
                 matched[slug] = item
 
-    for page in range(1, scan_end_page + 1):
+    for page in range(scan_start_page, scan_end_page + 1):
         print(
             f"Memproses halaman {page}/{scan_end_page}...",
             flush=True
