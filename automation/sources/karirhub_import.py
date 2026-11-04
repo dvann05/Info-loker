@@ -181,7 +181,7 @@ def convert(item, now):
         "apply_url": clean(item.get("platform_link")) or None,
         "published_at": published,
         "deadline": deadline,
-        "status": "draft"
+        "status": "published"
     }
 
 
@@ -246,25 +246,7 @@ def import_rows(rows):
             )
             inserted += 1
 
-        elif known[slug] == "draft":
-            update_data = {
-                key: value for key, value in row.items()
-                if key not in ("slug", "status")
-            }
-            filter_query = urllib.parse.urlencode({
-                "slug": "eq." + slug,
-                "status": "eq.draft"
-            })
-            request(
-                SUPABASE + "/rest/v1/jobs?" + filter_query,
-                method="PATCH",
-                data=update_data,
-                extra_headers={
-                    "Content-Type": "application/json",
-                    "Prefer": "return=minimal"
-                }
-            )
-            updated += 1
+
 
     return len(known), inserted, updated
 
@@ -304,10 +286,10 @@ def main():
     print("Data valid       :", len(valid_rows))
     print("Sudah ada        :", already)
     print("Data baru        :", inserted)
-    print("Draft diperbarui :", updated)
+    print("Draft lama       : tidak diubah")
     print("Batas harian     : 20 lowongan")
     print("Pemindaian arsip : DINONAKTIFKAN")
-    print("Status baru      : draft")
+    print("Status baru      : published")
 
 
 if __name__ == "__main__":
