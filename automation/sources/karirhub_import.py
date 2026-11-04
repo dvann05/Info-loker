@@ -173,7 +173,7 @@ def convert(item, now):
             )
         ),
         "employment_type": clean(item.get("job_type_name")) or "Tidak dicantumkan",
-        "description": "\\n\\n".join(details),
+        "description": "\n\n".join(details),
         "requirements": skills,
         "salary_min": positive_amount(item.get("min_salary_amount")),
         "salary_max": positive_amount(item.get("max_salary_amount")),

@@ -78,7 +78,12 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
       }
 
       addText(detail, "h2", "Deskripsi pekerjaan");
-      addText(detail, "p", job.description);
+      const description = addText(detail, "p", job.description || "Informasi deskripsi belum tersedia.");
+      description.style.whiteSpace = "pre-line";
+      description.style.lineHeight = "1.8";
+      description.style.marginTop = "12px";
+      description.style.marginBottom = "20px";
+      description.textContent = description.textContent.replace(/\\\\n/g, "\\n");
 
       if (job.requirements?.length) {
         addText(detail, "h2", "Persyaratan");
