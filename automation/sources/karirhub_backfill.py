@@ -9,7 +9,8 @@ from datetime import datetime, timezone
 API = "https://api.kemnaker.go.id/karirhub/vacancy/v2/published-industrial-vacancies"
 SUPABASE = os.environ["SUPABASE_URL"].rstrip("/")
 KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-LIMIT = 1
+LIMIT = 5
+
 REGION_FILE = os.path.join(
     os.path.dirname(__file__), "..", "data", "karirhub_regions.json"
 )
@@ -20,23 +21,31 @@ def request(url, method="GET", data=None, extra_headers=None):
         "apikey": KEY,
         "Authorization": "Bearer " + KEY
     }
+
     if extra_headers:
         headers.update(extra_headers)
 
     body = json.dumps(data).encode() if data is not None else None
+
     req = urllib.request.Request(
         url, data=body, headers=headers, method=method
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=45) as response:
+        with urllib.request.urlopen(req, timeout=30) as response:
             raw = response.read().decode()
             return json.loads(raw) if raw else None
+
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
-        print("URL DITOLAK:", exc.url)
-        print("DETAIL SERVER:", detail)
-        raise RuntimeError(f"HTTP {exc.code} | URL: {exc.url} | DETAIL: {detail}") from exc
+        raise RuntimeError(
+            f"HTTP {exc.code} | URL: {exc.url} | DETAIL: {detail}"
+        ) from exc
+
+    except urllib.error.URLError as exc:
+        raise RuntimeError(
+            f"Koneksi gagal | URL: {url} | DETAIL: {exc}"
+        ) from exc
 
 
 def epoch_iso(value):
@@ -78,7 +87,22 @@ def load_drafts():
 
         offset += len(batch)
 
-    return {row["slug"] for row in rows if row.get("slug")}
+    return {
+        row["slug"] for row in rows
+        if row.get("slug")
+    }
+
+
+def fetch_page(page):
+    url = API + "?" + urllib.parse.urlencode({
+        "page": page,
+        "limit": LIMIT
+    })
+
+    return request(
+        url,
+        extra_headers={"User-Agent": "Mozilla/5.0"}
+    )
 
 
 def make_patch(item, regions):
@@ -87,6 +111,7 @@ def make_patch(item, regions):
     for value in item.get("locations") or []:
         if isinstance(value, str) and value.startswith("city:"):
             region = regions.get(value.split(":", 1)[1])
+
             if region and region.get("city") and region.get("province"):
                 patch["location"] = region["city"]
                 patch["province"] = region["province"]
@@ -101,6 +126,7 @@ def make_patch(item, regions):
         patch["employment_type"] = employment
 
     skills = item.get("skills")
+
     if isinstance(skills, list):
         skills = [str(x).strip() for x in skills if str(x).strip()]
         if skills:
@@ -111,6 +137,7 @@ def make_patch(item, regions):
 
     if low is not None:
         patch["salary_min"] = low
+
     if high is not None:
         patch["salary_max"] = high
 
@@ -130,27 +157,28 @@ def make_patch(item, regions):
 
 
 def main():
+    started = time.time()
+
     with open(REGION_FILE, encoding="utf-8") as file:
         regions = json.load(file)
 
     targets = load_drafts()
-    print("Draft Karirhub ditemukan:", len(targets))
+
+    print("Draft Karirhub ditemukan:", len(targets), flush=True)
 
     if not targets:
-        print("Tidak ada draft untuk diperbarui.")
+        print("Tidak ada draft untuk diperbarui.", flush=True)
         return
 
     matched = {}
 
-    first = request(
-        API + "?" + urllib.parse.urlencode({
-            "page": 1,
-            "limit": 5
-        }),
-        extra_headers={"User-Agent": "Mozilla/5.0"}
-    )
+    print("Menghubungi API Karirhub...", flush=True)
 
-    last_page = int((first.get("meta") or {}).get("last_page") or 1)
+    first = fetch_page(1)
+    meta = first.get("meta") or {}
+    last_page = int(meta.get("last_page") or 1)
+
+    print("Total halaman API:", last_page, flush=True)
 
     def collect(items):
         for item in items or []:
@@ -160,38 +188,44 @@ def main():
             if job_id and slug in targets:
                 matched[slug] = item
 
-    collect(first.get("data"))
-    print(f"Halaman 1/{last_page}: {len(matched)}/{len(targets)} cocok")
-
-    for page in range(2, last_page + 1):
-        if len(matched) == len(targets):
-            break
-
-        result = request(
-            API + "?" + urllib.parse.urlencode({
-                "page": page,
-                "limit": 5
-            }),
-            extra_headers={"User-Agent": "Mozilla/5.0"}
+    for page in range(1, last_page + 1):
+        print(
+            f"Memproses halaman {page}/{last_page}...",
+            flush=True
         )
 
-        collect(result.get("data"))
+        if page == 1:
+            result = first
+        else:
+            result = fetch_page(page)
 
-        if page % 25 == 0 or len(matched) == len(targets):
-            print(
-                f"Halaman {page}/{last_page}: "
-                f"{len(matched)}/{len(targets)} cocok"
-            )
+        items = result.get("data") or []
+        collect(items)
 
-        if not result.get("data"):
+        print(
+            f"Halaman {page}: {len(items)} data | "
+            f"Cocok: {len(matched)}/{len(targets)}",
+            flush=True
+        )
+
+        if len(matched) >= len(targets):
+            print("Semua draft berhasil dicocokkan.", flush=True)
             break
 
-        time.sleep(0.15)
+        if not items:
+            print("API tidak mengembalikan data lagi.", flush=True)
+            break
+
+        time.sleep(0.1)
+
+    print("--------------------------------", flush=True)
+    print("Mulai memperbarui Supabase...", flush=True)
 
     updated = 0
     skipped = 0
+    unchanged = 0
 
-    for slug, item in matched.items():
+    for index, (slug, item) in enumerate(matched.items(), 1):
         patch = make_patch(item, regions)
 
         if not patch:
@@ -199,32 +233,52 @@ def main():
             continue
 
         query = urllib.parse.urlencode({
+            "select": "slug",
             "slug": "eq." + slug,
             "status": "eq.draft"
         })
 
-        request(
+        result = request(
             SUPABASE + "/rest/v1/jobs?" + query,
             method="PATCH",
             data=patch,
             extra_headers={
                 "Content-Type": "application/json",
-                "Prefer": "return=minimal"
+                "Prefer": "return=representation"
             }
         )
 
-        updated += 1
+        if result:
+            updated += len(result)
+        else:
+            unchanged += 1
 
-    print("--------------------------------")
-    print("Total draft ditemukan :", len(targets))
-    print("Cocok dengan API       :", len(matched))
-    print("Berhasil diperbarui    :", updated)
-    print("Tidak ada data baru    :", skipped)
-    print("Belum ditemukan        :", len(targets) - len(matched))
-    print("Hanya status draft yang diperbarui.")
-    print("Pendidikan, pengalaman, benefit, dan URL detail")
-    print("tidak diisi jika sumber API tidak menyediakannya.")
+        if index % 25 == 0 or index == len(matched):
+            print(
+                f"Update Supabase: {index}/{len(matched)} | "
+                f"Berhasil: {updated}",
+                flush=True
+            )
+
+    print("--------------------------------", flush=True)
+    print("HASIL BACKFILL KARIRHUB", flush=True)
+    print("Total draft ditemukan :", len(targets), flush=True)
+    print("Cocok dengan API       :", len(matched), flush=True)
+    print("Berhasil diperbarui    :", updated, flush=True)
+    print("Data tanpa perubahan   :", skipped, flush=True)
+    print("Tidak ter-update       :", unchanged, flush=True)
+    print("Belum ditemukan        :", len(targets) - len(matched), flush=True)
+    print("Status published       : TIDAK DIUBAH", flush=True)
+    print(
+        "Waktu proses           : "
+        f"{round(time.time() - started, 2)} detik",
+        flush=True
+    )
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as error:
+        print("BACKFILL GAGAL:", error, flush=True)
+        raise
