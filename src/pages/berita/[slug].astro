@@ -93,11 +93,10 @@ const formattedDate = article?.published_at
           </figure>
         )}
 
-        <div class="article-content">
-          {article.content.split(/\r?\n/).map((paragraph) =>
-            paragraph.trim() ? <p>{paragraph}</p> : null
-          )}
-        </div>
+        <div
+          class="article-content"
+          set:html={article.content.replace(/\\n/g, "\n")}
+        />
 
         <footer class="article-footer">
           <h2>Sumber Berita</h2>
