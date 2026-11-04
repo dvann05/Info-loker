@@ -50,14 +50,16 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
       </div>
 
       <div class="search-field">
-        <label for="lokasi">Lokasi kerja</label>
-        <select id="lokasi" name="lokasi">
-          <option value="">Semua lokasi</option>
-          <option value="cikarang">Cikarang</option>
-          <option value="cibitung">Cibitung</option>
-          <option value="bekasi">Bekasi</option>
-          <option value="karawang">Karawang</option>
-        </select>
+        <label for="province">Provinsi</label>
+        <select id="province"><option value="">Memuat provinsi...</option></select>
+      </div>
+      <div class="search-field">
+        <label for="city">Kota/Kabupaten</label>
+        <select id="city" disabled><option value="">Pilih provinsi dahulu</option></select>
+      </div>
+      <div class="search-field">
+        <label for="district">Kecamatan</label>
+        <select id="district" disabled><option value="">Pilih kota/kabupaten dahulu</option></select>
       </div>
 
       <button class="btn btn-primary" type="submit">
@@ -189,6 +191,7 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
 
   </footer>  <script>
     import { supabase } from "../lib/supabase";
+    import { setupLocationFilters } from "../scripts/location-filter";
 
     type Job = {
       id: string;
@@ -196,6 +199,9 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
       title: string;
       company_name: string;
       location: string;
+      province: string | null;
+      city: string | null;
+      district: string | null;
       employment_type: string | null;
       description: string;
       source_url: string;
@@ -206,7 +212,9 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
 
     const form = document.querySelector<HTMLFormElement>("#search-form");
     const keywordInput = document.querySelector<HTMLInputElement>("#keyword");
-    const locationInput = document.querySelector<HTMLSelectElement>("#lokasi");
+    const provinceInput = document.querySelector<HTMLSelectElement>("#province");
+    const cityInput = document.querySelector<HTMLSelectElement>("#city");
+    const districtInput = document.querySelector<HTMLSelectElement>("#district");
     const jobList = document.querySelector<HTMLDivElement>("#job-list");
     const jobStatus = document.querySelector<HTMLParagraphElement>("#job-status");
 
@@ -307,7 +315,9 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
 
     function filterJobs() {
       const keyword = (keywordInput?.value || "").trim().toLowerCase();
-      const location = (locationInput?.value || "").trim().toLowerCase();
+      const province = (provinceInput?.value || "").trim().toLowerCase();
+      const city = (cityInput?.value || "").trim().toLowerCase();
+      const district = (districtInput?.value || "").trim().toLowerCase();
 
       const filtered = jobs.filter((job) => {
         const searchable = [
@@ -320,9 +330,12 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
           .toLowerCase();
 
         const matchesKeyword = !keyword || searchable.includes(keyword);
-        const matchesLocation = !location || job.location.toLowerCase().includes(location);
+        const matchesProvince = !province || (job.province || "").toLowerCase() === province;
+        const cityName = (job.city || job.location || "").toLowerCase();
+        const matchesCity = !city || cityName.includes(city);
+        const matchesDistrict = !district || (job.district || "").toLowerCase() === district;
 
-        return matchesKeyword && matchesLocation;
+        return matchesKeyword && matchesProvince && matchesCity && matchesDistrict;
       });
 
       renderJobs(filtered);
@@ -334,7 +347,7 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
       const { data, error } = await supabase
         .from("jobs")
         .select(
-          "id,slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at,deadline"
+          "id,slug,title,company_name,location,province,city,district,employment_type,description,source_url,apply_url,published_at,deadline"
         )
         .eq("status", "published")
         .or(`deadline.is.null,deadline.gte.${new Date().toISOString().slice(0, 10)}`)
@@ -356,6 +369,10 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
       filterJobs();
       document.querySelector("#lowongan")?.scrollIntoView({ behavior: "smooth" });
     });
+
+    void setupLocationFilters(provinceInput!, cityInput!, districtInput!)
+      .then(() => filterJobs())
+      .catch((error) => console.error("Gagal memuat pilihan wilayah:", error));
 
     void loadJobs();
   </script></BaseLayout>

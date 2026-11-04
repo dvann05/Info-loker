@@ -160,6 +160,19 @@ def convert(item, now):
                 clean(item.get("city_name")) or "Lokasi belum dicantumkan"
             )
         ),
+        "city": (
+            next(
+                (
+                    REGION_MAP[loc.split(":", 1)[1]]["city"]
+                    for loc in (item.get("locations") or [])
+                    if isinstance(loc, str)
+                    and loc.startswith("city:")
+                    and loc.split(":", 1)[1] in REGION_MAP
+                ),
+                clean(item.get("city_name")) or "Lokasi belum dicantumkan"
+            )
+        ),
+        "district": None,
         "province": (
             next(
                 (

@@ -36,15 +36,17 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
     </div>
 
     <div class="search-field">
-      <label for="lokasi">Lokasi kerja</label>
-      <select id="lokasi">
-        <option value="">Semua lokasi</option>
-        <option value="cikarang">Cikarang</option>
-        <option value="cibitung">Cibitung</option>
-        <option value="bekasi">Bekasi</option>
-        <option value="karawang">Karawang</option>
-      </select>
-    </div>
+        <label for="province">Provinsi</label>
+        <select id="province"><option value="">Memuat provinsi...</option></select>
+      </div>
+      <div class="search-field">
+        <label for="city">Kota/Kabupaten</label>
+        <select id="city" disabled><option value="">Pilih provinsi dahulu</option></select>
+      </div>
+      <div class="search-field">
+        <label for="district">Kecamatan</label>
+        <select id="district" disabled><option value="">Pilih kota/kabupaten dahulu</option></select>
+      </div>
 
     <button class="btn btn-primary" type="submit">Cari ↗</button>
   </form>
@@ -70,12 +72,16 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
     </div>
   </footer>  <script>
     import { supabase } from "../../lib/supabase";
+    import { setupLocationFilters } from "../../scripts/location-filter";
 
     type Job = {
       slug: string;
       title: string;
       company_name: string;
       location: string;
+      province: string | null;
+      city: string | null;
+      district: string | null;
       employment_type: string | null;
       description: string;
       source_url: string;
@@ -87,14 +93,16 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
     const PAGE_SIZE = 9;
     const form = document.querySelector<HTMLFormElement>("#search-form");
     const keywordInput = document.querySelector<HTMLInputElement>("#keyword");
-    const locationInput = document.querySelector<HTMLSelectElement>("#lokasi");
+    const provinceInput = document.querySelector<HTMLSelectElement>("#province");
+    const cityInput = document.querySelector<HTMLSelectElement>("#city");
+    const districtInput = document.querySelector<HTMLSelectElement>("#district");
     const jobList = document.querySelector<HTMLDivElement>("#job-list");
     const jobStatus = document.querySelector<HTMLParagraphElement>("#job-status");
     const pagination = document.querySelector<HTMLElement>("#pagination");
 
     const initialParams = new URLSearchParams(window.location.search);
     if (keywordInput) keywordInput.value = initialParams.get("q") || "";
-    if (locationInput) locationInput.value = initialParams.get("lokasi") || "";
+
 
     let currentPage = Math.max(1, Number(initialParams.get("page")) || 1);
 
@@ -113,11 +121,15 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
     function makePageUrl(page: number) {
       const params = new URLSearchParams();
       const keyword = (keywordInput?.value || "").trim();
-      const location = (locationInput?.value || "").trim();
+      const province = (provinceInput?.value || "").trim();
+      const city = (cityInput?.value || "").trim();
+      const district = (districtInput?.value || "").trim();
 
       if (page > 1) params.set("page", String(page));
       if (keyword) params.set("q", keyword);
-      if (location) params.set("lokasi", location);
+      if (province) params.set("provinsi", province);
+      if (city) params.set("kota", city);
+      if (district) params.set("kecamatan", district);
 
       const query = params.toString();
       return query ? `/lowongan/?${query}` : "/lowongan/";
@@ -241,12 +253,14 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
 
       const today = localToday();
       const keyword = (keywordInput?.value || "").trim();
-      const location = (locationInput?.value || "").trim();
+      const province = (provinceInput?.value || "").trim();
+      const city = (cityInput?.value || "").trim();
+      const district = (districtInput?.value || "").trim();
 
       let query = supabase
         .from("jobs")
         .select(
-          "slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at,deadline",
+          "slug,title,company_name,location,province,city,district,employment_type,description,source_url,apply_url,published_at,deadline",
           { count: "exact" }
         )
         .eq("status", "published")
@@ -261,8 +275,14 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
         );
       }
 
-      if (location) {
-        query = query.ilike("location", `%${escapeLike(location)}%`);
+      if (province) {
+        query = query.ilike("province", province);
+      }
+      if (city) {
+        query = query.ilike("location", `%${escapeLike(city)}%`);
+      }
+      if (district) {
+        query = query.ilike("district", district);
       }
 
       const from = (currentPage - 1) * PAGE_SIZE;
@@ -297,5 +317,12 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
       window.location.href = makePageUrl(1);
     });
 
-    void loadJobs();
+    void setupLocationFilters(provinceInput!, cityInput!, districtInput!, {
+      province: initialParams.get("provinsi") || "",
+      city: initialParams.get("kota") || "",
+      district: initialParams.get("kecamatan") || ""
+    }).then(() => loadJobs()).catch((error) => {
+      console.error("Gagal memuat pilihan wilayah:", error);
+      void loadJobs();
+    });
   </script></BaseLayout>
