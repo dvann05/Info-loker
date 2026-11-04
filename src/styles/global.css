@@ -1148,3 +1148,17 @@ svg {
   }
 }
 
+
+/* Logo perusahaan pada kartu lowongan */
+.job-company {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.company-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}

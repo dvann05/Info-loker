@@ -78,6 +78,7 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
       slug: string;
       title: string;
       company_name: string;
+      company_logo: string | null;
       location: string;
       province: string | null;
       city: string | null;
@@ -203,9 +204,38 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
         const title = document.createElement("h2");
         title.textContent = job.title;
 
-        const company = document.createElement("p");
+        const company = document.createElement("div");
         company.className = "job-company";
-        company.textContent = job.company_name;
+
+        const logo = document.createElement("div");
+        logo.className = "company-logo";
+
+        const initials = (job.company_name || "PT")
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((word) => word[0])
+          .join("")
+          .toUpperCase();
+
+        if (job.company_logo) {
+          const image = document.createElement("img");
+          image.src = job.company_logo;
+          image.alt = `Logo ${job.company_name}`;
+          image.loading = "lazy";
+          image.onerror = () => {
+            logo.replaceChildren();
+            logo.textContent = initials;
+          };
+          logo.append(image);
+        } else {
+          logo.textContent = initials;
+        }
+
+        const companyName = document.createElement("span");
+        companyName.textContent = job.company_name || "Perusahaan tidak diketahui";
+
+        company.append(logo, companyName);
 
         const location = document.createElement("p");
         location.textContent = `📍 ${job.location}`;
@@ -260,7 +290,7 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
       let query = supabase
         .from("jobs")
         .select(
-          "slug,title,company_name,location,province,city,district,employment_type,description,source_url,apply_url,published_at,deadline",
+          "slug,title,company_name,company_logo,location,province,city,district,employment_type,description,source_url,apply_url,published_at,deadline",
           { count: "exact" }
         )
         .eq("status", "published")

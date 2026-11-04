@@ -50,7 +50,7 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
 
       const { data: job, error } = await supabase
         .from("jobs")
-        .select("title,company_name,location,employment_type,education,experience,salary_min,salary_max,description,requirements,benefits,source_url,apply_url,published_at,deadline")
+        .select("title,company_name,company_logo,location,employment_type,education,experience,salary_min,salary_max,description,requirements,benefits,source_url,apply_url,published_at,deadline")
         .eq("slug", slug)
         .eq("status", "published")
         .or(`deadline.is.null,deadline.gte.${today}`)
@@ -64,7 +64,40 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
       status.textContent = "";
 
       addText(detail, "h1", job.title);
-      addText(detail, "h2", job.company_name);
+
+      const company = document.createElement("div");
+      company.className = "job-company";
+
+      const logo = document.createElement("div");
+      logo.className = "company-logo";
+
+      const initials = (job.company_name || "PT")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase();
+
+      if (job.company_logo) {
+        const image = document.createElement("img");
+        image.src = job.company_logo;
+        image.alt = `Logo ${job.company_name}`;
+        image.loading = "lazy";
+        image.onerror = () => {
+          logo.replaceChildren();
+          logo.textContent = initials;
+        };
+        logo.append(image);
+      } else {
+        logo.textContent = initials;
+      }
+
+      const companyName = document.createElement("h2");
+      companyName.textContent = job.company_name || "Perusahaan tidak diketahui";
+
+      company.append(logo, companyName);
+      detail.append(company);
       addText(detail, "p", `Lokasi: ${job.location}`);
 
       if (job.employment_type) addText(detail, "p", `Jenis pekerjaan: ${job.employment_type}`);
