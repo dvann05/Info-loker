@@ -1,3 +1,4 @@
+import re
 import os
 import json
 import time
@@ -136,6 +137,11 @@ def convert(item, now):
     if skills:
         details.append("Keahlian: " + ", ".join(skills))
 
+    def make_job_slug(title, company, job_id):
+        text = f"{title} {company}".lower()
+        text = re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+        return f"{text}-{job_id}"
+
     def positive_amount(value):
         try:
             amount = int(value)
@@ -144,7 +150,7 @@ def convert(item, now):
             return None
 
     return {
-        "slug": "karirhub-" + job_id,
+        "slug": make_job_slug(title, company, job_id),
         "title": title,
         "company_name": company,
         "company_logo": item.get("company_logo_uri"),
