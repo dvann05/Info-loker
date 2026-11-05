@@ -9,20 +9,23 @@ from datetime import datetime, timezone
 
 API = "https://api.kemnaker.go.id/karirhub/vacancy/v2/published-industrial-vacancies"
 PORTAL = "https://karirhub.kemnaker.go.id/"
-SUPABASE = os.environ["SUPABASE_URL"].rstrip("/")
-KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+SUPABASE = os.environ.get('SUPABASE_URL', '').rstrip('/')
+KEY = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
 
-LIMIT = 5
+
+LIMIT = 20
 LATEST_PAGES = 20
 ARCHIVE_PAGES = 20
 STATE_URL = SUPABASE + "/rest/v1/automation_state"
 
 
 def headers(extra=None):
-    result = {
-        "apikey": KEY,
-        "Authorization": "Bearer " + KEY
-    }
+    result = {}
+    if KEY:
+        result.update({
+            'apikey': KEY,
+            'Authorization': 'Bearer ' + KEY
+        })
     if extra:
         result.update(extra)
     return result
@@ -60,16 +63,293 @@ def clean(value):
     return str(value or "").strip()
 
 
+# Daftar perusahaan yang disetujui.
+# Domain harus sesuai dengan situs resmi perusahaan.
+APPROVED_COMPANIES = {
+    "mattel indonesia": [],
+    "musashi auto parts indonesia": [],
+    "astra honda motor": [],
+    "toyota motor manufacturing indonesia": [],
+    "yamaha indonesia motor manufacturing": [],
+    "denso indonesia": [],
+    "mitsubishi motors krama yudha indonesia": [],
+    "hino motors manufacturing indonesia": [],
+    "suzuki indomobil motor": [],
+    "isuzu astra motor indonesia": [],
+    "hyundai motor manufacturing indonesia": [],
+    "sgmw motor indonesia": [],
+    "kayaba indonesia": [],
+    "aisin indonesia automotive": [],
+    "astra otoparts": [],
+    "federal izumi manufacturing": [],
+    "showa indonesia manufacturing": [],
+    "nusa keihin indonesia": [],
+    "fcc indonesia": [],
+    "tokai rubber indonesia": [],
+    "indonesia epson industry": [],
+    "samsung electronics indonesia": [],
+    "lg electronics indonesia": [],
+    "panasonic manufacturing indonesia": [],
+    "omron manufacturing of indonesia": [],
+    "schneider electric indonesia": [],
+    "daikin manufacturing indonesia": [],
+    "sat nusapersada": [],
+    "hartono istana teknologi": [],
+    "sharp electronics indonesia": [],
+    "indofood sukses makmur": [],
+    "indofood cbp sukses makmur": [],
+    "mayora indah": [],
+    "unilever indonesia": [],
+    "nestle indonesia": [],
+    "mondelez indonesia": [],
+    "coca cola europacific partners indonesia": [],
+    "garudafood putra putri jaya": [],
+    "wings surya": [],
+    "ajinomoto indonesia": [],
+    "frisian flag indonesia": [],
+    "ultrajaya milk industry": [],
+    "nippon indosari corpindo": [],
+    "kalbe farma": [],
+    "tempo scan pacific": [],
+    "chandra asri pacific": [],
+    "krakatau steel": [],
+    "pupuk indonesia": [],
+    "petrokimia gresik": [],
+    "semen indonesia": [],
+    "indocement tunggal prakarsa": [],
+    "pabrik kertas tjiwi kimia": [],
+    "fajar surya wisesa": [],
+    "pindo deli pulp and paper mills": [],
+    "lotte chemical indonesia": [],
+    "freeport indonesia": [],
+    "aneka tambang": [],
+    "bukit asam": [],
+    "vale indonesia": [],
+    "united tractors": [],
+    "kaltim prima coal": [],
+    "adaro andalan indonesia": [],
+    "pertamina": [],
+    "pln": [],
+    "medco energi internasional": [],
+    "pos indonesia": [],
+    "kereta api indonesia": [],
+    "pelindo": [],
+    "dhl supply chain indonesia": [],
+    "linfox logistics indonesia": [],
+    "shopee international indonesia": [],
+    "spx express": [],
+    "sumber alfaria trijaya": [],
+    "indomarco prismatama": [],
+    "midi utama indonesia": [],
+    "niterra mobility indonesia": [],
+    "nsk bearings manufacturing indonesia": [],
+    "ntn manufacturing indonesia": [],
+    "jtekt indonesia": [],
+    "robert bosch indonesia": [],
+    "schaeffler bearings indonesia": [],
+    "bridgestone tire indonesia": [],
+    "gajah tunggal": [],
+    "multistrada arah sarana": [],
+    "goodyear indonesia": [],
+    "hankook tire indonesia": [],
+    "pako group": [],
+    "yutaka manufacturing indonesia": [],
+    "astra daihatsu motor": [],
+    "nifco indonesia": [],
+    "tpr indonesia": [],
+    "daido indonesia manufacturing": [],
+    "indonesia stanley electric": [],
+    "mitsuba indonesia": [],
+    "t.rad indonesia": [],
+    "panasonic gobel indonesia": [],
+    "indonesia thai summit auto": [],
+    "jvc electronics indonesia": [],
+    "toshiba consumer products indonesia": [],
+    "haier electrical appliances indonesia": [],
+    "sanken indonesia": [],
+    "kawai indonesia": [],
+    "yamaha music manufacturing asia": [],
+    "volex indonesia": [],
+    "monde mahkota biscuit": [],
+    "heinz abc indonesia": [],
+    "kraft heinz indonesia": [],
+    "diamond food indonesia": [],
+    "kino indonesia": [],
+    "orang tua group": [],
+    "siantar top": [],
+    "sekar laut": [],
+    "campina ice cream industry": [],
+    "japfa comfeed indonesia": [],
+    "charoen pokphand indonesia": [],
+    "malindo feedmill": [],
+    "sreeya sewu indonesia": [],
+    "santos jaya abadi": [],
+    "tirta investama": [],
+    "basf indonesia": [],
+    "dow indonesia": [],
+    "evonik indonesia": [],
+    "p&g operations indonesia": [],
+    "l'oreal indonesia": [],
+    "bayer indonesia": [],
+    "otsuka indonesia": [],
+    "dexa medica": [],
+    "bio farma": [],
+    "kimia farma": [],
+    "indah kiat pulp and paper": [],
+    "app purinusa ekapersada": [],
+    "riau andalan pulp and paper": [],
+    "asahimas chemical": [],
+    "nippon paint indonesia": [],
+    "puninar logistics": [],
+    "kamadjaja logistics": [],
+    "cipta krida bahari": [],
+    "jne": [],
+    "global jet express": [],
+    "yusen logistics indonesia": [],
+    "kuehne nagel indonesia": [],
+    "maersk indonesia": [],
+    "db schenker indonesia": [],
+    "nippon express indonesia": [],
+    "telkom indonesia": [],
+    "indosat": [],
+    "xl smart telecom sejahtera": [],
+    "bank central asia": [],
+    "bank mandiri": [],
+    "bank rakyat indonesia": [],
+    "bank negara indonesia": [],
+    "erajaya swasembada": [],
+    "mitra adiperkasa": [],
+    "map aktif adiperkasa": [],
+}
 
-REGION_FILE = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "data",
-    "karirhub_regions.json"
-)
+APPROVED_PLATFORMS = {
+    'hiredtoday.com',
+    'toploker.com',
+    'redy.id',
+    'glints.com',
+    'kalibrr.id',
+}
 
-with open(REGION_FILE, encoding="utf-8") as f:
-    REGION_MAP = json.load(f)
+
+
+OFFICIAL_COMPANY_DOMAINS = {
+    "mattel indonesia": ["mattel.com"],
+    "astra international": ["astra.co.id"],
+    "astra honda motor": ["astra-honda.com"],
+    "toyota motor manufacturing indonesia": ["toyota.co.id"],
+    "yamaha indonesia motor manufacturing": ["yamaha-motor.co.id"],
+    "denso indonesia": ["denso.com"],
+    "indonesia epson industry": ["epson.co.id"],
+    "samsung electronics indonesia": ["samsung.com"],
+    "lg electronics indonesia": ["lg.com"],
+    "panasonic manufacturing indonesia": ["panasonic.com"],
+    "unilever indonesia": ["unilever.co.id"],
+    "indofood": ["indofood.com"],
+    "indofood sukses makmur": ["indofood.com"],
+    "indofood cbp sukses makmur": ["indofoodcbp.com"],
+    "mayora indah": ["mayoraindah.co.id"],
+    "nestle indonesia": ["nestle.co.id"],
+    "kalbe farma": ["kalbe.co.id"],
+    "chandra asri pacific": ["chandra-asri.com"],
+    "indocement tunggal prakarsa": ["indocement.co.id"],
+}
+
+
+def normalize_company_name(value):
+    value = clean(value).lower()
+    value = re.sub(r"[^a-z0-9]+", " ", value)
+    words = value.split()
+
+    removable = {"pt", "tbk", "persero", "perseroan"}
+    words = [word for word in words if word not in removable]
+
+    return " ".join(words)
+
+
+def approved_official_link(company, url):
+    company_name = normalize_company_name(company)
+
+    approved = {
+        normalize_company_name(name)
+        for name in APPROVED_COMPANIES
+    }
+
+    if company_name not in approved or not url:
+        return False
+
+    try:
+        parsed = urllib.parse.urlparse(url)
+        host = (parsed.hostname or "").lower()
+
+        if parsed.scheme != "https":
+            return False
+
+        # Periksa domain resmi perusahaan.
+        for name, domains in OFFICIAL_COMPANY_DOMAINS.items():
+            if normalize_company_name(name) == company_name:
+                if any(
+                    host == domain or host.endswith("." + domain)
+                    for domain in domains
+                ):
+                    return True
+
+        # Periksa platform rekrutmen yang diizinkan.
+        return any(
+            host == domain or host.endswith("." + domain)
+            for domain in APPROVED_PLATFORMS
+        )
+
+    except Exception:
+        return False
+
+
+
+PRIORITY_COMPANIES = [
+    "mattel indonesia",
+    "musashi auto parts indonesia",
+    "astra honda motor",
+    "toyota motor manufacturing indonesia",
+    "yamaha indonesia motor manufacturing",
+    "astra daihatsu motor",
+    "denso indonesia",
+    "indonesia epson industry",
+    "mitsubishi motors krama yudha indonesia",
+    "suzuki indomobil motor",
+    "hyundai motor manufacturing indonesia",
+    "hino motors manufacturing indonesia",
+    "aisin indonesia automotive",
+    "astra otoparts",
+    "bridgestone tire indonesia",
+    "gajah tunggal",
+    "samsung electronics indonesia",
+    "lg electronics indonesia",
+    "panasonic manufacturing indonesia",
+    "omron manufacturing of indonesia",
+    "schneider electric indonesia",
+    "unilever indonesia",
+    "indofood sukses makmur",
+    "mayora indah",
+    "nestle indonesia",
+    "charoen pokphand indonesia",
+    "japfa comfeed indonesia",
+    "kalbe farma",
+    "chandra asri pacific",
+    "krakatau steel",
+    "freeport indonesia",
+    "pertamina",
+    "pupuk indonesia",
+    "indocement tunggal prakarsa",
+    "dhl supply chain indonesia",
+    "sumber alfaria trijaya",
+    "indomarco prismatama",
+]
+
+def priority_rank(company):
+    normalized = normalize_company_name(company)
+    for index, name in enumerate(PRIORITY_COMPANIES):
+        if normalized == normalize_company_name(name):
+            return index
+    return len(PRIORITY_COMPANIES)
 
 
 def fetch_page(page):
@@ -92,6 +372,12 @@ def convert(item, now):
 
     if not title or not company or not job_id:
         return None
+
+    apply_url = clean(item.get("platform_link"))
+
+    if not approved_official_link(company, apply_url):
+        return None
+
     if title.lower() in ("ok", "test", "testing"):
         return None
     if item.get("canceled") or item.get("rejected"):
@@ -107,12 +393,14 @@ def convert(item, now):
     if published_dt > now:
         return None
 
-    deadline = None
-    if expires:
-        expires_dt = datetime.fromisoformat(expires)
-        if expires_dt <= now:
-            return None
-        deadline = expires_dt.date().isoformat()
+    if not expires:
+        return None
+
+    expires_dt = datetime.fromisoformat(expires)
+    if expires_dt <= now:
+        return None
+
+    deadline = expires_dt.date().isoformat()
 
     skills = item.get("skills") or []
     if not isinstance(skills, list):
@@ -197,7 +485,7 @@ def convert(item, now):
         "salary_min": positive_amount(item.get("min_salary_amount")),
         "salary_max": positive_amount(item.get("max_salary_amount")),
         "source_url": PORTAL,
-        "apply_url": clean(item.get("platform_link")) or None,
+        "apply_url": apply_url,
         "published_at": published,
         "deadline": deadline,
         "status": "published"
@@ -280,7 +568,7 @@ def main():
     items = list(first.get("data") or [])
     print(f"Halaman 1: {len(items)} data")
 
-    for page in range(2, min(4, last_page) + 1):
+    for page in range(2, min(LATEST_PAGES, last_page) + 1):
         result = fetch_page(page)
         page_items = result.get("data") or []
         if not page_items:
@@ -294,21 +582,30 @@ def main():
         if row:
             valid_rows.append(row)
 
+    valid_rows.sort(
+        key=lambda row: priority_rank(row.get("company_name", ""))
+    )
     valid_rows = valid_rows[:20]
 
-    already, inserted, updated = import_rows(valid_rows)
+    print()
+    print('========== SIMULASI DRY-RUN KARIRHUB ==========')
+    print('Data diperiksa :', len(items))
+    print('Data lolos filter :', len(valid_rows))
+    print('Batas harian : 20 lowongan')
+    print('')
 
-    print("--------------------------------")
-    print("HASIL IMPORT KARIRHUB HARIAN")
-    print("Halaman diproses :", min(4, last_page))
-    print("Data diperiksa   :", len(items))
-    print("Data valid       :", len(valid_rows))
-    print("Sudah ada        :", already)
-    print("Data baru        :", inserted)
-    print("Draft lama       : tidak diubah")
-    print("Batas harian     : 20 lowongan")
-    print("Pemindaian arsip : DINONAKTIFKAN")
-    print("Status baru      : published")
+    for i, row in enumerate(valid_rows, 1):
+        print(f'{i}. {row["company_name"]}')
+        print('   Posisi   :', row['title'])
+        print('   Lokasi   :', row['location'])
+        print('   Deadline :', row['deadline'])
+        print('   Lamaran  :', row['apply_url'])
+        print('')
+
+    print('SIMULASI SELESAI')
+    print('Supabase tidak diubah.')
+    print('Tidak ada lowongan yang diterbitkan.')
+
 
 
 if __name__ == "__main__":
