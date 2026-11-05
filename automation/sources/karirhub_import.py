@@ -446,18 +446,6 @@ def convert(item, now):
         "city": clean(item.get("city_name")) or "Lokasi belum dicantumkan",
         "province": clean(item.get("province_name")) or "Belum dicantumkan",
         "district": None,
-        "province": (
-            next(
-                (
-                    REGION_MAP[loc.split(":", 1)[1]]["province"]
-                    for loc in (item.get("locations") or [])
-                    if isinstance(loc, str)
-                    and loc.startswith("city:")
-                    and loc.split(":", 1)[1] in REGION_MAP
-                ),
-                "Belum dicantumkan"
-            )
-        ),
         "employment_type": clean(item.get("job_type_name")) or "Tidak dicantumkan",
         "description": "\n\n".join(details),
         "requirements": skills,
