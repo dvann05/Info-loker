@@ -220,13 +220,18 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
 
         if (job.company_logo) {
           const image = document.createElement("img");
-          image.src = job.company_logo;
           image.alt = `Logo ${job.company_name}`;
+          image.width = 44;
+          image.height = 44;
           image.loading = "lazy";
-          image.onerror = () => {
+          image.decoding = "async";
+          image.referrerPolicy = "no-referrer";
+          image.src = job.company_logo;
+          image.addEventListener("error", () => {
             logo.replaceChildren();
             logo.textContent = initials;
-          };
+            logo.setAttribute("aria-label", `Inisial perusahaan ${job.company_name}`);
+          }, { once: true });
           logo.append(image);
         } else {
           logo.textContent = initials;

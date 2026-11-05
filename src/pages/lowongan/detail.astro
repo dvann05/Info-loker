@@ -81,14 +81,19 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
 
       if (job.company_logo) {
         const image = document.createElement("img");
-        image.src = job.company_logo;
-        image.alt = `Logo ${job.company_name}`;
-        image.loading = "lazy";
-        image.onerror = () => {
-          logo.replaceChildren();
-          logo.textContent = initials;
-        };
-        logo.append(image);
+          image.alt = `Logo ${job.company_name}`;
+          image.width = 44;
+          image.height = 44;
+          image.loading = "lazy";
+          image.decoding = "async";
+          image.referrerPolicy = "no-referrer";
+          image.src = job.company_logo;
+          image.addEventListener("error", () => {
+            logo.replaceChildren();
+            logo.textContent = initials;
+            logo.setAttribute("aria-label", `Inisial perusahaan ${job.company_name}`);
+          }, { once: true });
+          logo.append(image);
       } else {
         logo.textContent = initials;
       }
