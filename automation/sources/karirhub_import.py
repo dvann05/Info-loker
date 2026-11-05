@@ -442,30 +442,9 @@ def convert(item, now):
         "title": title,
         "company_name": company,
         "company_logo": item.get("company_logo_uri"),
-        "location": (
-            next(
-                (
-                    REGION_MAP[loc.split(":", 1)[1]]["city"]
-                    for loc in (item.get("locations") or [])
-                    if isinstance(loc, str)
-                    and loc.startswith("city:")
-                    and loc.split(":", 1)[1] in REGION_MAP
-                ),
-                clean(item.get("city_name")) or "Lokasi belum dicantumkan"
-            )
-        ),
-        "city": (
-            next(
-                (
-                    REGION_MAP[loc.split(":", 1)[1]]["city"]
-                    for loc in (item.get("locations") or [])
-                    if isinstance(loc, str)
-                    and loc.startswith("city:")
-                    and loc.split(":", 1)[1] in REGION_MAP
-                ),
-                clean(item.get("city_name")) or "Lokasi belum dicantumkan"
-            )
-        ),
+        "location": clean(item.get("city_name")) or "Lokasi belum dicantumkan",
+        "city": clean(item.get("city_name")) or "Lokasi belum dicantumkan",
+        "province": clean(item.get("province_name")) or "Belum dicantumkan",
         "district": None,
         "province": (
             next(
