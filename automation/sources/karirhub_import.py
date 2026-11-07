@@ -2,6 +2,7 @@ import re
 import os
 import json
 import time
+import socket
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -32,23 +33,44 @@ def headers(extra=None):
 
 
 def request(url, method="GET", data=None, extra_headers=None):
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(data).encode() if data is not None else None,
-        headers=headers(extra_headers),
-        method=method
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=40) as response:
-            body = response.read().decode()
-            return json.loads(body) if body else None
-    except urllib.error.HTTPError as error:
-        detail = error.read().decode("utf-8", errors="replace")
-        print("HTTP ERROR:", error.code)
-        print("URL:", url)
-        print("DETAIL SERVER:", detail)
-        raise
+    payload = json.dumps(data).encode() if data is not None else None
 
+    for attempt in range(1, 5):
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers=headers(extra_headers),
+            method=method
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=90) as response:
+                body = response.read().decode()
+                return json.loads(body) if body else None
+
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", errors="replace")
+            print("HTTP ERROR:", error.code)
+            print("URL:", url)
+            print("DETAIL SERVER:", detail[:1000])
+
+            if error.code not in (408, 425, 429, 500, 502, 503, 504):
+                raise
+
+            if attempt == 4:
+                raise
+
+        except (TimeoutError, socket.timeout, urllib.error.URLError, ConnectionError) as error:
+            print(f"Koneksi gagal ({attempt}/4): {error}")
+
+            if attempt == 4:
+                raise
+
+        delay = min(5 * (2 ** (attempt - 1)), 40)
+        print(f"Mencoba kembali dalam {delay} detik...")
+        time.sleep(delay)
+
+    raise RuntimeError("Request gagal setelah 4 percobaan.")
 
 def epoch(value):
     try:
@@ -528,6 +550,8 @@ def import_rows(rows):
 def main():
     now = datetime.now(timezone.utc)
 
+    print("MENGAMBIL DATA KARIRHUB KEMNAKER")
+
     first = fetch_page(1)
     meta = first.get("meta") or {}
     last_page = int(meta.get("last_page") or 1)
@@ -535,44 +559,68 @@ def main():
     items = list(first.get("data") or [])
     print(f"Halaman 1: {len(items)} data")
 
-    for page in range(2, min(LATEST_PAGES, last_page) + 1):
-        result = fetch_page(page)
+    max_page = min(LATEST_PAGES, last_page)
+
+    for page in range(2, max_page + 1):
+        try:
+            result = fetch_page(page)
+        except Exception as error:
+            print(f"Halaman {page} gagal: {error}")
+            print("Menghentikan pengambilan halaman agar data yang sudah didapat tetap bisa diproses.")
+            break
+
         page_items = result.get("data") or []
         if not page_items:
             break
+
         items.extend(page_items)
         print(f"Halaman {page}: {len(page_items)} data")
 
     valid_rows = []
+
     for item in items:
-        row = convert(item, now)
-        if row:
-            valid_rows.append(row)
+        try:
+            row = convert(item, now)
+            if row:
+                valid_rows.append(row)
+        except Exception as error:
+            print("Data dilewati:", error)
 
     valid_rows.sort(
-        key=lambda row: priority_rank(row.get("company_name", ""))
+        key=lambda row: (
+            priority_rank(row.get("company_name", "")),
+            row.get("published_at", "")
+        )
     )
+
     valid_rows = valid_rows[:20]
 
     print()
-    print('========== SIMULASI DRY-RUN KARIRHUB ==========')
-    print('Data diperiksa :', len(items))
-    print('Data lolos filter :', len(valid_rows))
-    print('Batas harian : 20 lowongan')
-    print('')
+    print("========== IMPORT KARIRHUB ==========")
+    print("Data diperiksa :", len(items))
+    print("Lolos filter   :", len(valid_rows))
+    print("Batas harian   : 20")
+    print()
 
     for i, row in enumerate(valid_rows, 1):
-        print(f'{i}. {row["company_name"]}')
-        print('   Posisi   :', row['title'])
-        print('   Lokasi   :', row['location'])
-        print('   Deadline :', row['deadline'])
-        print('   Lamaran  :', row['apply_url'])
-        print('')
+        print(f"{i}. {row['company_name']} - {row['title']}")
 
-    print('SIMULASI SELESAI')
-    print('Supabase tidak diubah.')
-    print('Tidak ada lowongan yang diterbitkan.')
+    if not valid_rows:
+        print("Tidak ada lowongan yang lolos filter.")
+        return
 
+    print()
+    print("MENYIMPAN KE SUPABASE...")
+
+    existing, inserted, updated = import_rows(valid_rows)
+
+    print()
+    print("========== HASIL IMPORT ==========")
+    print("Sudah tersedia :", existing)
+    print("Berhasil masuk :", inserted)
+    print("Diperbarui     :", updated)
+    print("Total diproses :", len(valid_rows))
+    print("IMPORT SELESAI")
 
 
 if __name__ == "__main__":
