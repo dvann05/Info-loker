@@ -303,8 +303,7 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
           cleanDescription.length > 180
             ? `${cleanDescription.slice(0, 180).trimEnd()}…`
             : cleanDescription;
-        description.style.whiteSpace = "pre-line";
-        description.style.lineHeight = "1.6";
+        description.className = "job-description";
 
         const source = document.createElement("a");
         source.href = job.source_url;

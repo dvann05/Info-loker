@@ -1,0 +1,33 @@
+
+URL: https://karirhub.kemnaker.go.id/
+HTTP: 200
+FINAL URL: https://karirhub.kemnaker.go.id/
+Jobfair => https://jobfair.kemnaker.go.id
+Pelajari Lebih Lanjut => https://jobfair.kemnaker.go.id
+Lihat Lowongan => /lowongan-dalam-negeri
+Lihat Lowongan => https://siskop2mi.bp2mi.go.id/lowongan/list
+Cari Lowongan Sekarang => /lowongan-dalam-negeri/lowongan
+Lihat Lebih Banyak => /lowongan-dalam-negeri/lowongan
+Super Indo Apprentice Program => /lowongan-dalam-negeri/lowongan/super-indo-apprentice-program-1c6784ff-6671-47fa-b17c-1ebe503460c8
+OPERATOR PRODUKSI => /lowongan-dalam-negeri/lowongan/operator-produksi-63f1eed6-b93b-4967-8bc4-28cd69899ef0
+Operator => /lowongan-dalam-negeri/lowongan/operator-3b2afb21-5688-4d20-9d7f-f6a5acc9a0dd
+Train Driver => /lowongan-dalam-negeri/lowongan/train-driver-01a06c60-7b5b-70f2-b755-22910ff8fd8f
+Sales Provider => /lowongan-dalam-negeri/lowongan/sales-provider-a758da9c-b38c-4937-8827-dd8a657bac37
+COMMUNITY OFFICER - LAMPUNG => /lowongan-dalam-negeri/lowongan/community-officer---lampung-6eb7487c-c8a2-4a5f-a8a0-580554ef4572
+Dibutuhkan Teknik Mesin => /lowongan-dalam-negeri/lowongan/dibutuhkan-teknik-mesin-8fe33ab9-d554-4e9f-a668-c685d10e9a3d
+Partner Business Development => /lowongan-dalam-negeri/lowongan/partner-business-development-89e0646c-d542-4fa3-8090-de36c9199576
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=f8fc2163-d996-b82f-a170-7c308957b440&jobFunctions[0][label]=Penjualan%20dan%20Pemasaran
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=89c8f1c1-8000-42db-7a2f-ae940b9d8ec4&jobFunctions[0][label]=Manufaktur%20dan%20Produksi
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=563989b6-27cd-2ded-68d0-5922156df1e3&jobFunctions[0][label]=Operator
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=61242c39-80d4-dccf-00ed-6192c1b754ff&jobFunctions[0][label]=Lain-lain
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=14a15399-6188-5cd1-003e-3f12030058a6&jobFunctions[0][label]=Operasional
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=a874da33-386e-be80-d2f5-d2600b4b077f&jobFunctions[0][label]=Logistik
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=4e2b0f5b-bacb-5dee-d9ca-afb94f70b6ae&jobFunctions[0][label]=Marketing%20dan%20Relasi%20Publik
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=01624938-c687-7b58-cd05-97a753534df1&jobFunctions[0][label]=Management%20Trainee
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=b6ba6a37-dab5-85df-cfdc-4151b763d0cc&jobFunctions[0][label]=Manajemen%20Operasional
+ => /lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=5e54322d-323f-c431-27bf-f3d21e7b7b0e&jobFunctions[0][label]=Edukasi
+Bidang Lainnya => /lowongan-dalam-negeri/lowongan
+
+URL: https://karirhub.kemnaker.go.id/lowongan
+HTTP: 404
+FINAL URL: https://karirhub.kemnaker.go.id/lowongan

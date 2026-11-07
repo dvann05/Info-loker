@@ -1,0 +1,343 @@
+{
+  "http_status": 200,
+  "title": "Dapatkan pekerjaan dari seluruh dunia : Karirhub | Karirhub Kemnaker",
+  "scripts": [
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/4c711613237c9855.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/4aeb8827442975ee.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/f177c039e8bf6ef1.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/turbopack-147670bd34bb5637.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/c301c2c0ce21958d.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/4ede56db4e4a5640.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/fd6bb58943fe5b7b.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/433c9fe42580daf2.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/e3117322e86217b2.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/faf73a8272c2fee9.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/428314d2fc08fd21.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/6995f9eca098fe99.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/51479c5142c9a171.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/204b895549a819cb.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/87123bbc0e365894.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/2abc27d7a7a24430.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/307b342439823281.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/a6dad97d9634a72d.js",
+    "https://karirhub.kemnaker.go.id/_next/static/chunks/552612c65b9ae5f8.js",
+    "https://karirhub.kemnaker.go.id/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js",
+    "https://karirhub.kemnaker.go.id/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js",
+    "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092"
+  ],
+  "links": [
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/"
+    },
+    {
+      "text": "Pemberi Kerja",
+      "url": "https://karirhub.kemnaker.go.id/pemberi-kerja"
+    },
+    {
+      "text": "Daftar",
+      "url": "https://karirhub.kemnaker.go.id/pendaftaran"
+    },
+    {
+      "text": "Masuk",
+      "url": "https://karirhub.kemnaker.go.id/api/naco/login?redirect_url=/"
+    },
+    {
+      "text": "Pelajari Sebagai Pemberi Kerja",
+      "url": "https://karirhub.kemnaker.go.id/pemberi-kerja"
+    },
+    {
+      "text": "Lihat Lowongan",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri"
+    },
+    {
+      "text": "Cari Lowongan Sekarang",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan"
+    },
+    {
+      "text": "[email protected]",
+      "url": "https://karirhub.kemnaker.go.id/cdn-cgi/l/email-protection#fe8d8b8e8e918c8abe959b93909f959b8cd09991d0979a"
+    },
+    {
+      "text": "[email protected]",
+      "url": "https://karirhub.kemnaker.go.id/cdn-cgi/l/email-protection#8afafff9ebfefaebf9ebf8e1eff8e0ebcae1efe7e4ebe1eff8a4ede5a4e3ee"
+    },
+    {
+      "text": "Lihat Lebih Banyak",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan"
+    },
+    {
+      "text": "Super Indo Apprentice Program",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan/super-indo-apprentice-program-1c6784ff-6671-47fa-b17c-1ebe503460c8"
+    },
+    {
+      "text": "OPERATOR PRODUKSI",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan/operator-produksi-63f1eed6-b93b-4967-8bc4-28cd69899ef0"
+    },
+    {
+      "text": "Operator",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan/operator-3b2afb21-5688-4d20-9d7f-f6a5acc9a0dd"
+    },
+    {
+      "text": "Train Driver",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan/train-driver-01a06c60-7b5b-70f2-b755-22910ff8fd8f"
+    },
+    {
+      "text": "Sales Provider",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan/sales-provider-a758da9c-b38c-4937-8827-dd8a657bac37"
+    },
+    {
+      "text": "COMMUNITY OFFICER - LAMPUNG",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan/community-officer---lampung-6eb7487c-c8a2-4a5f-a8a0-580554ef4572"
+    },
+    {
+      "text": "Dibutuhkan Teknik Mesin",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan/dibutuhkan-teknik-mesin-8fe33ab9-d554-4e9f-a668-c685d10e9a3d"
+    },
+    {
+      "text": "Partner Business Development",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan/partner-business-development-89e0646c-d542-4fa3-8090-de36c9199576"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=f8fc2163-d996-b82f-a170-7c308957b440&jobFunctions[0][label]=Penjualan%20dan%20Pemasaran"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=89c8f1c1-8000-42db-7a2f-ae940b9d8ec4&jobFunctions[0][label]=Manufaktur%20dan%20Produksi"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=563989b6-27cd-2ded-68d0-5922156df1e3&jobFunctions[0][label]=Operator"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=61242c39-80d4-dccf-00ed-6192c1b754ff&jobFunctions[0][label]=Lain-lain"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=14a15399-6188-5cd1-003e-3f12030058a6&jobFunctions[0][label]=Operasional"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=a874da33-386e-be80-d2f5-d2600b4b077f&jobFunctions[0][label]=Logistik"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=4e2b0f5b-bacb-5dee-d9ca-afb94f70b6ae&jobFunctions[0][label]=Marketing%20dan%20Relasi%20Publik"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=01624938-c687-7b58-cd05-97a753534df1&jobFunctions[0][label]=Management%20Trainee"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=b6ba6a37-dab5-85df-cfdc-4151b763d0cc&jobFunctions[0][label]=Manajemen%20Operasional"
+    },
+    {
+      "text": "",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan?jobFunctions[0][id]=5e54322d-323f-c431-27bf-f3d21e7b7b0e&jobFunctions[0][label]=Edukasi"
+    },
+    {
+      "text": "Bidang Lainnya",
+      "url": "https://karirhub.kemnaker.go.id/lowongan-dalam-negeri/lowongan"
+    }
+  ],
+  "possible_endpoints": [
+    "/api/naco/login?redirect_url=/",
+    "/api/naco/logout",
+    "http://linkabilitas.kemnaker.go.id/\\",
+    "http://tka-online.kemnaker.go.id/\\",
+    "http://www.w3.org/2000/svg",
+    "http://www.w3.org/2000/svg\\",
+    "https://account.kemnaker.go.id/settings/security\\",
+    "https://akreditasi.console.kemnaker.go.id/\\",
+    "https://api-wlkp.kemnaker.go.id/v1/companies/0daf654e-edcc-463e-b3b5-805723dcbe40/logo?qs=096c259ca3ef1f0c0359a49e7134323cf9b941e3\\",
+    "https://api-wlkp.kemnaker.go.id/v1/companies/1a269f2d-3722-49cd-b3b6-18ee80d541d5/logo?qs=8f685632b3fc026587c338fd044f2e46c84d6fd1\\",
+    "https://api-wlkp.kemnaker.go.id/v1/companies/53353c2c-fb63-498a-ac4d-6f06ae117623/logo?qs=9ccb81aa041d438b39cfe060f6c031f15144dd19\\",
+    "https://api-wlkp.kemnaker.go.id/v1/companies/5da6638a-8481-4013-956e-996474b920c7/logo?qs=b8b43b47b270ac3047b8ab03e1742a238dddfc9e\\",
+    "https://api-wlkp.kemnaker.go.id/v1/companies/740f2e24-fd67-4c0f-9bb7-01600dde1a99/logo?qs=4dbc3e87150539f65dc57f33d52f1976ed0d769b\\",
+    "https://api-wlkp.kemnaker.go.id/v1/companies/8f613339-4532-4efa-ac8b-2b519fe92773/logo?qs=1c3e8e2c82bb01208b12b06d0f68cd0631fb9e0a\\",
+    "https://api-wlkp.kemnaker.go.id/v1/companies/942129a2-c666-491f-8d16-f1432528ef27/logo?qs=a053f2dc122739f993adbeb1cef8a4efaa7016e4\\",
+    "https://api.kemnaker.go.id\\",
+    "https://api.whatsapp.com/send?phone=628118712018",
+    "https://api.whatsapp.com/send?phone=628118712018\\",
+    "https://apps.apple.com/id/app/siapkerja-kemnaker/id1638880309",
+    "https://apps.apple.com/id/app/siapkerja-kemnaker/id1638880309\\",
+    "https://bantuan.kemnaker.go.id/\\",
+    "https://bantuan.kemnaker.go.id\\",
+    "https://bizhub.kemnaker.go.id/\\",
+    "https://bnsp.go.id/\\",
+    "https://cms.karirhub.kemnaker.go.id\\",
+    "https://employer.karirhub.kemnaker.go.id\\",
+    "https://facebook.com/KemnakerRI",
+    "https://facebook.com/KemnakerRI\\",
+    "https://jobfair.kemnaker.go.id",
+    "https://jobfair.kemnaker.go.id\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/Announce_d94b1f3019_d9c2a6520a.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/Announce_d94b1f3019_d9c2a6520a.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/Not_Found_Image_84133fe423_c0ab6b738b_16c6e87dd7.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/accreditation_fd89dce88c_02c812138b.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/app_store_c44c447eb3_2ca01f1059.png\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/arrow_right_start_on_rectangle_87e8dbeae7_68c39c92d6.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/bantuan_7e17749077_96dd437ba2.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/bizhub_fill_d6bd3b4ea4_7c89597a63.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/briefcase_19d3a08046_c5455f0717.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/briefcase_22ec2817cf_57ea070161.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/briefcase_22ec2817cf_57ea070161.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/call_3e76edf903_4feffd2bc2.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/call_3e76edf903_4feffd2bc2.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/check_badge_3dd47fe857_05b3cd3f49.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/check_badge_3dd47fe857_05b3cd3f49.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/check_badge_4e1e4040a2_d72dc9e0b5.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/cog_8_tooth_d83a47f0ed_1a6ff1c213.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/envelope_7d258dfdd5_44e948403f.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/envelope_7d258dfdd5_44e948403f.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/facebook_1efd699050_1d173fe589.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/facebook_1efd699050_1d173fe589.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/globe_c1b81720b0_8428a4511b.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/globe_c1b81720b0_8428a4511b.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/google_play_77a759a0ec_b6873f4120.png\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/hero_left_3cd7ff18a9_5944b8789c.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/hero_left_sm_52f6f8d0d4_c5de0a5d8c.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/hero_right_a36c5f28fc_222b965cea.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/hero_right_sm_d1ca073a17_3bdfbb278f.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/instagram_da5d17773c_3ddaf590dd.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/instagram_da5d17773c_3ddaf590dd.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/jobfair_b63421e34e_d86c3888e2.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/karirhub_lower_08c3886bd0_6e9a9ee711.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/karirhub_lower_08c3886bd0_6e9a9ee711.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/kelembagaan_bb7ba7df6f_58a118b0b8.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/kemnaker_e4440ddebe_9c69d1021b.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/large_hero_left_3cd7ff18a9_5944b8789c.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/large_hero_right_a36c5f28fc_222b965cea.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/large_jobfair_b63421e34e_d86c3888e2.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/large_portal_boarding_5b7c5ed5f6_d26ee568c3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/large_recruit_11943a5a46_7a44b0d231.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/large_vacancy_cta_b06333f9b8_e270adb2d3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/large_vacancy_cta_background_desktop_bf6b0744e6_5bc8bfcd8e.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/linkabilitas_1d0b7c450c_7d6efb8665.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/location_8025c17c1a_b273aadf62.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/location_8025c17c1a_b273aadf62.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/magnifying_glass_circle_32a6dd643c_af0ac33806.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/magnifying_glass_circle_32a6dd643c_af0ac33806.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_hero_left_3cd7ff18a9_5944b8789c.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_hero_right_a36c5f28fc_222b965cea.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_jobfair_b63421e34e_d86c3888e2.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_portal_boarding_5b7c5ed5f6_d26ee568c3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_recruit_11943a5a46_7a44b0d231.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_vacancy_cta_b06333f9b8_e270adb2d3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_vacancy_cta_background_desktop_bf6b0744e6_5bc8bfcd8e.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_vacancy_dn_f71401598c_5c665d18f3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/medium_vacancy_ln_c64ae17475_9af8c30dbe.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/pasker_dark_6f24f0e4f0_4263fe52dd.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/pasker_dark_6f24f0e4f0_4263fe52dd.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/pemagangan_201faa900e_f9a5e67063.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/penggunaan_tka_b003dfaebd_46ae812906.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/portal_boarding_5b7c5ed5f6_d26ee568c3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/pppkb_9a767dc76b_820e6af9b0.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/produktivitas_4c97aea2fb_c5b1e78969.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/program_pelatihan_fd4a8b7613_89e76ecdce.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/question_mark_circle_88ee4b67f5_4ddb6b9f13.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/recruit_11943a5a46_7a44b0d231.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/sertihub_fill_a7865b3499_148197171c.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/shield_check_0aa597cd95_6bf509cefa.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/skillhub_fill_92124d6f93_d1e3a997c5.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/skkni_7e9d44d4f4_1aededed7d.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_hero_left_3cd7ff18a9_5944b8789c.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_hero_right_a36c5f28fc_222b965cea.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_jobfair_b63421e34e_d86c3888e2.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_portal_boarding_5b7c5ed5f6_d26ee568c3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_recruit_11943a5a46_7a44b0d231.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_vacancy_cta_b06333f9b8_e270adb2d3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_vacancy_cta_background_desktop_bf6b0744e6_5bc8bfcd8e.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_vacancy_cta_background_mobile_d44848cf18_a982a6a9b2.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_vacancy_dn_f71401598c_5c665d18f3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/small_vacancy_ln_c64ae17475_9af8c30dbe.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/talenthub_fill_3088b38929_5e0dd93c08.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/teman_k3_3e2c904ca2_4c9d30227c.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_app_store_c44c447eb3_2ca01f1059.png\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_google_play_77a759a0ec_b6873f4120.png\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_hero_left_3cd7ff18a9_5944b8789c.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_hero_left_sm_52f6f8d0d4_c5de0a5d8c.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_hero_right_a36c5f28fc_222b965cea.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_jobfair_b63421e34e_d86c3888e2.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_kemnaker_e4440ddebe_9c69d1021b.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_portal_boarding_5b7c5ed5f6_d26ee568c3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_recruit_11943a5a46_7a44b0d231.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_talenthub_fill_3088b38929_5e0dd93c08.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_vacancy_cta_b06333f9b8_e270adb2d3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_vacancy_cta_background_desktop_bf6b0744e6_5bc8bfcd8e.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_vacancy_cta_background_mobile_d44848cf18_a982a6a9b2.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_vacancy_dn_f71401598c_5c665d18f3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/thumbnail_vacancy_ln_c64ae17475_9af8c30dbe.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/tiktok_d167f3b024_a846cf7420.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/tiktok_d167f3b024_a846cf7420.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/user_d14ef38fe2_09052a4c85.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/vacancy_cta_b06333f9b8_e270adb2d3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/vacancy_cta_background_desktop_bf6b0744e6_5bc8bfcd8e.webp)",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/vacancy_cta_background_desktop_bf6b0744e6_5bc8bfcd8e.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/vacancy_cta_background_mobile_d44848cf18_a982a6a9b2.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/vacancy_dn_f71401598c_5c665d18f3.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/vacancy_ln_c64ae17475_9af8c30dbe.webp\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/whatsapp_c755f5d832_af121cfbd3.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/whatsapp_c755f5d832_af121cfbd3.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/wlkp_2389c709ff_896ccab7e6.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/x_ae20f952d9_359162cf91.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/x_ae20f952d9_359162cf91.svg\\",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/youtube_96984fb8b9_910d8f5b44.svg",
+    "https://karirhub-cms.oss-ap-southeast-5.aliyuncs.com/youtube_96984fb8b9_910d8f5b44.svg\\",
+    "https://karirhub.console.kemnaker.go.id\\",
+    "https://karirhub.kemnaker.go.id",
+    "https://karirhub.kemnaker.go.id\\",
+    "https://kemnaker.go.id/",
+    "https://kemnaker.go.id/\\",
+    "https://kemnaker.go.id/information/about",
+    "https://kemnaker.go.id/information/about\\",
+    "https://kemnaker.go.id/information/contact",
+    "https://kemnaker.go.id/information/contact\\",
+    "https://kemnaker.go.id/information/sitemap",
+    "https://kemnaker.go.id/information/sitemap\\",
+    "https://kemnaker.go.id\\",
+    "https://paskerid.kemnaker.go.id/",
+    "https://paskerid.kemnaker.go.id/\\",
+    "https://plausible.kemnaker.go.id/js/script.js",
+    "https://plausible.kemnaker.go.id/js/script.js\\",
+    "https://play.google.com/store/apps/details?id=id.go.kemnaker.siapkerja&amp;pcampaignid=karirhub-kemnaker",
+    "https://play.google.com/store/apps/details?id=id.go.kemnaker.siapkerja\\u0026pcampaignid=karirhub-kemnaker\\",
+    "https://pppkb.kemnaker.go.id/\\",
+    "https://produktivitas.kemnaker.go.id/\\",
+    "https://proglat.kemnaker.go.id/\\",
+    "https://siapkerja.kemnaker.go.id/app/activity?tabIndex=0\\",
+    "https://siapkerja.kemnaker.go.id/app/activity?tabIndex=1\\",
+    "https://siapkerja.kemnaker.go.id\\",
+    "https://siskop2mi.bp2mi.go.id/lowongan/list",
+    "https://siskop2mi.bp2mi.go.id/lowongan/list\\",
+    "https://skillhub.kemnaker.go.id/\\",
+    "https://skillhub.kemnaker.go.id/magang\\",
+    "https://skillhub.kemnaker.go.id/mitra\\",
+    "https://skkni.kemnaker.go.id/\\",
+    "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "https://talenthub.kemnaker.go.id/\\",
+    "https://temank3.kemnaker.go.id/\\",
+    "https://twitter.com/KemnakerRI",
+    "https://twitter.com/KemnakerRI\\",
+    "https://twitter.com/pusatpasarkerja",
+    "https://twitter.com/pusatpasarkerja\\",
+    "https://wajiblapor.kemnaker.go.id/\\",
+    "https://wajiblapor.kemnaker.go.id\\",
+    "https://wlkp-assets.kemnaker.go.id/companies/5f12425a-44cd-49a9-a9c4-3aa8dba81592/6a83fa135bbf2.jpg\\",
+    "https://www.facebook.com/pusatpasarkerja",
+    "https://www.facebook.com/pusatpasarkerja\\",
+    "https://www.instagram.com/kemnaker",
+    "https://www.instagram.com/kemnaker\\",
+    "https://www.instagram.com/pusatpasarkerja",
+    "https://www.instagram.com/pusatpasarkerja\\",
+    "https://www.tiktok.com/@paskerid_",
+    "https://www.tiktok.com/@paskerid_\\",
+    "https://www.youtube.com/channel/UCXX-orbQDc0LVXhVB1I0K3g",
+    "https://www.youtube.com/channel/UCXX-orbQDc0LVXhVB1I0K3g\\",
+    "https://www.youtube.com/pusatpasarkerja",
+    "https://www.youtube.com/pusatpasarkerja\\"
+  ]
+}

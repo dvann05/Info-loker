@@ -23,7 +23,7 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
       <article class="job-card">
         <p id="status" role="status">Memuat detail lowongan...</p>
         <div id="job-detail"></div>
-      </article>  <p style="margin-top:24px">
+      </article>  <p class="back-home">
     <a href="/lowongan">← Kembali ke daftar lowongan</a>
   </p>
 </div>
@@ -117,10 +117,7 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
 
       addText(detail, "h2", "Deskripsi pekerjaan");
       const description = addText(detail, "p", job.description || "Informasi deskripsi belum tersedia.");
-      description.style.whiteSpace = "pre-line";
-      description.style.lineHeight = "1.8";
-      description.style.marginTop = "12px";
-      description.style.marginBottom = "20px";
+      description.className = "job-description";
       description.textContent = (job.description || "").replaceAll("\\n", "\n");
 
       if (job.requirements?.length) {

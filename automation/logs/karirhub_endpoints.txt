@@ -1,0 +1,20 @@
+),o=await fetch(`${e.endpoint}/v1/files/${t}`,{method:
+),o=await fetch(`${e.endpoint}/v1/files/download-links`,{method:
+),s=n?`/v1/admin/buckets/${t}/files/upload`:`/v1/buckets/${t}/files/upload`,u=await fetch(`${e.endpoint}${s}`,{method:
+);return sn}(),t=e.chunkSize??262144,r=e.simultaneousUploads??3;async function n(n,a,o){let i=`${e.endpoint}/v1/storages/${n}/files`,l=so(e),s=await fetch(`${i}/init`,{method:
+/karirhub/catalogue/v1/popular-job-functions
+/karirhub/onboarding/v2/cities
+/karirhub/onboarding/v2/companies/verified
+/karirhub/onboarding/v2/documents
+/karirhub/onboarding/v2/government-agencies
+/karirhub/onboarding/v2/governments/verified
+/karirhub/onboarding/v2/industries
+/karirhub/onboarding/v2/provinces
+/karirhub/onboarding/v2/sub-districts
+/karirhub/onboarding/v2/villages
+/karirhub/v1/available-micro-vacancies
+/karirhub/v2/skills
+/karirhub/vacancy/v2/published-industrial-vacancies
+https://api.pinterest.com/v1/urls/count.json
+https://api.tumblr.com/v2/share/stats
+};return si(b,{id:d,name:a.name})}async function a(t,r){let n=so(e),a=await fetch(`${e.endpoint}/v1/storages/${t}/files/${r}`,{method:

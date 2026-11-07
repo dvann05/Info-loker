@@ -4,12 +4,34 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;
+  ogType?: "website" | "article";
 }
 
 const {
   title = "InfoLoker — Temukan Pekerjaanmu",
-  description = "Temukan informasi lowongan kerja terbaru dari sumber resmi perusahaan."
+  description = "Temukan informasi lowongan kerja terbaru dari sumber resmi perusahaan.",
+  ogImage,
+  ogType = "website"
 } = Astro.props;
+
+const siteUrl = "https://infolokerkita.web.id"\;
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).href;
+const socialImage = ogImage || `${siteUrl}/favicon.svg`;
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "InfoLoker",
+  url: `${siteUrl}/`,
+  description,
+  inLanguage: "id-ID",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${siteUrl}/lowongan/?q={search_term_string}`,
+    "query-input": "required name=search_term_string"
+  }
+};
 ---
 
 <!doctype html>
@@ -17,42 +39,41 @@ const {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <meta name="theme-color" content="#0b6bcb" />
     <meta name="description" content={description} />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <title>{title}</title>
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="InfoLoker" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:locale" content="id_ID" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(schema)}
+    />
   </head>
 
   <body>
     <slot />
 
-    <script is:inline>
-      (() => {
-        try {
-          const ua = navigator.userAgent;
-
-          const device = /tablet|ipad/i.test(ua)
-            ? "Tablet"
-            : /mobile|android|iphone/i.test(ua)
-              ? "Mobile"
-              : "Desktop";
-
-          fetch("/api/visit", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              path: location.pathname,
-              referrer: document.referrer,
-              device
-            }),
-            keepalive: true
-          }).catch(() => {});
-        } catch {}
-      })();
+    <script>
+      import "../scripts/visit";
     </script>
   </body>
 </html>

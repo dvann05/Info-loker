@@ -57,9 +57,9 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
 
   <div id="job-list" class="job-grid"></div>
 
-  <nav id="pagination" aria-label="Navigasi halaman" style="display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:28px 0;"></nav>
+  <nav id="pagination" class="pagination" aria-label="Navigasi halaman"></nav>
 
-  <p style="margin-top:32px">
+  <p class="back-home">
     <a href="/">← Kembali ke beranda</a>
   </p>
 </div>
@@ -142,20 +142,9 @@ description="Cari lowongan kerja berdasarkan posisi, perusahaan, dan lokasi di I
       const link = document.createElement("a");
       link.textContent = label;
       link.href = disabled ? "#" : makePageUrl(page);
-      link.style.cssText = [
-        "display:inline-flex",
-        "align-items:center",
-        "justify-content:center",
-        "min-width:38px",
-        "height:38px",
-        "padding:0 10px",
-        "border:1px solid var(--border, #ddd)",
-        "border-radius:8px",
-        "text-decoration:none",
-        "font-weight:600",
-        active ? "background:var(--primary, #2563eb);color:white;border-color:var(--primary, #2563eb)" : "color:inherit",
-        disabled ? "opacity:.4;pointer-events:none" : ""
-      ].join(";");
+      link.className = "pagination-link";
+      if (active) link.classList.add("is-active");
+      if (disabled) link.classList.add("is-disabled");
 
       if (active) link.setAttribute("aria-current", "page");
       if (disabled) link.setAttribute("aria-disabled", "true");
