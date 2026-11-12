@@ -23,10 +23,20 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
       <article class="job-card">
         <p id="status" role="status">Memuat detail lowongan...</p>
         <div id="job-detail"></div>
-      </article>  <p class="back-home">
-    <a href="/lowongan">← Kembali ke daftar lowongan</a>
-  </p>
-</div>
+      </article>
+
+      <section class="similar-jobs-section" id="similar-jobs-section" hidden>
+        <div class="similar-jobs-header">
+          <h2>Lowongan Serupa Terkait 🎯</h2>
+          <p id="similar-jobs-subtitle">Peluang karir lain di bidang atau wilayah yang sama.</p>
+        </div>
+        <div id="similar-jobs-list" class="job-grid"></div>
+      </section>
+
+      <p class="back-home">
+        <a href="/lowongan">← Kembali ke daftar lowongan</a>
+      </p>
+    </div>
 
   </main>  <script>
     import { supabase } from "../../lib/supabase";
@@ -45,25 +55,50 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
       if (!status || !detail) return;
 
       const slug = new URLSearchParams(window.location.search).get("slug") || "";
-
       const today = new Date().toISOString().slice(0, 10);
+
+      // Render Skeleton state
+      status.textContent = "";
+      const skeleton = document.createElement("div");
+      skeleton.className = "job-skeleton-card";
+      skeleton.innerHTML = `
+        <div class="job-skeleton-header">
+          <div class="skeleton job-skeleton-avatar"></div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+            <div class="skeleton job-skeleton-title"></div>
+            <div class="skeleton job-skeleton-text"></div>
+          </div>
+        </div>
+        <div class="job-skeleton-desc" style="height: 100px;"></div>
+        <div class="job-skeleton-desc" style="height: 160px;"></div>
+      `;
+      detail.replaceChildren(skeleton);
 
       const { data: job, error } = await supabase
         .from("jobs")
-        .select("title,company_name,company_logo,location,employment_type,education,experience,salary_min,salary_max,description,requirements,benefits,source_url,apply_url,published_at,deadline")
+        .select("title,company_name,company_logo,location,province,city,employment_type,education,experience,salary_min,salary_max,description,requirements,benefits,source_url,apply_url,published_at,deadline")
         .eq("slug", slug)
         .eq("status", "published")
         .or(`deadline.is.null,deadline.gte.${today}`)
         .maybeSingle();
+
+      detail.replaceChildren();
 
       if (error || !job) {
         status.textContent = "Lowongan tidak ditemukan atau sudah tidak tersedia.";
         return;
       }
 
-      status.textContent = "";
+      document.title = `${job.title} — ${job.company_name || 'InfoLoker'}`;
 
-      addText(detail, "h1", job.title);
+      // Header container
+      const headerBox = document.createElement("div");
+      headerBox.className = "job-detail-header";
+
+      const title = document.createElement("h1");
+      title.textContent = job.title;
+      title.style.margin = "0 0 14px";
+      title.style.fontSize = "clamp(24px, 4vw, 32px)";
 
       const company = document.createElement("div");
       company.className = "job-company";
@@ -81,41 +116,71 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
 
       if (job.company_logo) {
         const image = document.createElement("img");
-          image.alt = `Logo ${job.company_name}`;
-          image.width = 44;
-          image.height = 44;
-          image.loading = "lazy";
-          image.decoding = "async";
-          image.referrerPolicy = "no-referrer";
-          image.src = job.company_logo;
-          image.addEventListener("error", () => {
-            logo.replaceChildren();
-            logo.textContent = initials;
-            logo.setAttribute("aria-label", `Inisial perusahaan ${job.company_name}`);
-          }, { once: true });
-          logo.append(image);
+        image.alt = `Logo ${job.company_name}`;
+        image.width = 44;
+        image.height = 44;
+        image.loading = "lazy";
+        image.decoding = "async";
+        image.referrerPolicy = "no-referrer";
+        image.src = job.company_logo;
+        image.addEventListener("error", () => {
+          logo.replaceChildren();
+          logo.textContent = initials;
+          logo.setAttribute("aria-label", `Inisial perusahaan ${job.company_name}`);
+        }, { once: true });
+        logo.append(image);
       } else {
         logo.textContent = initials;
       }
 
       const companyName = document.createElement("h2");
       companyName.textContent = job.company_name || "Perusahaan tidak diketahui";
+      companyName.style.margin = "0";
+      companyName.style.fontSize = "17px";
 
       company.append(logo, companyName);
-      detail.append(company);
-      addText(detail, "p", `Lokasi: ${job.location}`);
 
-      if (job.employment_type) addText(detail, "p", `Jenis pekerjaan: ${job.employment_type}`);
-      if (job.education) addText(detail, "p", `Pendidikan: ${job.education}`);
-      if (job.experience) addText(detail, "p", `Pengalaman: ${job.experience}`);
+      const headerTextWrap = document.createElement("div");
+      headerTextWrap.append(title, company);
+      headerBox.append(headerTextWrap);
+      detail.append(headerBox);
+
+      // Specs Grid
+      const specsGrid = document.createElement("div");
+      specsGrid.className = "job-specs-grid";
+
+      function addSpec(label: string, value: string) {
+        const item = document.createElement("div");
+        item.className = "job-spec-item";
+        const l = document.createElement("span");
+        l.className = "job-spec-label";
+        l.textContent = label;
+        const v = document.createElement("span");
+        v.className = "job-spec-value";
+        v.textContent = value;
+        item.append(l, v);
+        specsGrid.append(item);
+      }
+
+      addSpec("Lokasi", `📍 ${job.location}`);
+      if (job.employment_type) addSpec("Jenis Pekerjaan", `💼 ${job.employment_type}`);
+      if (job.education) addSpec("Pendidikan", `🎓 ${job.education}`);
+      if (job.experience) addSpec("Pengalaman", `⏱ ${job.experience}`);
 
       if (job.salary_min != null || job.salary_max != null) {
         const min = job.salary_min != null ? `Rp${Number(job.salary_min).toLocaleString("id-ID")}` : "";
         const max = job.salary_max != null ? `Rp${Number(job.salary_max).toLocaleString("id-ID")}` : "";
-        addText(detail, "p", `Perkiraan gaji: ${min}${min && max ? " – " : ""}${max}`);
+        addSpec("Perkiraan Gaji", `💰 ${min}${min && max ? " – " : ""}${max}`);
       }
 
-      addText(detail, "h2", "Deskripsi pekerjaan");
+      if (job.deadline) {
+        addSpec("Batas Pendaftaran", `📅 ${new Date(`${job.deadline}T00:00:00`).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`);
+      }
+
+      detail.append(specsGrid);
+
+      // Deskripsi
+      addText(detail, "h2", "Deskripsi Pekerjaan");
       const description = addText(detail, "p", job.description || "Informasi deskripsi belum tersedia.");
       description.className = "job-description";
       description.textContent = (job.description || "").replaceAll("\\n", "\n");
@@ -134,17 +199,9 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
         addText(detail, "p", job.benefits);
       }
 
-      if (job.deadline) {
-        addText(detail, "p", `Batas pendaftaran: ${new Date(`${job.deadline}T00:00:00`).toLocaleDateString("id-ID")}`);
-      }
-
-      const source = document.createElement("a");
-      source.href = job.source_url;
-      source.target = "_blank";
-      source.rel = "noopener noreferrer";
-      source.className = "job-source";
-      source.textContent = "Buka sumber rekrutmen resmi ↗";
-      detail.append(source);
+      // Action Buttons
+      const actions = document.createElement("div");
+      actions.className = "job-detail-actions";
 
       if (job.apply_url) {
         const apply = document.createElement("a");
@@ -152,9 +209,156 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
         apply.target = "_blank";
         apply.rel = "noopener noreferrer";
         apply.className = "btn btn-primary";
-        apply.textContent = "Lamar sekarang";
-        detail.append(apply);
+        apply.textContent = "Lamar Sekarang ↗";
+        actions.append(apply);
       }
+
+      const source = document.createElement("a");
+      source.href = job.source_url;
+      source.target = "_blank";
+      source.rel = "noopener noreferrer";
+      source.className = "btn btn-secondary";
+      source.textContent = "Buka Sumber Resmi ↗";
+      actions.append(source);
+
+      const shareBtn = document.createElement("button");
+      shareBtn.type = "button";
+      shareBtn.className = "btn btn-secondary";
+      shareBtn.textContent = "Salin Tautan 🔗";
+      shareBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          shareBtn.textContent = "Tautan Tersalin! ✅";
+          setTimeout(() => { shareBtn.textContent = "Salin Tautan 🔗"; }, 2500);
+        } catch {
+          shareBtn.textContent = "Berhasil!";
+        }
+      };
+      actions.append(shareBtn);
+
+      detail.append(actions);
+
+      void loadSimilarJobs(job, slug, today);
+    }
+
+    async function loadSimilarJobs(currentJob: any, currentSlug: string, today: string) {
+      const section = document.querySelector<HTMLElement>("#similar-jobs-section");
+      const list = document.querySelector<HTMLDivElement>("#similar-jobs-list");
+      const subtitle = document.querySelector<HTMLParagraphElement>("#similar-jobs-subtitle");
+      if (!section || !list) return;
+
+      let query = supabase
+        .from("jobs")
+        .select("id,slug,title,company_name,company_logo,location,province,city,employment_type,description,published_at")
+        .eq("status", "published")
+        .neq("slug", currentSlug)
+        .or(`deadline.is.null,deadline.gte.${today}`);
+
+      if (currentJob.city) {
+        query = query.ilike("city", `%${currentJob.city}%`);
+      } else if (currentJob.province) {
+        query = query.ilike("province", `%${currentJob.province}%`);
+      }
+
+      const { data, error } = await query
+        .order("published_at", { ascending: false })
+        .limit(3);
+
+      let items = (data || []);
+
+      if (items.length < 3) {
+        const excludeSlugs = [currentSlug, ...items.map((i: any) => i.slug)];
+        const { data: latest } = await supabase
+          .from("jobs")
+          .select("id,slug,title,company_name,company_logo,location,province,city,employment_type,description,published_at")
+          .eq("status", "published")
+          .not("slug", "in", `(${excludeSlugs.join(",")})`)
+          .or(`deadline.is.null,deadline.gte.${today}`)
+          .order("published_at", { ascending: false })
+          .limit(3 - items.length);
+
+        if (latest && latest.length > 0) {
+          items = [...items, ...latest];
+        }
+      }
+
+      if (items.length === 0) return;
+
+      if (subtitle && currentJob.city) {
+        subtitle.textContent = `Peluang karir lain di ${currentJob.city} dan sekitarnya.`;
+      }
+
+      list.replaceChildren();
+
+      for (const simJob of items) {
+        const card = document.createElement("article");
+        card.className = "job-card";
+
+        const company = document.createElement("div");
+        company.className = "job-company";
+
+        const logo = document.createElement("div");
+        logo.className = "company-logo";
+
+        const initials = (simJob.company_name || "PT")
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((word: string) => word[0])
+          .join("")
+          .toUpperCase();
+
+        if (simJob.company_logo) {
+          const image = document.createElement("img");
+          image.alt = `Logo ${simJob.company_name}`;
+          image.width = 44;
+          image.height = 44;
+          image.loading = "lazy";
+          image.src = simJob.company_logo;
+          image.onerror = () => {
+            logo.replaceChildren();
+            logo.textContent = initials;
+          };
+          logo.append(image);
+        } else {
+          logo.textContent = initials;
+        }
+
+        const compName = document.createElement("span");
+        compName.textContent = simJob.company_name || "Perusahaan tidak diketahui";
+        company.append(logo, compName);
+
+        const title = document.createElement("h3");
+        title.textContent = simJob.title;
+
+        const metaRow = document.createElement("div");
+        metaRow.className = "job-meta-row";
+
+        const locBadge = document.createElement("span");
+        locBadge.className = "job-badge job-badge-location";
+        locBadge.textContent = `📍 ${simJob.location}`;
+
+        const typeBadge = document.createElement("span");
+        typeBadge.className = "job-badge job-badge-type";
+        typeBadge.textContent = simJob.employment_type || "Penuh Waktu";
+
+        metaRow.append(locBadge, typeBadge);
+
+        const actions = document.createElement("div");
+        actions.className = "job-card-actions";
+
+        const detailLink = document.createElement("a");
+        detailLink.href = `/lowongan/detail/?slug=${encodeURIComponent(simJob.slug)}`;
+        detailLink.textContent = "Lihat detail →";
+        detailLink.className = "job-source";
+
+        actions.append(detailLink);
+
+        card.append(company, title, metaRow, actions);
+        list.append(card);
+      }
+
+      section.hidden = false;
     }
 
     void loadDetail();

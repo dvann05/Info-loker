@@ -43,9 +43,18 @@ const schema = {
     <meta name="theme-color" content="#0b6bcb" />
     <meta name="description" content={description} />
     <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <link rel="dns-prefetch" href="https://ucxwxmasnbidzofuoqks.supabase.co" />
+    <link rel="preconnect" href="https://ucxwxmasnbidzofuoqks.supabase.co" crossorigin />
 
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
 
     <title>{title}</title>
 
@@ -71,6 +80,25 @@ const schema = {
 
   <body>
     <slot />
+
+    <nav class="mobile-bottom-nav" aria-label="Navigasi Bawah">
+      <a href="/" class="mobile-nav-item" aria-label="Beranda">
+        <span class="mobile-nav-icon">🏠</span>
+        <span class="mobile-nav-label">Beranda</span>
+      </a>
+      <a href="/lowongan/" class="mobile-nav-item" aria-label="Lowongan">
+        <span class="mobile-nav-icon">💼</span>
+        <span class="mobile-nav-label">Lowongan</span>
+      </a>
+      <a href="/berita/" class="mobile-nav-item" aria-label="Berita">
+        <span class="mobile-nav-icon">📰</span>
+        <span class="mobile-nav-label">Berita</span>
+      </a>
+      <a href="/#panduan" class="mobile-nav-item" aria-label="Panduan">
+        <span class="mobile-nav-icon">🛡️</span>
+        <span class="mobile-nav-label">Panduan</span>
+      </a>
+    </nav>
 
     <script>
       import "../scripts/visit";

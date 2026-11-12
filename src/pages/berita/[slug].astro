@@ -37,6 +37,35 @@ const { data: article, error } = await supabase
   .eq("status", "published")
   .maybeSingle();
 
+let relatedArticles: any[] = [];
+if (article?.category) {
+  const { data: byCat } = await supabase
+    .from("news")
+    .select("slug,title,excerpt,category,image_url,image_alt,published_at")
+    .eq("status", "published")
+    .eq("category", article.category)
+    .neq("slug", slug)
+    .order("published_at", { ascending: false })
+    .limit(3);
+
+  relatedArticles = byCat || [];
+}
+
+if (relatedArticles.length < 3) {
+  const excludeSlugs = [slug, ...relatedArticles.map((a: any) => a.slug)];
+  const { data: latestNews } = await supabase
+    .from("news")
+    .select("slug,title,excerpt,category,image_url,image_alt,published_at")
+    .eq("status", "published")
+    .not("slug", "in", `(${excludeSlugs.join(",")})`)
+    .order("published_at", { ascending: false })
+    .limit(3 - relatedArticles.length);
+
+  if (latestNews) {
+    relatedArticles = [...relatedArticles, ...latestNews];
+  }
+}
+
 const validUrl = (value: string | null) => {
   if (!value) return null;
 
@@ -94,6 +123,28 @@ const formattedDate = article?.published_at
       year: "numeric"
     }).format(new Date(article.published_at))
   : "Tanggal tidak tersedia";
+
+const articleSchema = article ? {
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  headline: article.title,
+  description: article.excerpt || article.title,
+  image: imageUrl ? [imageUrl] : undefined,
+  datePublished: article.published_at || undefined,
+  inLanguage: "id-ID",
+  author: {
+    "@type": "Organization",
+    name: article.source_name || "InfoLoker"
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "InfoLoker",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://infolokerkita.web.id/favicon.svg"
+    }
+  }
+} : null;
 ---
 
 {article && !error ? (
@@ -103,10 +154,20 @@ const formattedDate = article?.published_at
     ogImage={imageUrl || undefined}
     ogType="article"
   >
+    {articleSchema && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(articleSchema)}
+      />
+    )}
     <main class="article-container">
-      <a href="/berita/" class="back-link">
-        ← Kembali ke daftar berita
-      </a>
+      <nav class="article-breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Beranda</a>
+        <span class="breadcrumb-separator">/</span>
+        <a href="/berita/">Berita</a>
+        <span class="breadcrumb-separator">/</span>
+        <span aria-current="page" class="breadcrumb-current">{article.category}</span>
+      </nav>
 
       <article class="article">
         <header class="article-header">
@@ -132,6 +193,21 @@ const formattedDate = article?.published_at
           set:html={sanitizedContent}
         />
 
+        <div class="article-share">
+          <span class="share-label">Bagikan artikel ini:</span>
+          <a
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(article.title + ' ' + (Astro.url ? Astro.url.href : ''))}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-share btn-share-wa"
+          >
+            💬 WhatsApp
+          </a>
+          <button type="button" class="btn-share btn-share-copy" id="share-copy-btn">
+            🔗 Salin Tautan
+          </button>
+        </div>
+
         <footer class="article-footer">
           <h2>Sumber Berita</h2>
           <p>{article.source_name || "Sumber tidak dicantumkan"}</p>
@@ -148,10 +224,65 @@ const formattedDate = article?.published_at
         </footer>
       </article>
 
+      {relatedArticles.length > 0 && (
+        <section class="related-news-section">
+          <div class="related-news-header">
+            <h2>Berita Terkait Lainnya 📰</h2>
+            <p>Ikuti perkembangan industri dan dunia kerja terkini.</p>
+          </div>
+          <div class="related-news-grid">
+            {relatedArticles.map((rel: any) => {
+              const relImage = validUrl(rel.image_url);
+              const relDate = rel.published_at
+                ? new Intl.DateTimeFormat("id-ID", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                  }).format(new Date(rel.published_at))
+                : "Terbaru";
+
+              return (
+                <article class="related-news-card">
+                  <a href={`/berita/${rel.slug}/`} class="related-card-link">
+                    <div class="related-card-image">
+                      {relImage ? (
+                        <img src={relImage} alt={rel.image_alt || rel.title} loading="lazy" decoding="async" />
+                      ) : (
+                        <div class="related-image-placeholder">📰</div>
+                      )}
+                    </div>
+                    <div class="related-card-body">
+                      <span class="related-category-badge">{rel.category}</span>
+                      <h3>{rel.title}</h3>
+                      <time>{relDate}</time>
+                    </div>
+                  </a>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <a href="/berita/" class="back-bottom">
         ← Kembali ke semua berita
       </a>
     </main>
+
+    <script>
+      const copyBtn = document.querySelector<HTMLButtonElement>("#share-copy-btn");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+            copyBtn.textContent = "Tersalin! ✅";
+            setTimeout(() => { copyBtn.textContent = "🔗 Salin Tautan"; }, 2500);
+          } catch {
+            copyBtn.textContent = "Berhasil!";
+          }
+        });
+      }
+    </script>
   </BaseLayout>
 ) : (
   <BaseLayout
@@ -175,6 +306,36 @@ const formattedDate = article?.published_at
     margin: 40px auto 70px;
   }
 
+  .article-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--muted, #64748b);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .article-breadcrumbs a {
+    color: var(--primary, #0b6bcb);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .article-breadcrumbs a:hover {
+    text-decoration: underline;
+  }
+
+  .breadcrumb-separator {
+    color: #cbd5e1;
+    font-size: 12px;
+  }
+
+  .breadcrumb-current {
+    color: var(--text, #1e293b);
+    font-weight: 600;
+  }
+
   .back-link,
   .back-bottom {
     display: inline-block;
@@ -189,8 +350,64 @@ const formattedDate = article?.published_at
     text-decoration: underline;
   }
 
+  .article-share {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 32px 0 20px;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    flex-wrap: wrap;
+  }
+
+  .share-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted, #64748b);
+    margin-right: 4px;
+  }
+
+  .btn-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 650;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  .btn-share:active {
+    transform: scale(0.97);
+  }
+
+  .btn-share-wa {
+    background: #25d366;
+    color: #ffffff;
+  }
+
+  .btn-share-wa:hover {
+    opacity: 0.9;
+  }
+
+  .btn-share-copy {
+    background: #ffffff;
+    border: 1px solid var(--border, #cbd5e1);
+    color: var(--text, #334155);
+  }
+
+  .btn-share-copy:hover {
+    background: #f1f5f9;
+  }
+
   .article {
-    margin-top: 28px;
+    margin-top: 12px;
     padding: 30px;
     border: 1px solid var(--border, #e2e8f0);
     border-radius: 18px;
@@ -304,6 +521,118 @@ const formattedDate = article?.published_at
     color: white;
     font-weight: 700;
     text-decoration: none;
+  }
+
+  /* Related News Section */
+  .related-news-section {
+    margin-top: 48px;
+    padding-top: 36px;
+    border-top: 1px solid var(--border, #e2e8f0);
+  }
+
+  .related-news-header {
+    margin-bottom: 24px;
+  }
+
+  .related-news-header h2 {
+    margin: 0 0 6px;
+    font-size: clamp(20px, 3.5vw, 24px);
+    font-weight: 800;
+    color: var(--text, #0f172a);
+    letter-spacing: -0.5px;
+  }
+
+  .related-news-header p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted, #64748b);
+  }
+
+  .related-news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 18px;
+  }
+
+  .related-news-card {
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--surface, #fff);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .related-news-card:hover {
+    transform: translateY(-3px);
+    border-color: #b9d7f8;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .related-card-link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .related-card-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #f1f5f9;
+  }
+
+  .related-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .related-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+  }
+
+  .related-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .related-category-badge {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .related-card-body h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--text, #0f172a);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .related-card-body time {
+    margin-top: auto;
+    font-size: 12px;
+    color: var(--muted, #64748b);
   }
 
   @media (max-width: 600px) {

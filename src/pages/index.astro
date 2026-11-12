@@ -70,6 +70,83 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
     <p class="hero-note">
       Selalu periksa informasi dan tautan rekrutmen resmi sebelum melamar.
     </p>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-number">1.500+</span>
+        <span class="stat-label">Lowongan Aktif</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-number">400+</span>
+        <span class="stat-label">Perusahaan Resmi</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-number">38</span>
+        <span class="stat-label">Provinsi Indonesia</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-number">100%</span>
+        <span class="stat-label">Bebas Pungli / Gratis</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section categories-section">
+  <div class="container">
+    <div class="section-heading">
+      <div>
+        <h2>Kategori Industri Populer</h2>
+        <p>Jelajahi lowongan kerja berdasarkan sektor industri utama.</p>
+      </div>
+    </div>
+    <div class="category-grid">
+      <button type="button" class="category-chip" data-query="Operator Produksi">
+        <span class="cat-icon">🏭</span>
+        <span class="cat-info">
+          <strong>Manufaktur & Pabrik</strong>
+          <small>Operator, QA, Teknisi</small>
+        </span>
+      </button>
+      <button type="button" class="category-chip" data-query="Gudang">
+        <span class="cat-icon">📦</span>
+        <span class="cat-info">
+          <strong>Gudang & Logistik</strong>
+          <small>Staff Gudang, Driver, Packer</small>
+        </span>
+      </button>
+      <button type="button" class="category-chip" data-query="Administrasi">
+        <span class="cat-icon">💼</span>
+        <span class="cat-info">
+          <strong>Administrasi & Kantor</strong>
+          <small>Admin, Data Entry, HR</small>
+        </span>
+      </button>
+      <button type="button" class="category-chip" data-query="Sales">
+        <span class="cat-icon">🛒</span>
+        <span class="cat-info">
+          <strong>Ritel & Penjualan</strong>
+          <small>Kasir, Pramuniaga, SPG</small>
+        </span>
+      </button>
+      <button type="button" class="category-chip" data-query="Teknisi">
+        <span class="cat-icon">🔧</span>
+        <span class="cat-info">
+          <strong>Teknik & Otomotif</strong>
+          <small>Mekanik, Maintenance</small>
+        </span>
+      </button>
+      <button type="button" class="category-chip" data-query="IT">
+        <span class="cat-icon">💻</span>
+        <span class="cat-info">
+          <strong>Teknologi & Digital</strong>
+          <small>Staff IT, Desain, Sosmed</small>
+        </span>
+      </button>
+    </div>
   </div>
 </section>
 
@@ -168,27 +245,54 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
 
   </main>  <footer class="site-footer">
     <div class="container">
-      <div class="footer-inner">
-        <div>
+      <div class="footer-columns">
+        <div class="footer-col brand-col">
           <a class="brand" href="/">
             <span class="brand-mark">I</span>
             <span>Info<span>Loker</span></span>
           </a>
           <p class="footer-description">
-            Informasi lowongan kerja yang terstruktur dan mudah ditelusuri.
+            Portal informasi lowongan kerja resmi di Indonesia. Dihubungkan dengan data rekrutmen terpercaya untuk karir yang transparan, aman, dan bebas biaya.
           </p>
-        </div>    <nav class="footer-links" aria-label="Navigasi footer">
-      <a href="#tentang">Tentang</a>
-      <a href="#panduan">Panduan Melamar</a>
-    </nav>
-  </div>
+          <div class="footer-badge">🛡️ Bebas Pungutan Biaya 100%</div>
+        </div>
 
-  <div class="footer-bottom">
-    © {new Date().getFullYear()} InfoLoker. Periksa informasi melalui
-    sumber rekrutmen resmi.
-  </div>
-</div>
+        <div class="footer-col">
+          <h4>Navigasi Portal</h4>
+          <ul class="footer-nav-list">
+            <li><a href="/lowongan/">Cari Lowongan Kerja</a></li>
+            <li><a href="/berita/">Berita Dunia Kerja</a></li>
+            <li><a href="#tentang">Tentang InfoLoker</a></li>
+            <li><a href="#panduan">Panduan Anti-Penipuan</a></li>
+          </ul>
+        </div>
 
+        <div class="footer-col">
+          <h4>Kategori Lowongan</h4>
+          <ul class="footer-nav-list">
+            <li><a href="/lowongan/?q=Operator">Operator Produksi</a></li>
+            <li><a href="/lowongan/?q=Gudang">Logistik & Gudang</a></li>
+            <li><a href="/lowongan/?q=Admin">Administrasi Kantor</a></li>
+            <li><a href="/lowongan/?q=Sales">Ritel & Pemasaran</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Verifikasi & Regulasi</h4>
+          <p class="footer-text-muted">
+            InfoLoker tidak pernah memungut biaya apapun dari pelamar kerja. Waspadai segala bentuk penipuan tiket travel atau rekrutmen berbayar.
+          </p>
+          <a href="https://kemnaker.go.id" target="_blank" rel="noopener noreferrer" class="footer-external-link">
+            Situs Resmi Kemnaker RI ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© {new Date().getFullYear()} InfoLoker Indonesia. Hak cipta dilindungi.</p>
+        <p class="footer-subtext">Informasi bersumber dari portal resmi rekrutmen perusahaan dan Karirhub Kemnaker.</p>
+      </div>
+    </div>
   </footer>  <script>
     import { supabase } from "../lib/supabase";
     import { setupLocationFilters } from "../scripts/location-filter";
@@ -231,14 +335,97 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
       });
     }
 
+    function renderSkeletons(count = 6) {
+      if (!jobList) return;
+      jobList.replaceChildren();
+
+      for (let i = 0; i < count; i++) {
+        const card = document.createElement("div");
+        card.className = "job-skeleton-card";
+
+        const header = document.createElement("div");
+        header.className = "job-skeleton-header";
+
+        const avatar = document.createElement("div");
+        avatar.className = "skeleton job-skeleton-avatar";
+
+        const headerText = document.createElement("div");
+        headerText.style.display = "flex";
+        headerText.style.flexDirection = "column";
+        headerText.style.gap = "8px";
+        headerText.style.flex = "1";
+
+        const title = document.createElement("div");
+        title.className = "skeleton job-skeleton-title";
+
+        const company = document.createElement("div");
+        company.className = "skeleton job-skeleton-text";
+
+        headerText.append(title, company);
+        header.append(avatar, headerText);
+
+        const badges = document.createElement("div");
+        badges.className = "job-skeleton-badges";
+        const b1 = document.createElement("div");
+        b1.className = "skeleton job-skeleton-badge";
+        const b2 = document.createElement("div");
+        b2.className = "skeleton job-skeleton-badge";
+        badges.append(b1, b2);
+
+        const desc = document.createElement("div");
+        desc.className = "skeleton job-skeleton-desc";
+
+        const footer = document.createElement("div");
+        footer.className = "job-skeleton-footer";
+        const link = document.createElement("div");
+        link.className = "skeleton job-skeleton-text";
+        link.style.width = "40%";
+        const btn = document.createElement("div");
+        btn.className = "skeleton job-skeleton-btn";
+        footer.append(link, btn);
+
+        card.append(header, badges, desc, footer);
+        jobList.append(card);
+      }
+    }
+
     function renderJobs(items: Job[]) {
       if (!jobList || !jobStatus) return;
 
       jobList.replaceChildren();
 
       if (items.length === 0) {
-        jobStatus.textContent =
-          "Belum ada lowongan yang cocok. Coba kata kunci atau lokasi lain.";
+        jobStatus.textContent = "0 lowongan ditemukan.";
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+
+        const icon = document.createElement("div");
+        icon.className = "empty-state-icon";
+        icon.textContent = "🔍";
+
+        const title = document.createElement("h3");
+        title.className = "empty-state-title";
+        title.textContent = "Belum ada lowongan yang sesuai";
+
+        const desc = document.createElement("p");
+        desc.className = "empty-state-desc";
+        desc.textContent = "Coba gunakan kata kunci lain atau pilih wilayah yang lebih luas.";
+
+        const resetBtn = document.createElement("button");
+        resetBtn.className = "btn btn-secondary";
+        resetBtn.textContent = "Reset Pencarian";
+        resetBtn.type = "button";
+        resetBtn.onclick = () => {
+          if (keywordInput) keywordInput.value = "";
+          if (provinceInput) {
+            provinceInput.value = "";
+            provinceInput.dispatchEvent(new Event("change"));
+          }
+          filterJobs();
+        };
+
+        empty.append(icon, title, desc, resetBtn);
+        jobList.append(empty);
         return;
       }
 
@@ -247,9 +434,6 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
       for (const job of items) {
         const card = document.createElement("article");
         card.className = "job-card";
-
-        const title = document.createElement("h3");
-        title.textContent = job.title;
 
         const company = document.createElement("div");
         company.className = "job-company";
@@ -284,14 +468,32 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
 
         company.append(logo, companyName);
 
-        const location = document.createElement("p");
-        location.textContent = `📍 ${job.location}`;
+        const title = document.createElement("h3");
+        title.textContent = job.title;
 
-        const type = document.createElement("p");
-        type.textContent = job.employment_type || "Jenis pekerjaan tidak dicantumkan";
+        const metaRow = document.createElement("div");
+        metaRow.className = "job-meta-row";
 
-        const date = document.createElement("p");
-        date.textContent = `Dipublikasikan: ${formatDate(job.published_at)}`;
+        const locBadge = document.createElement("span");
+        locBadge.className = "job-badge job-badge-location";
+        locBadge.textContent = `📍 ${job.location}`;
+
+        const typeBadge = document.createElement("span");
+        typeBadge.className = "job-badge job-badge-type";
+        typeBadge.textContent = job.employment_type || "Penuh Waktu";
+
+        const verifiedBadge = document.createElement("span");
+        verifiedBadge.className = "job-badge job-badge-verified";
+        verifiedBadge.textContent = "✓ Resmi Kemnaker";
+
+        metaRow.append(locBadge, typeBadge, verifiedBadge);
+
+        if (job.published_at) {
+          const dateBadge = document.createElement("span");
+          dateBadge.className = "job-badge job-badge-date";
+          dateBadge.textContent = `⏱ ${formatDate(job.published_at)}`;
+          metaRow.append(dateBadge);
+        }
 
         const cleanDescription = (job.description || "")
           .replace(/\\n/g, "\n")
@@ -300,43 +502,47 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
 
         const description = document.createElement("p");
         description.textContent =
-          cleanDescription.length > 180
-            ? `${cleanDescription.slice(0, 180).trimEnd()}…`
+          cleanDescription.length > 170
+            ? `${cleanDescription.slice(0, 170).trimEnd()}…`
             : cleanDescription;
         description.className = "job-description";
+
+        const actions = document.createElement("div");
+        actions.className = "job-card-actions";
+
+        const detail = document.createElement("a");
+        detail.href = `/lowongan/detail/?slug=${encodeURIComponent(job.slug)}`;
+        detail.textContent = "Lihat detail →";
+        detail.className = "job-source";
 
         const source = document.createElement("a");
         source.href = job.source_url;
         source.target = "_blank";
         source.rel = "noopener noreferrer";
-        source.textContent = "Periksa sumber resmi ↗";
+        source.textContent = "Sumber resmi ↗";
         source.className = "job-source";
+        source.style.color = "var(--muted)";
+        source.style.fontSize = "13px";
 
-        const detail = document.createElement("a");
-        detail.href = `/lowongan/detail/?slug=${encodeURIComponent(job.slug)}`;
-        detail.textContent = "Lihat detail lowongan →";
-        detail.className = "job-source";
-
-        card.append(
-          title,
-          company,
-          location,
-          type,
-          date,
-          description,
-          detail,
-          source
-        );
+        actions.append(detail, source);
 
         if (job.apply_url) {
           const apply = document.createElement("a");
           apply.href = job.apply_url;
           apply.target = "_blank";
           apply.rel = "noopener noreferrer";
-          apply.textContent = "Lamar sekarang";
+          apply.textContent = "Lamar ↗";
           apply.className = "btn btn-primary";
-          card.append(apply);
+          actions.append(apply);
         }
+
+        card.append(
+          company,
+          title,
+          metaRow,
+          description,
+          actions
+        );
 
         jobList.append(card);
       }
@@ -373,6 +579,9 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
     async function loadJobs() {
       if (!jobStatus) return;
 
+      jobStatus.textContent = "Memuat lowongan terbaru...";
+      renderSkeletons(6);
+
       const { data, error } = await supabase
         .from("jobs")
         .select(
@@ -384,6 +593,7 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
 
       if (error) {
         console.error("Gagal mengambil lowongan:", error.message);
+        if (jobList) jobList.replaceChildren();
         jobStatus.textContent =
           "Lowongan belum dapat dimuat. Periksa konfigurasi Supabase dan kebijakan akses tabel jobs.";
         return;
@@ -397,6 +607,17 @@ description="Temukan lowongan kerja terbaru berdasarkan posisi, perusahaan, dan 
       event.preventDefault();
       filterJobs();
       document.querySelector("#lowongan")?.scrollIntoView({ behavior: "smooth" });
+    });
+
+    document.querySelectorAll<HTMLButtonElement>(".category-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const query = btn.getAttribute("data-query") || "";
+        if (keywordInput) {
+          keywordInput.value = query;
+          filterJobs();
+          document.querySelector("#lowongan")?.scrollIntoView({ behavior: "smooth" });
+        }
+      });
     });
 
     void setupLocationFilters(provinceInput!, cityInput!, districtInput!)

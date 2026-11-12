@@ -243,6 +243,41 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     list.appendChild(card);
   }
 
+  function renderNewsSkeletons(count = 6) {
+    if (!list) return;
+    list.replaceChildren();
+
+    for (let i = 0; i < count; i++) {
+      const card = createElement("div", "news-card skeleton-news-card");
+      const img = createElement("div", "skeleton");
+      img.style.width = "100%";
+      img.style.aspectRatio = "16 / 9";
+
+      const body = createElement("div", "news-card-body");
+      body.style.display = "flex";
+      body.style.flexDirection = "column";
+      body.style.gap = "10px";
+      body.style.padding = "20px";
+
+      const badge = createElement("div", "skeleton");
+      badge.style.width = "75px";
+      badge.style.height = "22px";
+      badge.style.borderRadius = "9999px";
+
+      const title = createElement("div", "skeleton");
+      title.style.width = "90%";
+      title.style.height = "24px";
+
+      const text = createElement("div", "skeleton");
+      text.style.width = "100%";
+      text.style.height = "40px";
+
+      body.append(badge, title, text);
+      card.append(img, body);
+      list.append(card);
+    }
+  }
+
   const PAGE_SIZE = 12;
   let currentPage = 0;
   let totalNews = 0;
@@ -262,6 +297,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     isLoading = true;
     const thisRequest = requestVersion;
+
+    if (currentPage === 0) {
+      status.textContent = "Memuat berita terbaru...";
+      renderNewsSkeletons(6);
+    }
 
     if (loadMoreButton) {
       loadMoreButton.disabled = true;
@@ -290,11 +330,16 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       if (!data || data.length === 0) {
         if (currentPage === 0) {
+          list.replaceChildren();
           status.textContent = "Belum ada berita yang diterbitkan.";
         }
 
         if (loadMoreButton) loadMoreButton.hidden = true;
         return;
+      }
+
+      if (currentPage === 0) {
+        list.replaceChildren();
       }
 
       data.forEach((article) => renderNews(article));
