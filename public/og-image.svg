@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="ogBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="60%" stop-color="#071936" />
+      <stop offset="100%" stop-color="#030c1d" />
+    </linearGradient>
+    <linearGradient id="ogBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="55%" stop-color="#0b6bcb" />
+      <stop offset="100%" stop-color="#0755a5" />
+    </linearGradient>
+    <linearGradient id="ogGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#ogBg)" />
+
+  <!-- Subtle glow rings -->
+  <circle cx="1100" cy="100" r="300" fill="#0b6bcb" opacity="0.12" filter="blur(60px)" />
+  <circle cx="100" cy="500" r="260" fill="#0284c7" opacity="0.08" filter="blur(50px)" />
+
+  <!-- Left Icon (180x180) -->
+  <g transform="translate(100, 150)">
+    <rect width="180" height="180" rx="46" fill="url(#ogBlue)" />
+    <!-- Briefcase Symbol -->
+    <g transform="translate(24, 20) scale(0.26)">
+      <path d="M194 150 C194 122 216 98 244 98 L268 98 C296 98 318 122 318 150 L318 174 L194 174 Z" fill="none" stroke="#ffffff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+      <rect x="92" y="170" width="328" height="240" rx="44" fill="#ffffff" />
+      <path d="M92 232 L212 232 C222 232 230 240 230 250 C230 260 238 268 248 268 L264 268 C274 268 282 260 282 250 C282 240 290 232 300 232 L420 232" fill="none" stroke="#e2e8f0" stroke-width="10" stroke-linecap="round" />
+      <circle cx="256" cy="316" r="56" fill="url(#ogBlue)" />
+      <rect x="230" y="290" width="12" height="52" rx="6" fill="#ffffff" />
+      <path d="M239 316 L273 288" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+      <path d="M239 316 L276 344" stroke="#38bdf8" stroke-width="12" stroke-linecap="round" />
+      <circle cx="388" cy="174" r="32" fill="url(#ogGreen)" stroke="#ffffff" stroke-width="8" />
+      <path d="M374 174 L384 184 L402 164" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+  </g>
+
+  <!-- Typography -->
+  <g transform="translate(320, 200)">
+    <!-- Pill Badge -->
+    <rect width="210" height="36" rx="18" fill="#1e293b" stroke="#334155" />
+    <circle cx="22" cy="18" r="6" fill="#10b981" />
+    <text x="36" y="23" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="14" font-weight="700" fill="#94a3b8">PORTAL RESMI &amp; TERPERCAYA</text>
+
+    <!-- Main Title -->
+    <text x="0" y="90" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="58" font-weight="800" fill="#ffffff" letter-spacing="-1">Info Loker <tspan fill="#38bdf8">Kita</tspan></text>
+
+    <!-- Subtitle -->
+    <text x="0" y="145" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="24" font-weight="500" fill="#94a3b8">Informasi Lowongan Kerja Resmi &amp; Terverifikasi Seluruh Indonesia</text>
+
+    <!-- Highlights -->
+    <g transform="translate(0, 195)">
+      <text x="0" y="0" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="19" font-weight="600" fill="#38bdf8">🛡️ 100% Bebas Biaya</text>
+      <text x="230" y="0" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="19" font-weight="600" fill="#10b981">✓ Sumber Resmi BUMN &amp; Swasta</text>
+      <text x="590" y="0" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="19" font-weight="600" fill="#f8fafc">📍 38 Provinsi</text>
+    </g>
+  </g>
+
+  <!-- Bottom Bar -->
+  <rect y="620" width="1200" height="10" fill="url(#ogBlue)" />
+</svg>

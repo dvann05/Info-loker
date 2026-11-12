@@ -2,16 +2,15 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
 <BaseLayout
-title="Detail Lowongan Kerja | InfoLoker"
-description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
-
+  title="Detail Lowongan Kerja | Info Loker Kita"
+  description="Informasi detail lowongan kerja dan tautan rekrutmen resmi di Info Loker Kita."
 >
 
   <header class="site-header">
     <div class="container navbar">
-      <a class="brand" href="/">
-        <span class="brand-mark">I</span>
-        <span>Info<span>Loker</span></span>
+      <a class="brand" href="/" aria-label="Info Loker Kita beranda">
+        <img src="/favicon.svg" alt="Logo Info Loker Kita" width="38" height="38" class="brand-logo-icon" />
+        <span>Info Loker <span>Kita</span></span>
       </a>
       <nav class="nav-links">
         <a href="/">Beranda</a>
@@ -89,7 +88,41 @@ description="Informasi detail lowongan kerja dan tautan rekrutmen resmi."
         return;
       }
 
-      document.title = `${job.title} — ${job.company_name || 'InfoLoker'}`;
+      const comp = job.company_name ? ` di ${job.company_name}` : "";
+      document.title = `${job.title}${comp} — Info Loker Kita`;
+
+      // Inject Schema JobPosting for Google Jobs
+      try {
+        const jobSchema = {
+          "@context": "https://schema.org",
+          "@type": "JobPosting",
+          title: job.title,
+          description: job.description || job.title,
+          datePosted: job.published_at || new Date().toISOString(),
+          validThrough: job.deadline ? `${job.deadline}T23:59:59Z` : undefined,
+          employmentType: job.employment_type || "FULL_TIME",
+          hiringOrganization: {
+            "@type": "Organization",
+            name: job.company_name || "Perusahaan",
+            logo: job.company_logo || undefined
+          },
+          jobLocation: {
+            "@type": "Place",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: job.city || job.location,
+              addressRegion: job.province || "Indonesia",
+              addressCountry: "ID"
+            }
+          }
+        };
+        const scriptElem = document.createElement("script");
+        scriptElem.type = "application/ld+json";
+        scriptElem.textContent = JSON.stringify(jobSchema);
+        document.head.appendChild(scriptElem);
+      } catch (err) {
+        console.error("Gagal menambahkan job schema", err);
+      }
 
       // Header container
       const headerBox = document.createElement("div");

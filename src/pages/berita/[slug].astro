@@ -134,11 +134,11 @@ const articleSchema = article ? {
   inLanguage: "id-ID",
   author: {
     "@type": "Organization",
-    name: article.source_name || "InfoLoker"
+    name: article.source_name || "Info Loker Kita"
   },
   publisher: {
     "@type": "Organization",
-    name: "InfoLoker",
+    name: "Info Loker Kita",
     logo: {
       "@type": "ImageObject",
       url: "https://infolokerkita.web.id/favicon.svg"
@@ -149,7 +149,7 @@ const articleSchema = article ? {
 
 {article && !error ? (
   <BaseLayout
-    title={`${article.title} — InfoLoker`}
+    title={`${article.title} — Info Loker Kita`}
     description={article.excerpt || article.title}
     ogImage={imageUrl || undefined}
     ogType="article"
@@ -286,7 +286,7 @@ const articleSchema = article ? {
   </BaseLayout>
 ) : (
   <BaseLayout
-    title="Berita Tidak Ditemukan — InfoLoker"
+    title="Berita Tidak Ditemukan — Info Loker Kita"
     description="Berita yang kamu cari tidak ditemukan."
   >
     <main class="not-found">

@@ -31,6 +31,12 @@ export async function GET() {
     });
   }
 
+  const { data: news } = await supabase
+    .from("news")
+    .select("slug, published_at")
+    .eq("status", "published")
+    .order("published_at", { ascending: false });
+
   const urls = [
     {
       loc: `${SITE_URL}/`,
@@ -40,10 +46,19 @@ export async function GET() {
       loc: `${SITE_URL}/lowongan/`,
       priority: "0.9",
     },
+    {
+      loc: `${SITE_URL}/berita/`,
+      priority: "0.9",
+    },
     ...(jobs || []).map((job) => ({
       loc: `${SITE_URL}/lowongan/detail/?slug=${encodeURIComponent(job.slug)}`,
       priority: "0.8",
       lastmod: job.published_at,
+    })),
+    ...(news || []).map((article) => ({
+      loc: `${SITE_URL}/berita/${encodeURIComponent(article.slug)}/`,
+      priority: "0.7",
+      lastmod: article.published_at,
     })),
   ];
 

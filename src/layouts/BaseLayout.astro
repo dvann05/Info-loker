@@ -9,20 +9,21 @@ interface Props {
 }
 
 const {
-  title = "InfoLoker — Temukan Pekerjaanmu",
-  description = "Temukan informasi lowongan kerja terbaru dari sumber resmi perusahaan.",
+  title = "Info Loker Kita — Temukan Lowongan Kerja Terbaru",
+  description = "Info Loker Kita adalah portal informasi lowongan kerja resmi dan terpercaya di Indonesia. Temukan info loker terbaru dari sumber terverifikasi.",
   ogImage,
   ogType = "website"
 } = Astro.props;
 
 const siteUrl = "https://infolokerkita.web.id";
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl).href;
-const socialImage = ogImage || `${siteUrl}/favicon.svg`;
+const socialImage = ogImage || `${siteUrl}/og-image.png`;
 
 const schema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "InfoLoker",
+  name: "Info Loker Kita",
+  alternateName: ["InfoLokerKita", "Info Loker", "InfoLoker"],
   url: `${siteUrl}/`,
   description,
   inLanguage: "id-ID",
@@ -42,6 +43,7 @@ const schema = {
 
     <meta name="theme-color" content="#0b6bcb" />
     <meta name="description" content={description} />
+    <meta name="keywords" content="info loker kita, info loker, infolokerkita, lowongan kerja indonesia, cari loker terbaru, loker bumn, loker fresh graduate" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta name="format-detection" content="telephone=no" />
 
@@ -54,12 +56,14 @@ const schema = {
 
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <title>{title}</title>
 
     <meta property="og:type" content={ogType} />
-    <meta property="og:site_name" content="InfoLoker" />
+    <meta property="og:site_name" content="Info Loker Kita" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
