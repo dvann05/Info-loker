@@ -125,8 +125,8 @@ class AIDataManagerAgent:
             local_db.log(self.name, f"Artikel [{slug}] sudah ada di Supabase, lewati.", level="WARN")
             return False
 
-        # Pastikan status default
-        article["status"] = article.get("status", "published")
+        # Pastikan status terbit
+        article["status"] = "published"
 
         # Format record
         record = {

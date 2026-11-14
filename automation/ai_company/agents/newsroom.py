@@ -133,7 +133,7 @@ Perkembangan pada sektor ini berpotensi membuka kesempatan kerja baru, baik di b
             "category": category,
             "source_name": source_name,
             "source_url": source_url,
-            "status": "draft", # Siap untuk persetujuan / verifikasi sebelum publish
+            "status": "published", # Dipublikasikan otomatis ke website InfoLoker
             "is_featured": False,
             "published_at": now_iso
         }

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#050811" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#22c55e" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="720" fill="url(#bg)" />
+
+  <!-- Grid decoration lines -->
+  <line x1="80" y1="0" x2="80" y2="720" stroke="#1f293d" stroke-width="1" stroke-opacity="0.4" />
+  <line x1="1200" y1="0" x2="1200" y2="720" stroke="#1f293d" stroke-width="1" stroke-opacity="0.4" />
+  <line x1="0" y1="120" x2="1280" y2="120" stroke="#1f293d" stroke-width="1" stroke-opacity="0.4" />
+  <line x1="0" y1="620" x2="1280" y2="620" stroke="#1f293d" stroke-width="1" stroke-opacity="0.4" />
+
+  <!-- Top bar accent -->
+  <rect x="0" y="0" width="1280" height="6" fill="url(#accent)" />
+
+  <!-- Category badge -->
+  <rect x="80" y="160" width="220" height="44" rx="22" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+  <text x="190" y="188" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#38bdf8" text-anchor="middle">Otomotif dan Kendaraan Listrik</text>
+
+  <!-- Title Text -->
+  <text x="80" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="46" font-weight="bold" fill="#ffffff">Pabrik BYD Subang Mempekerjakan</text>
+<text x="80" y="388" font-family="system-ui, -apple-system, sans-serif" font-size="46" font-weight="bold" fill="#ffffff">6.000 Orang, 90 Persen Pekerja WNI</text>
+
+
+  <!-- Footer Branding -->
+  <text x="80" y="650" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="#64748b">
+    INFOLOKERKITA <tspan fill="#38bdf8">MEDIA</tspan>
+  </text>
+  <text x="1200" y="650" font-family="system-ui, -apple-system, sans-serif" font-size="18" fill="#475569" text-anchor="end">
+    infolokerkita.web.id
+  </text>
+</svg>
