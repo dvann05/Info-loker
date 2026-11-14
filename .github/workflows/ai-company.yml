@@ -41,12 +41,12 @@ jobs:
       - name: Run AI Company Operations
         env:
           SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
+          python -m automation.ai_company.publish_single_article --sync-staged
           CYCLE="${{ github.event.inputs.cycle }}"
           if [ -z "$CYCLE" ]; then
             CYCLE="all"
