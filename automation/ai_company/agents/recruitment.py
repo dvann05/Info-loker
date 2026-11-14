@@ -4,7 +4,7 @@ import time
 import urllib.request
 import urllib.parse
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from automation.ai_company.core.database import supabase_client, local_db
 from automation.ai_company.core.task_queue import task_queue
 
@@ -28,24 +28,31 @@ class AIRecruitmentAgent:
             local_db.log(self.name, f"Gagal mengambil data Karirhub hal {page}: {e}", level="WARN")
             return []
 
-    def get_existing_slugs(self) -> set:
-        """Mengambil slug lowongan yang sudah ada di database untuk mencegah duplikasi."""
+    def get_existing_records(self) -> Tuple[set, set]:
+        """Mengambil slug dan pasangan (judul, perusahaan) yang sudah ada di database untuk mencegah duplikasi konten."""
         try:
-            rows = supabase_client.query_rows("jobs", "select=slug&limit=500&order=created_at.desc")
-            return {r["slug"] for r in rows if "slug" in r}
+            rows = supabase_client.query_rows("jobs", "select=slug,title,company_name&limit=500&order=created_at.desc")
+            slugs = {r["slug"] for r in rows if "slug" in r}
+            pairs = {
+                (re.sub(r"[^a-z0-9]", "", str(r.get("title", "")).lower()), 
+                 re.sub(r"[^a-z0-9]", "", str(r.get("company_name", "")).lower()))
+                for r in rows if r.get("title") and r.get("company_name")
+            }
+            return slugs, pairs
         except Exception as e:
-            local_db.log(self.name, f"Gagal memuat slug yang ada: {e}", level="WARN")
-            return set()
+            local_db.log(self.name, f"Gagal memuat data eksisting: {e}", level="WARN")
+            return set(), set()
 
     def discover_vacancies(self, target_count: int = 20, max_pages: int = 5) -> Dict[str, Any]:
         """Menjalankan proses pencarian lowongan kerja terpercaya."""
         start_time = time.time()
         local_db.log(self.name, f"Memulai pencarian lowongan kerja (target: {target_count})...")
 
-        existing_slugs = self.get_existing_slugs()
+        existing_slugs, existing_pairs = self.get_existing_records()
         discovered = []
         skipped_duplicate = 0
         pages_checked = 0
+        company_batch_counts = {}
 
         for page in range(1, max_pages + 1):
             pages_checked += 1
@@ -61,6 +68,20 @@ class AIRecruitmentAgent:
                 if not title or not company or not job_id:
                     continue
 
+                norm_title = re.sub(r"[^a-z0-9]", "", title.lower())
+                norm_company = re.sub(r"[^a-z0-9]", "", company.lower())
+                pair_key = (norm_title, norm_company)
+
+                # 1. Anti-Flood: Maksimal 2 lowongan per perusahaan dalam satu batch
+                if company_batch_counts.get(norm_company, 0) >= 2:
+                    skipped_duplicate += 1
+                    continue
+
+                # 2. Anti-Duplicate: Jika judul dan perusahaan yang sama persis sudah ada di database
+                if pair_key in existing_pairs:
+                    skipped_duplicate += 1
+                    continue
+
                 # Generate slug preview
                 raw_slug = f"{title}-{company}".lower()
                 clean_slug = re.sub(r"[^a-z0-9]+", "-", raw_slug).strip("-") + f"-{job_id}"
@@ -68,6 +89,11 @@ class AIRecruitmentAgent:
                 if clean_slug in existing_slugs:
                     skipped_duplicate += 1
                     continue
+
+                # Tandai sudah ada agar tidak masuk berulang kali
+                company_batch_counts[norm_company] = company_batch_counts.get(norm_company, 0) + 1
+                existing_pairs.add(pair_key)
+                existing_slugs.add(clean_slug)
 
                 discovered.append({
                     "raw_id": job_id,
