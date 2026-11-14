@@ -68,6 +68,7 @@ if (relatedArticles.length < 3) {
 
 const validUrl = (value: string | null) => {
   if (!value) return null;
+  if (value.startsWith("/")) return value;
 
   try {
     const url = new URL(value);
@@ -124,12 +125,16 @@ const formattedDate = article?.published_at
     }).format(new Date(article.published_at))
   : "Tanggal tidak tersedia";
 
+const fullImageUrl = imageUrl
+  ? (imageUrl.startsWith("/") ? `https://infolokerkita.web.id${imageUrl}` : imageUrl)
+  : undefined;
+
 const articleSchema = article ? {
   "@context": "https://schema.org",
   "@type": "NewsArticle",
   headline: article.title,
   description: article.excerpt || article.title,
-  image: imageUrl ? [imageUrl] : undefined,
+  image: fullImageUrl ? [fullImageUrl] : undefined,
   datePublished: article.published_at || undefined,
   inLanguage: "id-ID",
   author: {
@@ -151,7 +156,7 @@ const articleSchema = article ? {
   <BaseLayout
     title={`${article.title} — Info Loker Kita`}
     description={article.excerpt || article.title}
-    ogImage={imageUrl || undefined}
+    ogImage={fullImageUrl}
     ogType="article"
   >
     {articleSchema && (

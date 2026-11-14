@@ -111,6 +111,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   function validUrl(value: string | null) {
     if (!value) return null;
+    if (value.startsWith("/")) return value;
 
     try {
       const url = new URL(value);
