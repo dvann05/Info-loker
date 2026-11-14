@@ -1,7 +1,7 @@
 import re
 import urllib.parse
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from automation.ai_company.core.database import local_db
 
 SUSPICIOUS_KEYWORDS = [
