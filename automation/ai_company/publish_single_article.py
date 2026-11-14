@@ -98,6 +98,7 @@ def publish_article_data():
         supabase_client.insert_rows("news", [ARTICLE_DATA])
         print("\n🚀 BERHASIL! Artikel berhasil di-upload dan dipublikasikan langsung ke Supabase!")
     except Exception as e:
+        print(f"\n[DEBUG ERROR DETAIL]: {e}")
         err = str(e).lower()
         if "row-level security" in err or "401" in err or "403" in err:
             print("\n⚠️ Supabase RLS aktif (kunci Anon tidak diizinkan INSERT).")
