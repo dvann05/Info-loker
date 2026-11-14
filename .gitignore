@@ -23,3 +23,10 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# AI Company local runtime
+*.db
+*.lock
+*.pyc
+__pycache__/
+automation/ai_company/reports/*.md

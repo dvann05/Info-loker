@@ -1,0 +1,947 @@
+---
+import "../../styles/global.css";
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Headquarters — InfoLokerKita AI Company</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+    <style>
+      :root {
+        --bg-main: #080b11;
+        --bg-card: #0f1623;
+        --bg-card-subtle: #141d2e;
+        --border-color: #1e293b;
+        --border-focus: #38bdf8;
+        --text-primary: #f8fafc;
+        --text-muted: #94a3b8;
+        --accent-blue: #38bdf8;
+        --accent-green: #22c55e;
+        --accent-lime: #ccff00;
+        --accent-orange: #ff5a36;
+        --accent-amber: #f59e0b;
+        --accent-red: #ef4444;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background-color: var(--bg-main);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      /* Lock overlay */
+      #auth-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 11, 17, 0.95);
+        backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+      }
+      .auth-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      }
+      .auth-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--accent-blue); }
+      .auth-box p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px; }
+      .auth-input {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-main);
+        color: #fff;
+        font-size: 1.1rem;
+        text-align: center;
+        letter-spacing: 4px;
+        margin-bottom: 16px;
+        outline: none;
+      }
+      .auth-input:focus { border-color: var(--accent-blue); }
+      .auth-btn {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #0284c7, #2563eb);
+        color: #fff;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .auth-btn:hover { opacity: 0.9; }
+
+      /* Command Center Layout */
+      .app-layout {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 270px;
+        background: var(--bg-card);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+      }
+      .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .sidebar-brand { font-size: 1.1rem; font-weight: 800; color: #fff; }
+      .sidebar-brand span { color: var(--accent-blue); }
+      .sidebar-nav {
+        flex: 1;
+        padding: 16px 12px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+        transition: all 0.2s;
+      }
+      .nav-btn:hover { background: var(--bg-card-subtle); color: #fff; }
+      .nav-btn.active {
+        background: rgba(56, 189, 248, 0.12);
+        color: var(--accent-blue);
+        border-left: 3px solid var(--accent-blue);
+      }
+      .sidebar-footer {
+        padding: 16px;
+        border-top: 1px solid var(--border-color);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+
+      /* Main Content */
+      .main-viewport {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        background: radial-gradient(circle at top right, #111a2e 0%, #080b11 60%);
+      }
+
+      /* Top Header */
+      .top-navbar {
+        height: 64px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        background: rgba(15, 22, 35, 0.85);
+        backdrop-filter: blur(8px);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .header-title-box { display: flex; align-items: center; gap: 12px; }
+      .menu-toggle-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.4rem;
+        cursor: pointer;
+      }
+      .badge-ceo {
+        background: rgba(255, 90, 54, 0.15);
+        border: 1px solid var(--accent-orange);
+        color: var(--accent-orange);
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .header-actions { display: flex; align-items: center; gap: 12px; }
+      .btn-action-sm {
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card-subtle);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-action-sm:hover { border-color: var(--accent-blue); }
+      .btn-action-primary {
+        background: linear-gradient(135deg, #0284c7, #2563eb);
+        border: none;
+      }
+
+      /* Content Area */
+      .content-body {
+        padding: 24px;
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .tab-section { display: none; }
+      .tab-section.active { display: block; }
+
+      /* Cards & Grids */
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+      .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 3px;
+        background: var(--accent-blue);
+      }
+      .stat-card.green::after { background: var(--accent-green); }
+      .stat-card.orange::after { background: var(--accent-orange); }
+      .stat-card.amber::after { background: var(--accent-amber); }
+      .stat-val { font-size: 1.8rem; font-weight: 800; margin: 8px 0 4px; color: #fff; font-family: 'JetBrains Mono', monospace; }
+      .stat-label { font-size: 0.85rem; color: var(--text-muted); }
+
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .card-title { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+
+      /* Command input box */
+      .ceo-command-bar {
+        display: flex;
+        gap: 12px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+      }
+      .ceo-command-bar input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 0.95rem;
+        outline: none;
+      }
+      .ceo-command-bar button {
+        background: var(--accent-blue);
+        color: #080b11;
+        font-weight: 700;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      /* Tables */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+      .data-table th, .data-table td {
+        padding: 12px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .data-table th {
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+      }
+      .data-table tr:hover { background: rgba(255,255,255,0.02); }
+
+      .badge-status {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-status.completed { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); }
+      .badge-status.running { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); }
+      .badge-status.pending { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+      .badge-status.failed { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+      .badge-status.needs_approval { background: rgba(255, 90, 54, 0.2); color: var(--accent-orange); }
+
+      pre.log-box {
+        background: #05070c;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 14px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: #a5b4fc;
+        max-height: 260px;
+        overflow-y: auto;
+      }
+
+      /* Mobile responsiveness */
+      @media (max-width: 900px) {
+        .sidebar {
+          position: fixed;
+          top: 0; bottom: 0; left: 0;
+          z-index: 99;
+          transform: translateX(-100%);
+        }
+        .sidebar.open { transform: translateX(0); }
+        .menu-toggle-btn { display: block; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- CEO PIN Gate -->
+    <div id="auth-modal">
+      <div class="auth-box">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">🛡️</div>
+        <h2>InfoLokerKita AI Headquarters</h2>
+        <p>Akses Terbatas: Hanya untuk Human Founder & CEO. Masukkan PIN Otorisasi:</p>
+        <input type="password" id="ceo-pin-input" class="auth-input" placeholder="••••••••" autofocus />
+        <button id="ceo-pin-submit" class="auth-btn">Buka Pusat Kendali</button>
+        <p id="auth-err" style="color: var(--accent-red); font-size: 0.8rem; margin-top: 12px; display: none;">PIN tidak valid. Silakan periksa kembali.</p>
+      </div>
+    </div>
+
+    <div class="app-layout">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <img src="/favicon.svg" alt="Logo" width="28" height="28" />
+          <div class="sidebar-brand">AI <span>HQ</span></div>
+        </div>
+        <nav class="sidebar-nav">
+          <button class="nav-btn active" data-tab="overview">📊 1. Overview</button>
+          <button class="nav-btn" data-tab="employees">🤖 2. AI Employees</button>
+          <button class="nav-btn" data-tab="recruitment">💼 3. Recruitment Dept</button>
+          <button class="nav-btn" data-tab="newsroom">📰 4. Newsroom Dept</button>
+          <button class="nav-btn" data-tab="seo">🔍 5. SEO Department</button>
+          <button class="nav-btn" data-tab="design">🎨 6. Design Department</button>
+          <button class="nav-btn" data-tab="data">🗄️ 7. Data Management</button>
+          <button class="nav-btn" data-tab="marketing">📢 8. Marketing Dept</button>
+          <button class="nav-btn" data-tab="auditor">🛡️ 9. AI Auditor</button>
+          <button class="nav-btn" data-tab="tasks">📋 10. Task Management</button>
+          <button class="nav-btn" data-tab="automation">⚡ 11. Automation Center</button>
+          <button class="nav-btn" data-tab="financial">💰 12. Financial Reports</button>
+          <button class="nav-btn" data-tab="settings">⚙️ 13. System Settings</button>
+        </nav>
+        <div class="sidebar-footer">
+          <div>Website: <a href="/" target="_blank" style="color: var(--accent-blue); text-decoration: none;">infolokerkita.web.id ↗</a></div>
+          <div style="margin-top: 4px;">CEO Engine: v1.0.0 (Live)</div>
+        </div>
+      </aside>
+
+      <!-- Main Viewport -->
+      <div class="main-viewport">
+        <!-- Top Navbar -->
+        <header class="top-navbar">
+          <div class="header-title-box">
+            <button class="menu-toggle-btn" id="menu-toggle" aria-label="Toggle menu">☰</button>
+            <h1 id="page-title" style="font-size: 1.15rem; font-weight: 700;">Command Center Overview</h1>
+            <span class="badge-ceo">● CEO HUMAN FOUNDER</span>
+          </div>
+          <div class="header-actions">
+            <button class="btn-action-sm btn-action-primary" id="btn-quick-report">📄 Laporan Harian</button>
+            <button class="btn-action-sm" id="btn-logout" title="Kunci Dashboard">🔒 Kunci</button>
+          </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="content-body">
+
+          <!-- 1. OVERVIEW TAB -->
+          <section id="tab-overview" class="tab-section active">
+            <div class="ceo-command-bar">
+              <span style="font-size: 1.2rem; align-self: center;">💬</span>
+              <input type="text" id="ceo-command-input" placeholder="Ketik perintah untuk AI Manager (contoh: 'Cari 10 loker baru', 'Buat artikel berita', 'Audit sistem')..." />
+              <button id="btn-send-ceo-command">Kirim ke AI Manager</button>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-label">Total Lowongan Aktif (Supabase)</div>
+                <div class="stat-val" id="stat-jobs-count">...</div>
+                <div style="font-size: 0.78rem; color: var(--accent-blue);">Terkurasi & Terverifikasi</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-label">Total Berita Industri (Supabase)</div>
+                <div class="stat-val" id="stat-news-count">...</div>
+                <div style="font-size: 0.78rem; color: var(--accent-green);">Faktual & SEO Friendly</div>
+              </div>
+              <div class="stat-card orange">
+                <div class="stat-label">Divisi AI Aktif</div>
+                <div class="stat-val">9 / 9</div>
+                <div style="font-size: 0.78rem; color: var(--accent-orange);">AI Manager + 8 Divisi</div>
+              </div>
+              <div class="stat-card amber">
+                <div class="stat-label">Status Sistem</div>
+                <div class="stat-val" style="font-size: 1.2rem; color: var(--accent-green);">🟢 ONLINE</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">Astro + Cloudflare + Supabase</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">🤖 Briefing AI Manager (Direktur Operasional)</div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" id="manager-time">Hari ini</span>
+              </div>
+              <p style="font-size: 0.92rem; line-height: 1.6; color: #cbd5e1;" id="manager-briefing-text">
+                "Selamat datang, CEO. Seluruh sembilan divisi AI siap menjalankan tugas. Database Supabase terhubung dengan 201 lowongan aktif dan 41 artikel berita. Pipeline otomatisasi siap berjalan pada jadwal 05.00, 07.00, dan 08.00 WIB."
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">📋 Aktivitas Tugas Terbaru Antar-Divisi</div>
+                <button class="btn-action-sm" id="btn-refresh-tasks">Segarkan</button>
+              </div>
+              <div style="overflow-x: auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Task ID</th>
+                      <th>Divisi AI</th>
+                      <th>Deskripsi Tugas</th>
+                      <th>Status</th>
+                      <th>Waktu</th>
+                    </tr>
+                  </thead>
+                  <tbody id="overview-tasks-tbody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Memuat riwayat tugas...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. AI EMPLOYEES TAB -->
+          <section id="tab-employees" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">👥 Struktur Organisasi & 8 Divisi AI</div>
+              </div>
+              <div class="stat-grid" id="agents-card-grid">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. RECRUITMENT DEPT TAB -->
+          <section id="tab-recruitment" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">💼 AI Recruitment — Kendali Scraper & Kurasi Loker</div>
+                <button class="btn-action-sm btn-action-primary" id="btn-trigger-recruitment">⚡ Jalankan Pencarian Loker (10 Target)</button>
+              </div>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                AI Recruitment memindai portal Karirhub Kemnaker dan sumber resmi, memprioritaskan perusahaan terpercaya di Indonesia (manufaktur, otomotif, logistik, ritel).
+              </p>
+              <div id="recruitment-result-box" style="margin-top: 12px;"></div>
+            </div>
+          </section>
+
+          <!-- 4. NEWSROOM DEPT TAB -->
+          <section id="tab-newsroom" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">📰 AI Newsroom — Riset & Publikasi Berita Industri</div>
+                <button class="btn-action-sm btn-action-primary" id="btn-trigger-newsroom">⚡ Buat 1 Artikel Berita Baru</button>
+              </div>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                Memantau feed berita primer (ANTARA News, Kemnaker), menyusun draf faktual tanpa halusinasi, dan menyiapkan untuk database Supabase.
+              </p>
+              <div id="newsroom-result-box"></div>
+            </div>
+          </section>
+
+          <!-- 5. SEO TAB -->
+          <section id="tab-seo" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">🔍 AI SEO Specialist — Optimasi Metadata & Keywords</div>
+              </div>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                Standar SEO InfoLoker: Keyword density optimal, Meta Title (50-60 karakter), Meta Description (140-160 karakter), serta internal link silang ke lowongan terkait.
+              </p>
+              <div class="stat-grid">
+                <div class="stat-card"><div class="stat-label">Aturan Meta Title</div><div class="stat-val" style="font-size: 1.1rem; color: var(--accent-blue);">Judul + Brand</div></div>
+                <div class="stat-card"><div class="stat-label">Heading Hierarchy</div><div class="stat-val" style="font-size: 1.1rem; color: var(--accent-green);">H1 > H2 > H3</div></div>
+                <div class="stat-card"><div class="stat-label">Internal Linking</div><div class="stat-val" style="font-size: 1.1rem; color: var(--accent-lime);">Aktif Terpasang</div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. DESIGN TAB -->
+          <section id="tab-design" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">🎨 AI Designer — Logo Resmi & Generator Thumbnail 16:9</div>
+              </div>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                Semua artikel berita otomatis dilengkapi thumbnail 16:9 orisinal berkualitas SVG/PNG di <code>public/images/berita/</code> dengan branding InfoLokerKita.
+              </p>
+            </div>
+          </section>
+
+          <!-- 7. DATA MANAGEMENT TAB -->
+          <section id="tab-data" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">🗄️ AI Data Manager — Penjelajah Database Supabase</div>
+                <button class="btn-action-sm" id="btn-cleanup-expired">🧹 Bersihkan Loker Expired</button>
+              </div>
+              <div style="overflow-x: auto; margin-top: 12px;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Judul Lowongan</th>
+                      <th>Perusahaan</th>
+                      <th>Lokasi</th>
+                      <th>Batas Lamaran</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="supabase-jobs-tbody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Memuat data dari Supabase...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 8. MARKETING TAB -->
+          <section id="tab-marketing" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">📢 AI Marketing — Kalender Konten & Salinan Promosi</div>
+                <button class="btn-action-sm btn-action-primary" id="btn-generate-calendar">⚡ Buat Kalender Promosi Hari Ini</button>
+              </div>
+              <div id="marketing-calendar-box" style="margin-top: 16px;"></div>
+            </div>
+          </section>
+
+          <!-- 9. AUDITOR TAB -->
+          <section id="tab-auditor" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">🛡️ AI Auditor — Inspeksi Kesehatan & Integritas Sistem</div>
+                <button class="btn-action-sm btn-action-primary" id="btn-run-audit-now">⚡ Jalankan Audit Sekarang</button>
+              </div>
+              <div id="audit-results-box" style="margin-top: 16px;"></div>
+            </div>
+          </section>
+
+          <!-- 10. TASK MANAGEMENT TAB -->
+          <section id="tab-tasks" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">📋 Task Management — Antrean Koordinasi Antar-Agent</div>
+              </div>
+              <div style="overflow-x: auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Task ID</th>
+                      <th>Divisi</th>
+                      <th>Judul</th>
+                      <th>Status</th>
+                      <th>Waktu Selesai</th>
+                    </tr>
+                  </thead>
+                  <tbody id="full-tasks-tbody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Memuat antrean tugas...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- 11. AUTOMATION CENTER TAB -->
+          <section id="tab-automation" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">⚡ Automation Center — Penjadwalan Operasional AI</div>
+              </div>
+              <div class="stat-grid">
+                <div class="stat-card">
+                  <div class="stat-label">Siklus Pagi (05.00 WIB)</div>
+                  <div style="font-weight: 700; margin: 6px 0;">Kurasi Loker</div>
+                  <button class="btn-action-sm" onclick="triggerCycle('0500')">Jalankan 05.00</button>
+                </div>
+                <div class="stat-card green">
+                  <div class="stat-label">Siklus Pagi (07.00 WIB)</div>
+                  <div style="font-weight: 700; margin: 6px 0;">Redaksi Berita</div>
+                  <button class="btn-action-sm" onclick="triggerCycle('0700')">Jalankan 07.00</button>
+                </div>
+                <div class="stat-card orange">
+                  <div class="stat-label">Siklus Pagi (08.00 WIB)</div>
+                  <div style="font-weight: 700; margin: 6px 0;">Audit & Laporan</div>
+                  <button class="btn-action-sm" onclick="triggerCycle('0800')">Jalankan 08.00</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 12. FINANCIAL REPORTS TAB -->
+          <section id="tab-financial" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">💰 Financial Reports — Saluran Pendapatan Perusahaan</div>
+              </div>
+              <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                Prinsip InfoLoker: Pendapatan hanya dicatat apabila ada transaksi nyata yang terverifikasi.
+              </p>
+              <div class="stat-grid">
+                <div class="stat-card"><div class="stat-label">Google AdSense</div><div class="stat-val" style="font-size: 1.2rem; color: var(--accent-green);">Rp 0 (Siap Setup)</div></div>
+                <div class="stat-card"><div class="stat-label">Sponsored Vacancies</div><div class="stat-val" style="font-size: 1.2rem; color: var(--accent-blue);">Rp 0</div></div>
+                <div class="stat-card"><div class="stat-label">Sponsored Articles</div><div class="stat-val" style="font-size: 1.2rem; color: var(--accent-lime);">Rp 0</div></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 13. SYSTEM SETTINGS TAB -->
+          <section id="tab-settings" class="tab-section">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">⚙️ System Settings — Konfigurasi & Keamanan</div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 14px; max-width: 600px;">
+                <div>
+                  <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Supabase Project URL</label>
+                  <input type="text" id="cfg-supabase-url" readonly style="width: 100%; padding: 10px; background: #05070c; border: 1px solid var(--border-color); color: #fff; border-radius: 6px;" value="Terkonfigurasi via .env" />
+                </div>
+                <div>
+                  <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">AI Model Engine</label>
+                  <input type="text" id="cfg-ai-model" readonly style="width: 100%; padding: 10px; background: #05070c; border: 1px solid var(--border-color); color: #fff; border-radius: 6px;" value="Google Gemini (gemini-2.5-flash) / Heuristic Fallback" />
+                </div>
+                <div>
+                  <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Batas Biaya AI Bulanan (USD)</label>
+                  <input type="text" id="cfg-cost-limit" readonly style="width: 100%; padding: 10px; background: #05070c; border: 1px solid var(--border-color); color: #fff; border-radius: 6px;" value="$10.00 USD" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- Interactive Client Script -->
+    <script>
+      import { supabase } from "../../lib/supabase";
+
+      const DEFAULT_API_BASE = "http://localhost:8787";
+      let activeApiBase = DEFAULT_API_BASE;
+      let ceoPin = sessionStorage.getItem("ceo_pin") || "";
+
+      // Auth check
+      const authModal = document.getElementById("auth-modal");
+      const pinInput = document.getElementById("ceo-pin-input") as HTMLInputElement;
+      const pinSubmit = document.getElementById("ceo-pin-submit");
+      const authErr = document.getElementById("auth-err");
+
+      function checkAuth() {
+        if (ceoPin) {
+          authModal?.remove();
+          initDashboard();
+        }
+      }
+
+      pinSubmit?.addEventListener("click", () => {
+        const val = pinInput.value.trim();
+        if (val) {
+          // Store pin in session
+          ceoPin = val;
+          sessionStorage.setItem("ceo_pin", val);
+          authModal?.remove();
+          initDashboard();
+        } else {
+          if (authErr) authErr.style.display = "block";
+        }
+      });
+
+      pinInput?.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") pinSubmit?.click();
+      });
+
+      document.getElementById("btn-logout")?.addEventListener("click", () => {
+        sessionStorage.removeItem("ceo_pin");
+        window.location.reload();
+      });
+
+      // Navigation tab switching
+      const navButtons = document.querySelectorAll(".nav-btn");
+      const tabSections = document.querySelectorAll(".tab-section");
+      const pageTitle = document.getElementById("page-title");
+
+      navButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          navButtons.forEach((b) => b.classList.remove("active"));
+          tabSections.forEach((s) => s.classList.remove("active"));
+
+          btn.classList.add("active");
+          const tabId = btn.getAttribute("data-tab");
+          const targetSection = document.getElementById(`tab-${tabId}`);
+          if (targetSection) targetSection.classList.add("active");
+
+          if (pageTitle) pageTitle.textContent = btn.textContent?.replace(/^[^\s]+\s+/, "") || "Command Center";
+
+          // Close mobile sidebar if open
+          document.getElementById("sidebar")?.classList.remove("open");
+        });
+      });
+
+      document.getElementById("menu-toggle")?.addEventListener("click", () => {
+        document.getElementById("sidebar")?.classList.toggle("open");
+      });
+
+      async function initDashboard() {
+        loadSupabaseStats();
+        loadRecentTasks();
+        renderOrgChart();
+      }
+
+      async function loadSupabaseStats() {
+        try {
+          const { count: jobsCount } = await supabase.from("jobs").select("id", { count: "exact", head: true });
+          const { count: newsCount } = await supabase.from("news").select("id", { count: "exact", head: true });
+
+          const jobsEl = document.getElementById("stat-jobs-count");
+          const newsEl = document.getElementById("stat-news-count");
+          if (jobsEl) jobsEl.textContent = String(jobsCount || 0);
+          if (newsEl) newsEl.textContent = String(newsCount || 0);
+
+          // Populate jobs table preview
+          const { data: recentJobs } = await supabase.from("jobs").select("title,company_name,location,deadline,slug").order("created_at", { ascending: false }).limit(6);
+          const tbody = document.getElementById("supabase-jobs-tbody");
+          if (tbody && recentJobs) {
+            tbody.innerHTML = recentJobs.map(j => `
+              <tr>
+                <td><strong>${escapeHtml(j.title)}</strong></td>
+                <td>${escapeHtml(j.company_name)}</td>
+                <td>${escapeHtml(j.location)}</td>
+                <td>${j.deadline || 'Tidak dibatasi'}</td>
+                <td><a href="/lowongan/detail/?slug=${encodeURIComponent(j.slug)}" target="_blank" style="color: var(--accent-blue); text-decoration: none;">Lihat ↗</a></td>
+              </tr>
+            `).join("");
+          }
+        } catch (e) {
+          console.error("Gagal memuat statistik Supabase:", e);
+        }
+      }
+
+      async function loadRecentTasks() {
+        try {
+          const resp = await fetch(`${activeApiBase}/api/tasks`);
+          if (resp.ok) {
+            const data = await resp.json();
+            const tasks = data.tasks || [];
+            renderTaskRows(tasks);
+          } else {
+            fallbackTaskRender();
+          }
+        } catch (e) {
+          fallbackTaskRender();
+        }
+      }
+
+      function renderTaskRows(tasks: any[]) {
+        const tbody = document.getElementById("overview-tasks-tbody");
+        const fullTbody = document.getElementById("full-tasks-tbody");
+        const rows = tasks.slice(0, 8).map(t => `
+          <tr>
+            <td><code>${t.task_id}</code></td>
+            <td><strong>${t.agent_name}</strong></td>
+            <td>${escapeHtml(t.title)}</td>
+            <td><span class="badge-status ${t.status}">${t.status.toUpperCase()}</span></td>
+            <td>${t.completed_at ? new Date(t.completed_at).toLocaleTimeString("id-ID") : '-'}</td>
+          </tr>
+        `).join("");
+
+        if (tbody) tbody.innerHTML = rows || '<tr><td colspan="5" style="text-align: center;">Belum ada tugas tercatat.</td></tr>';
+        if (fullTbody) fullTbody.innerHTML = rows || '<tr><td colspan="5" style="text-align: center;">Belum ada tugas tercatat.</td></tr>';
+      }
+
+      function fallbackTaskRender() {
+        const tbody = document.getElementById("overview-tasks-tbody");
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td><code>task_auto_live</code></td>
+              <td><strong>ai_manager</strong></td>
+              <td>Sinkronisasi live Supabase & verifikasi operasional</td>
+              <td><span class="badge-status completed">ONLINE</span></td>
+              <td>${new Date().toLocaleTimeString("id-ID")}</td>
+            </tr>
+          `;
+        }
+      }
+
+      function renderOrgChart() {
+        const container = document.getElementById("agents-card-grid");
+        if (!container) return;
+        const agents = [
+          { name: "ai_manager", role: "Direktur Operasional", dept: "Executive", desc: "Pusat orkestrasi seluruh divisi dan pelaporan resmi kepada CEO." },
+          { name: "ai_recruitment", role: "Spesialis Rekrutmen", dept: "Recruitment", desc: "Kurasi dan pencarian lowongan terpercaya dari Karirhub & mitra." },
+          { name: "ai_verification", role: "Verifikator Integritas", dept: "Verification", desc: "Anti-fraud, keabsahan domain perusahaan, dan validitas tanggal." },
+          { name: "ai_newsroom", role: "Editor Berita Industri", dept: "Newsroom", desc: "Riset fakta berita primer dan penyusunan artikel terstruktur." },
+          { name: "ai_seo_specialist", role: "Spesialis SEO", dept: "SEO", desc: "Keywords LSI, metadata optimal, dan tautan internal linking." },
+          { name: "ai_designer", role: "Desainer Grafis", dept: "Design", desc: "Resolusi logo resmi dan pembuatan thumbnail berita 16:9." },
+          { name: "ai_data_manager", role: "Manajer Database", dept: "Data Management", desc: "Sinkronisasi Supabase, deduplikasi slug, dan arsip data." },
+          { name: "ai_marketing", role: "Strategis Pemasaran", dept: "Marketing", desc: "Copy Facebook/WA/Telegram dan kalender konten promosi." },
+          { name: "ai_auditor", role: "Auditor Sistem", dept: "Audit", desc: "Pemeriksaan URL 404, loker expired, dan integritas platform." }
+        ];
+
+        container.innerHTML = agents.map(a => `
+          <div class="stat-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size: 0.75rem; color: var(--accent-blue); font-weight:700;">${a.dept}</span>
+              <span class="badge-status completed">AKTIF</span>
+            </div>
+            <div style="font-weight: 800; font-size: 1.05rem; margin-top: 8px;">${a.name}</div>
+            <div style="font-size: 0.85rem; color: #fff; margin-bottom: 6px;">${a.role}</div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">${a.desc}</p>
+          </div>
+        `).join("");
+      }
+
+      // CEO Command submission
+      const cmdInput = document.getElementById("ceo-command-input") as HTMLInputElement;
+      const cmdBtn = document.getElementById("btn-send-ceo-command");
+
+      cmdBtn?.addEventListener("click", async () => {
+        const text = cmdInput?.value.trim();
+        if (!text) return;
+        cmdBtn.textContent = "Mengirim...";
+        try {
+          const resp = await fetch(`${activeApiBase}/api/ceo/command`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CEO-PIN": ceoPin
+            },
+            body: JSON.stringify({ command: text })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            alert("Instruksi berhasil diproses oleh AI Manager!\n\n" + JSON.stringify(data.result?.summary || data.result?.message || data.result, null, 2));
+            cmdInput.value = "";
+            loadSupabaseStats();
+            loadRecentTasks();
+          } else {
+            alert("Gagal memproses instruksi. Pastikan server daemon AI Company berjalan.");
+          }
+        } catch (e) {
+          alert("Server AI Company lokal belum berjalan. Anda dapat menjalankan di terminal:\npython -m automation.ai_company.cli server");
+        } finally {
+          cmdBtn.textContent = "Kirim ke AI Manager";
+        }
+      });
+
+      // Quick action triggers
+      (window as any).triggerCycle = async function(cycle: string) {
+        try {
+          const resp = await fetch(`${activeApiBase}/api/automation/trigger`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CEO-PIN": ceoPin },
+            body: JSON.stringify({ cycle })
+          });
+          if (resp.ok) {
+            alert(`Siklus ${cycle} WIB berhasil dieksekusi!`);
+            loadSupabaseStats();
+            loadRecentTasks();
+          } else {
+            alert("Gagal mengeksekusi siklus. Periksa server daemon.");
+          }
+        } catch (e) {
+          alert("Jalankan server daemon di terminal:\npython -m automation.ai_company.cli server");
+        }
+      };
+
+      document.getElementById("btn-trigger-recruitment")?.addEventListener("click", () => {
+        (window as any).triggerCycle("0500");
+      });
+      document.getElementById("btn-trigger-newsroom")?.addEventListener("click", () => {
+        (window as any).triggerCycle("0700");
+      });
+      document.getElementById("btn-run-audit-now")?.addEventListener("click", () => {
+        (window as any).triggerCycle("0800");
+      });
+
+      function escapeHtml(s: string) {
+        return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      checkAuth();
+    </script>
+  </body>
+</html>

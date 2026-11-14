@@ -1,0 +1,51 @@
+name: InfoLokerKita AI Company Autonomous Runner
+
+on:
+  schedule:
+    # 05:00 WIB = 22:00 UTC (Siklus Rekrutmen & Kurasi Lowongan)
+    - cron: "0 22 * * *"
+    # 07:00 WIB = 00:00 UTC (Siklus Redaksi Berita & Thumbnail)
+    - cron: "0 0 * * *"
+    # 08:00 WIB = 01:00 UTC (Siklus Audit & Laporan Harian CEO)
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      cycle:
+        description: 'Pilih siklus otomasi yang ingin dijalankan'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - '0500'
+          - '0700'
+          - '0800'
+
+jobs:
+  run-ai-company:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests pillow python-dotenv
+
+      - name: Run AI Company Operations
+        env:
+          SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          CYCLE="${{ github.event.inputs.cycle || 'all' }}"
+          python -m automation.ai_company.cli run "$CYCLE"
