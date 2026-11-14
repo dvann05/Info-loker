@@ -101,17 +101,15 @@ class AINewsroomAgent:
 
         # Template konten terstruktur sesuai doctrine InfoLoker (tidak berhalusinasi)
         content = f"""
-{title}
-
 Perkembangan terkini terkait sektor industri dan ketenagakerjaan di Indonesia menunjukkan dinamika positif yang perlu dipantau oleh para pencari kerja maupun profesional. Berdasarkan laporan resmi yang dihimpun dari {source_name}, informasi ini memuat fakta dan data yang telah dikonfirmasi.
 
-**Poin Utama & Fakta Terverifikasi**
+### Poin Utama & Fakta Terverifikasi
 
 - **Ringkasan Peristiwa:** {raw_summary or title}
 - **Sumber Rujukan Primer:** {source_name}
 - **Bidang Terkait:** {category} dan ketenagakerjaan nasional.
 
-**Apa artinya bagi pencari kerja?**
+### Apa artinya bagi pencari kerja?
 
 Perkembangan pada sektor ini berpotensi membuka kesempatan kerja baru, baik di bidang operasional, administrasi, logistik, maupun keahlian teknis terkait. Bagi masyarakat dan pencari kerja yang berminat di bidang ini, disarankan untuk:
 1. Memperbarui dokumen lamaran, CV, dan portofolio keahlian yang relevan.

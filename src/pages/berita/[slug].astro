@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { supabase } from "../../lib/supabase";
+import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
 export async function getStaticPaths() {
@@ -84,35 +85,84 @@ const validUrl = (value: string | null) => {
 };
 
 
-const sanitizedContent = article?.content
-  ? sanitizeHtml(article.content.replace(/\\n/g, "\n"), {
-      allowedTags: [
-        ...sanitizeHtml.defaults.allowedTags,
-        "iframe"
-      ],
-      allowedAttributes: {
-        ...sanitizeHtml.defaults.allowedAttributes,
-        iframe: [
-          "src",
-          "title",
-          "width",
-          "height",
-          "allow",
-          "allowfullscreen",
-          "loading",
-          "referrerpolicy"
-        ]
-      },
-      allowedIframeHostnames: [
-        "youtube.com",
-        "www.youtube.com",
-        "youtube-nocookie.com",
-        "www.youtube-nocookie.com"
-      ],
-      allowIframeRelativeUrls: false,
-      allowedSchemes: ["http", "https", "mailto"]
-    })
-  : "";
+function formatNewsContent(rawContent: string | null | undefined, articleTitle?: string): string {
+  if (!rawContent) return "";
+
+  // 1. Unescape literal newlines yang tersimpan di string database
+  let text = rawContent
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .trim();
+
+  // 2. Hapus judul yang terulang di baris pertama artikel
+  if (articleTitle) {
+    const normTitle = articleTitle.trim().toLowerCase();
+    const lines = text.split("\n");
+    if (lines.length > 0) {
+      const firstLineClean = lines[0].replace(/^[#\s*]+|[#\s*]+$/g, "").trim().toLowerCase();
+      if (
+        firstLineClean === normTitle ||
+        (normTitle.length > 15 && (firstLineClean.startsWith(normTitle) || normTitle.startsWith(firstLineClean)))
+      ) {
+        lines.shift();
+        text = lines.join("\n").trim();
+      }
+    }
+  }
+
+  // 3. Konversi baris tebal mandiri (seperti **Judul Bagian**) menjadi heading H3
+  text = text.replace(/^[\t ]*\*\*([^*\n]+)\*\*[\t ]*$/gm, (_match, headingText) => {
+    const trimmed = headingText.trim();
+    return "### " + trimmed.replace(/:$/, "");
+  });
+
+  // 4. Ubah Catatan / Peringatan khusus menjadi callout quote
+  text = text.replace(/^[\t ]*\*\*(Catatan[^*:]*|Peringatan[^*:]*)(?:\*\*:\s*|:\*\*\s*)(.+)$/gm, (_m, label, body) => {
+    return "> **" + label + ":** " + body;
+  });
+
+  // 5. Render markdown menjadi HTML bersih
+  const rawHtml = marked.parse(text, {
+    gfm: true,
+    breaks: false
+  }) as string;
+
+  // 6. Sanitasi tag HTML untuk keamanan
+  return sanitizeHtml(rawHtml, {
+    allowedTags: [
+      ...sanitizeHtml.defaults.allowedTags,
+      "iframe",
+      "h1", "h2", "h3", "h4", "h5", "h6",
+      "p", "ul", "ol", "li", "blockquote",
+      "strong", "b", "em", "i", "a", "hr", "br"
+    ],
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      a: ["href", "title", "target", "rel"],
+      iframe: [
+        "src",
+        "title",
+        "width",
+        "height",
+        "allow",
+        "allowfullscreen",
+        "loading",
+        "referrerpolicy"
+      ]
+    },
+    allowedIframeHostnames: [
+      "youtube.com",
+      "www.youtube.com",
+      "youtube-nocookie.com",
+      "www.youtube-nocookie.com"
+    ],
+    allowIframeRelativeUrls: false,
+    allowedSchemes: ["http", "https", "mailto"]
+  });
+}
+
+const sanitizedContent = formatNewsContent(article?.content, article?.title);
 
 const imageUrl = validUrl(article?.image_url ?? null);
 const sourceUrl = validUrl(article?.source_url ?? null);
@@ -462,13 +512,105 @@ const articleSchema = article ? {
 
   .article-content {
     color: var(--text, #334155);
-    font-size: 16px;
-    line-height: 1.9;
+    font-size: 16.5px;
+    line-height: 1.95;
     overflow-wrap: anywhere;
   }
 
   .article-content p {
     margin: 0 0 20px;
+    color: var(--text, #334155);
+  }
+
+  .article-content h2,
+  .article-content h3,
+  .article-content h4 {
+    color: #0f172a;
+    font-weight: 800;
+    line-height: 1.4;
+    margin: 32px 0 14px;
+    letter-spacing: -0.3px;
+  }
+
+  .article-content h2 {
+    font-size: 22px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .article-content h3 {
+    font-size: 19px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .article-content h3::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    background: #2563eb;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .article-content ul,
+  .article-content ol {
+    margin: 0 0 22px;
+    padding-left: 24px;
+  }
+
+  .article-content li {
+    margin-bottom: 10px;
+    line-height: 1.8;
+    color: var(--text, #334155);
+  }
+
+  .article-content li::marker {
+    color: #2563eb;
+    font-weight: 700;
+  }
+
+  .article-content strong,
+  .article-content b {
+    color: #0f172a;
+    font-weight: 700;
+  }
+
+  .article-content a {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+  }
+
+  .article-content a:hover {
+    color: #1d4ed8;
+  }
+
+  .article-content blockquote {
+    margin: 24px 0;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-left: 4px solid #2563eb;
+    border-radius: 0 12px 12px 0;
+    color: #1e293b;
+    font-size: 15.5px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  }
+
+  .article-content blockquote p {
+    margin: 0;
+    line-height: 1.75;
+  }
+
+  .article-content hr {
+    border: 0;
+    height: 1px;
+    background: #e2e8f0;
+    margin: 32px 0;
   }
 
   .article-footer {
