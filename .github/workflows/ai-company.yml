@@ -32,11 +32,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
 
       - name: Install Dependencies
         run: |
-          pip install requests pillow python-dotenv
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run AI Company Operations
         env:
@@ -47,5 +47,8 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          CYCLE="${{ github.event.inputs.cycle || 'all' }}"
+          CYCLE="${{ github.event.inputs.cycle }}"
+          if [ -z "$CYCLE" ]; then
+            CYCLE="all"
+          fi
           python -m automation.ai_company.cli run "$CYCLE"
