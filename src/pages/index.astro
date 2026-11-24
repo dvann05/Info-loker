@@ -588,7 +588,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           "id,slug,title,company_name,company_logo,location,province,city,district,employment_type,description,source_url,apply_url,published_at,deadline"
         )
         .eq("status", "published")
-        .or(`deadline.is.null,deadline.gte.${new Date().toISOString().slice(0, 10)}`)
+        .gte(
+          "deadline",
+          new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Asia/Jakarta",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(new Date())
+        )
         .order("published_at", { ascending: false });
 
       if (error) {
