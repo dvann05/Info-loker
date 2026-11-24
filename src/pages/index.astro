@@ -511,7 +511,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         actions.className = "job-card-actions";
 
         const detail = document.createElement("a");
-        detail.href = `/lowongan/detail/?slug=${encodeURIComponent(job.slug)}`;
+        detail.href = `/lowongan/${encodeURIComponent(job.slug)}/`;
         detail.textContent = "Lihat detail →";
         detail.className = "job-source";
 

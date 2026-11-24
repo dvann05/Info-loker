@@ -20,7 +20,7 @@ export async function GET() {
     .from("jobs")
     .select("slug, published_at")
     .eq("status", "published")
-    .or(`deadline.is.null,deadline.gte.${today}`)
+    .gte("deadline", today)
     .order("published_at", { ascending: false });
 
   if (error) {
@@ -51,7 +51,7 @@ export async function GET() {
       priority: "0.9",
     },
     ...(jobs || []).map((job) => ({
-      loc: `${SITE_URL}/lowongan/detail/?slug=${encodeURIComponent(job.slug)}`,
+      loc: `${SITE_URL}/lowongan/${encodeURIComponent(job.slug)}/`,
       priority: "0.8",
       lastmod: job.published_at,
     })),

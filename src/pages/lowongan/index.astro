@@ -393,7 +393,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         actions.className = "job-card-actions";
 
         const detail = document.createElement("a");
-        detail.href = `/lowongan/detail/?slug=${encodeURIComponent(job.slug)}`;
+        detail.href = `/lowongan/${encodeURIComponent(job.slug)}/`;
         detail.textContent = "Lihat detail →";
         detail.className = "job-source";
 
@@ -443,7 +443,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           { count: "exact" }
         )
         .eq("status", "published")
-        .or(`deadline.is.null,deadline.gte.${today}`)
+        .gte("deadline", today)
         .order("published_at", { ascending: false })
         .order("slug", { ascending: true });
 

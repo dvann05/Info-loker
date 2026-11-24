@@ -1,0 +1,178 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { supabase } from "../../lib/supabase";
+
+export const prerender = true;
+
+const jakartaToday = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
+
+export async function getStaticPaths() {
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("slug,title,company_name,company_logo,location,province,city,employment_type,description,source_url,apply_url,published_at,deadline")
+    .eq("status", "published")
+    .not("slug", "is", null)
+    .not("published_at", "is", null)
+    .not("deadline", "is", null)
+    .gte("deadline", today)
+    .order("published_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Gagal mengambil data lowongan: ${error.message}`);
+  }
+
+  return (data ?? [])
+    .filter((job) => job.slug)
+    .map((job) => ({
+      params: { slug: job.slug },
+      props: { job },
+    }));
+}
+
+const { job } = Astro.props;
+
+const title = `${job.title} — ${job.company_name || "Info Loker Kita"}`;
+const description = (job.description || `Informasi lowongan ${job.title}.`).slice(0, 300);
+
+const jobSchema = {
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  title: job.title,
+  description: job.description || job.title,
+  datePosted: job.published_at
+    ? new Date(job.published_at).toISOString()
+    : undefined,
+  validThrough: `${job.deadline}T23:59:59+07:00`,
+  employmentType: job.employment_type || "FULL_TIME",
+  hiringOrganization: {
+    "@type": "Organization",
+    name: job.company_name || "Perusahaan",
+    ...(job.company_logo ? { logo: job.company_logo } : {}),
+  },
+  jobLocation: {
+    "@type": "Place",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: job.city || job.location || "Indonesia",
+      addressRegion: job.province || "Indonesia",
+      addressCountry: "ID",
+    },
+  },
+};
+
+const jsonLd = JSON.stringify(jobSchema).replace(/</g, "\\u003c");
+const applyUrl = job.apply_url || job.source_url;
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  ogType="article"
+>
+  <script type="application/ld+json" set:html={jsonLd} />
+
+  <main class="section">
+    <div class="container">
+      <article class="job-card">
+        <h1>{job.title}</h1>
+
+        <div class="job-company">
+          {job.company_logo && (
+            <img
+              src={job.company_logo}
+              alt={`Logo ${job.company_name || "perusahaan"}`}
+              width="48"
+              height="48"
+              loading="lazy"
+            />
+          )}
+          <h2>{job.company_name || "Perusahaan tidak diketahui"}</h2>
+        </div>
+
+        <p><strong>Lokasi:</strong> {job.location || job.city || "Indonesia"}</p>
+        {job.province && <p><strong>Provinsi:</strong> {job.province}</p>}
+        {job.employment_type && (
+          <p><strong>Tipe pekerjaan:</strong> {job.employment_type}</p>
+        )}
+        <p>
+          <strong>Tanggal akhir informasi:</strong>
+          {new Date(`${job.deadline}T00:00:00+07:00`).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            timeZone: "Asia/Jakarta",
+          })}
+        </p>
+        <p class="deadline-note">
+          Tanggal akhir informasi ini bukan jaminan batas pendaftaran resmi dari perusahaan.
+          Periksa kembali informasi pada sumber rekrutmen resmi.
+        </p>
+
+        <hr />
+
+        <h2>Deskripsi Lowongan</h2>
+        <div class="job-description">{job.description || "Informasi deskripsi belum tersedia."}</div>
+
+        {applyUrl && (
+          <p>
+            <a href={applyUrl} target="_blank" rel="nofollow noopener noreferrer">
+              Lihat sumber dan informasi pendaftaran resmi
+            </a>
+          </p>
+        )}
+      </article>
+
+      <p><a href="/lowongan/">← Kembali ke daftar lowongan</a></p>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .job-card {
+    background: var(--card, #fff);
+    padding: 24px;
+    border-radius: 14px;
+    margin: 20px auto;
+    max-width: 900px;
+  }
+
+  .job-company {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+  }
+
+  .job-company img {
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .job-company h2 {
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .job-description {
+    white-space: pre-line;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  .deadline-note {
+    font-size: 13px;
+    opacity: .75;
+  }
+</style>
