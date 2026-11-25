@@ -179,19 +179,24 @@ export function buildJobPostingJsonLd(job: JobSchemaInput): Record<string, unkno
       }
     : undefined;
 
-  const validThrough =
+  let datePosted = toIsoOrUndefined(job.published_at) || new Date().toISOString();
+
+  const parsedValidThrough =
     job.deadline && /^\d{4}-\d{2}-\d{2}$/.test(job.deadline.trim())
       ? `${job.deadline.trim()}T23:59:59+07:00`
       : toIsoOrUndefined(job.deadline);
 
-  let datePosted = toIsoOrUndefined(job.published_at) || new Date().toISOString();
+  // Google Search Console mewajibkan validThrough untuk lowongan yang memiliki batas waktu;
+  // sediakan fallback +30 hari dari datePosted agar kolom validThrough tidak pernah hilang.
+  const validThrough =
+    parsedValidThrough ||
+    new Date(Date.parse(datePosted) + 30 * 24 * 60 * 60 * 1000).toISOString();
+
   // Pastikan datePosted tidak lebih baru dari validThrough agar valid di Google Jobs
-  if (validThrough) {
-    const postedMs = Date.parse(datePosted);
-    const validMs = Date.parse(validThrough);
-    if (!Number.isNaN(postedMs) && !Number.isNaN(validMs) && postedMs > validMs) {
-      datePosted = new Date(validMs).toISOString();
-    }
+  const postedMs = Date.parse(datePosted);
+  const validMs = Date.parse(validThrough);
+  if (!Number.isNaN(postedMs) && !Number.isNaN(validMs) && postedMs > validMs) {
+    datePosted = new Date(validMs).toISOString();
   }
 
   const descParts: string[] = [];
@@ -222,7 +227,7 @@ export function buildJobPostingJsonLd(job: JobSchemaInput): Record<string, unkno
     },
     url: `${SITE_URL}${getJobDetailPath(job.slug)}`,
     datePosted,
-    ...(validThrough ? { validThrough } : {}),
+    validThrough,
     employmentType: mapEmploymentType(job.employment_type),
     hiringOrganization: {
       "@type": "Organization",
