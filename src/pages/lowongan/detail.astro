@@ -4,6 +4,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 <BaseLayout
   title="Detail Lowongan Kerja | Info Loker Kita"
   description="Informasi detail lowongan kerja dan tautan rekrutmen resmi di Info Loker Kita."
+  robots="noindex,follow"
 >
 
   <header class="site-header">
@@ -14,10 +15,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </a>
       <nav class="nav-links">
         <a href="/">Beranda</a>
-        <a href="/lowongan">Daftar Lowongan</a>
+        <a href="/lowongan/">Daftar Lowongan</a>
+        <a href="/berita/">Berita</a>
       </nav>
     </div>
-  </header>  <main class="section">
+  </header>
+
+  <main class="section">
     <div class="container">
       <article class="job-card">
         <p id="status" role="status">Memuat detail lowongan...</p>
@@ -33,12 +37,19 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </section>
 
       <p class="back-home">
-        <a href="/lowongan">← Kembali ke daftar lowongan</a>
+        <a href="/lowongan/">← Kembali ke daftar lowongan</a>
       </p>
     </div>
+  </main>
 
-  </main>  <script>
+  <script>
     import { supabase } from "../../lib/supabase";
+    import {
+      SITE_URL,
+      formatJakartaDate,
+      getJakartaToday,
+      getJobDetailPath,
+    } from "../../lib/seo";
 
     const status = document.querySelector<HTMLParagraphElement>("#status");
     const detail = document.querySelector<HTMLDivElement>("#job-detail");
@@ -53,10 +64,20 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     async function loadDetail() {
       if (!status || !detail) return;
 
-      const slug = new URLSearchParams(window.location.search).get("slug") || "";
-      const today = new Date().toISOString().slice(0, 10);
+      const slug = (new URLSearchParams(window.location.search).get("slug") || "").trim();
+      if (!slug) {
+        status.textContent = "Lowongan tidak ditemukan atau alamat tidak valid.";
+        return;
+      }
 
-      // Render Skeleton state
+      // Arahkan canonical tag ke rute detail statis yang resmi
+      const canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+      if (canonicalLink) {
+        canonicalLink.href = `${SITE_URL}${getJobDetailPath(slug)}`;
+      }
+
+      const todayWib = getJakartaToday();
+
       status.textContent = "";
       const skeleton = document.createElement("div");
       skeleton.className = "job-skeleton-card";
@@ -75,10 +96,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       const { data: job, error } = await supabase
         .from("jobs")
-        .select("title,company_name,company_logo,location,province,city,employment_type,education,experience,salary_min,salary_max,description,requirements,benefits,source_url,apply_url,published_at,deadline")
+        .select("slug,title,company_name,company_logo,location,province,city,employment_type,education,experience,salary_min,salary_max,description,requirements,benefits,source_url,apply_url,published_at,deadline")
         .eq("slug", slug)
         .eq("status", "published")
-        .or(`deadline.is.null,deadline.gte.${today}`)
+        .not("published_at", "is", null)
+        .not("deadline", "is", null)
+        .gte("deadline", todayWib)
         .maybeSingle();
 
       detail.replaceChildren();
@@ -91,40 +114,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const comp = job.company_name ? ` di ${job.company_name}` : "";
       document.title = `${job.title}${comp} — Info Loker Kita`;
 
-      // Inject Schema JobPosting for Google Jobs
-      try {
-        const jobSchema = {
-          "@context": "https://schema.org",
-          "@type": "JobPosting",
-          title: job.title,
-          description: job.description || job.title,
-          datePosted: job.published_at || new Date().toISOString(),
-          validThrough: job.deadline ? `${job.deadline}T23:59:59Z` : undefined,
-          employmentType: job.employment_type || "FULL_TIME",
-          hiringOrganization: {
-            "@type": "Organization",
-            name: job.company_name || "Perusahaan",
-            logo: job.company_logo || undefined
-          },
-          jobLocation: {
-            "@type": "Place",
-            address: {
-              "@type": "PostalAddress",
-              addressLocality: job.city || job.location,
-              addressRegion: job.province || "Indonesia",
-              addressCountry: "ID"
-            }
-          }
-        };
-        const scriptElem = document.createElement("script");
-        scriptElem.type = "application/ld+json";
-        scriptElem.textContent = JSON.stringify(jobSchema);
-        document.head.appendChild(scriptElem);
-      } catch (err) {
-        console.error("Gagal menambahkan job schema", err);
-      }
-
-      // Header container
       const headerBox = document.createElement("div");
       headerBox.className = "job-detail-header";
 
@@ -143,7 +132,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         .split(/\s+/)
         .filter(Boolean)
         .slice(0, 2)
-        .map((word) => word[0])
+        .map((word: string) => word[0])
         .join("")
         .toUpperCase();
 
@@ -178,7 +167,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       headerBox.append(headerTextWrap);
       detail.append(headerBox);
 
-      // Specs Grid
       const specsGrid = document.createElement("div");
       specsGrid.className = "job-specs-grid";
 
@@ -207,12 +195,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
 
       if (job.deadline) {
-        addSpec("Batas Pendaftaran", `📅 ${new Date(`${job.deadline}T00:00:00`).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`);
+        addSpec("Batas Pendaftaran", `📅 ${formatJakartaDate(job.deadline)}`);
       }
 
       detail.append(specsGrid);
 
-      // Deskripsi
       addText(detail, "h2", "Deskripsi Pekerjaan");
       const description = addText(detail, "p", job.description || "Informasi deskripsi belum tersedia.");
       description.className = "job-description";
@@ -232,7 +219,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         addText(detail, "p", job.benefits);
       }
 
-      // Action Buttons
       const actions = document.createElement("div");
       actions.className = "job-detail-actions";
 
@@ -260,7 +246,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       shareBtn.textContent = "Salin Tautan 🔗";
       shareBtn.onclick = async () => {
         try {
-          await navigator.clipboard.writeText(window.location.href);
+          await navigator.clipboard.writeText(`${SITE_URL}${getJobDetailPath(slug)}`);
           shareBtn.textContent = "Tautan Tersalin! ✅";
           setTimeout(() => { shareBtn.textContent = "Salin Tautan 🔗"; }, 2500);
         } catch {
@@ -271,10 +257,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       detail.append(actions);
 
-      void loadSimilarJobs(job, slug, today);
+      void loadSimilarJobs(job, slug, todayWib);
     }
 
-    async function loadSimilarJobs(currentJob: any, currentSlug: string, today: string) {
+    async function loadSimilarJobs(currentJob: any, currentSlug: string, todayWib: string) {
       const section = document.querySelector<HTMLElement>("#similar-jobs-section");
       const list = document.querySelector<HTMLDivElement>("#similar-jobs-list");
       const subtitle = document.querySelector<HTMLParagraphElement>("#similar-jobs-subtitle");
@@ -285,7 +271,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         .select("id,slug,title,company_name,company_logo,location,province,city,employment_type,description,published_at")
         .eq("status", "published")
         .neq("slug", currentSlug)
-        .or(`deadline.is.null,deadline.gte.${today}`);
+        .not("deadline", "is", null)
+        .gte("deadline", todayWib);
 
       if (currentJob.city) {
         query = query.ilike("city", `%${currentJob.city}%`);
@@ -293,11 +280,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         query = query.ilike("province", `%${currentJob.province}%`);
       }
 
-      const { data, error } = await query
+      const { data } = await query
         .order("published_at", { ascending: false })
         .limit(3);
 
-      let items = (data || []);
+      let items = data || [];
 
       if (items.length < 3) {
         const excludeSlugs = [currentSlug, ...items.map((i: any) => i.slug)];
@@ -306,7 +293,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           .select("id,slug,title,company_name,company_logo,location,province,city,employment_type,description,published_at")
           .eq("status", "published")
           .not("slug", "in", `(${excludeSlugs.join(",")})`)
-          .or(`deadline.is.null,deadline.gte.${today}`)
+          .not("deadline", "is", null)
+          .gte("deadline", todayWib)
           .order("published_at", { ascending: false })
           .limit(3 - items.length);
 
@@ -381,7 +369,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         actions.className = "job-card-actions";
 
         const detailLink = document.createElement("a");
-        detailLink.href = `/lowongan/detail/?slug=${encodeURIComponent(simJob.slug)}`;
+        detailLink.href = getJobDetailPath(simJob.slug);
         detailLink.textContent = "Lihat detail →";
         detailLink.className = "job-source";
 
@@ -395,4 +383,5 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
 
     void loadDetail();
-  </script></BaseLayout>
+  </script>
+</BaseLayout>

@@ -1,12 +1,9 @@
 import json
-import time
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
-from automation.ai_company.core.config import REPORTS_DIR
+from datetime import datetime
+from typing import Dict, Any
+from automation.ai_company.core.config import REPORTS_DIR, WIB_TIMEZONE
 from automation.ai_company.core.database import supabase_client, local_db
 from automation.ai_company.core.task_queue import task_queue
-from automation.ai_company.core.llm import llm_engine
 
 from automation.ai_company.agents.recruitment import ai_recruitment
 from automation.ai_company.agents.verification import ai_verification
@@ -16,6 +13,7 @@ from automation.ai_company.agents.designer import ai_designer
 from automation.ai_company.agents.data_manager import ai_data_manager
 from automation.ai_company.agents.marketing import ai_marketing
 from automation.ai_company.agents.auditor import ai_auditor
+
 
 class AIManagerAgent:
     """AI Manager (Direktur Operasional): Pusat orkestrasi 8 divisi AI dan pelaporan langsung kepada CEO."""
@@ -34,17 +32,14 @@ class AIManagerAgent:
         task_queue.start_task(task_id)
 
         try:
-            # 1. AI Recruitment
             local_db.log(self.name, f"[{task_id}] Mendelegasikan tugas ke AI Recruitment...")
             recruitment_res = ai_recruitment.discover_vacancies(target_count=target_count)
             candidates = recruitment_res.get("candidates") or []
 
-            # 2. AI Verification
             local_db.log(self.name, f"[{task_id}] Meminta AI Verification memverifikasi {len(candidates)} kandidat...")
             verification_res = ai_verification.verify_batch(candidates)
             passed = verification_res.get("passed") or []
 
-            # 3. AI Data Manager
             local_db.log(self.name, f"[{task_id}] Menginstruksikan AI Data Manager sinkronisasi {len(passed)} lowongan lolos...")
             sync_res = ai_data_manager.sync_jobs(passed)
 
@@ -74,22 +69,18 @@ class AIManagerAgent:
         task_queue.start_task(task_id)
 
         try:
-            # 1. AI Newsroom
             local_db.log(self.name, f"[{task_id}] Menugaskan AI Newsroom untuk riset...")
             news_res = ai_newsroom.conduct_research_and_draft(count=article_count)
             drafts = news_res.get("drafts") or []
 
             published_articles = []
             for draft in drafts:
-                # 2. AI SEO Specialist
                 local_db.log(self.name, f"[{task_id}] AI SEO Specialist mengoptimasi: {draft['title'][:40]}...")
                 seo_draft = ai_seo_specialist.optimize_article(draft)
 
-                # 3. AI Designer
                 local_db.log(self.name, f"[{task_id}] AI Designer merancang thumbnail 16:9...")
                 designed_draft = ai_designer.generate_thumbnail_for_article(seo_draft)
 
-                # 4. AI Data Manager
                 local_db.log(self.name, f"[{task_id}] AI Data Manager mempublikasikan ke Supabase...")
                 success = ai_data_manager.sync_news_article(designed_draft)
                 if success:
@@ -112,55 +103,48 @@ class AIManagerAgent:
             return {"task_id": task_id, "status": "failed", "error": error_msg}
 
     def run_daily_audit_and_report(self) -> Dict[str, Any]:
-        """Menjalankan AI Auditor dan menyusun Laporan Operasional Harian Resmi untuk CEO."""
+        """Menjalankan pengarsipan expired, AI Auditor, dan menyusun Laporan Operasional Harian untuk CEO."""
         task_id = task_queue.create_task(
             agent_name=self.name,
             title="Audit Operasional Harian & Penyusunan Laporan CEO",
-            description="Audit integritas database, pengecekan 404, dan kompilasi laporan komprehensif harian."
+            description="Pengarsipan lowongan kedaluwarsa, audit integritas database, dan kompilasi laporan harian."
         )
         task_queue.start_task(task_id)
 
         try:
-            # 1. AI Auditor
-            audit_res = ai_auditor.run_full_audit()
-
-            # 2. Clean up expired jobs check
+            # 1. Arsipkan lowongan kedaluwarsa terlebih dahulu sebelum audit
             cleanup_res = ai_data_manager.cleanup_expired_jobs()
 
-            # 3. Gather real operational metrics from Supabase & SQLite
-            jobs_count = supabase_client.get_count("jobs")
-            news_count = supabase_client.get_count("news")
+            # 2. AI Auditor
+            audit_res = ai_auditor.run_full_audit()
+
+            # 3. Kumpulkan metrik aktif nyata (WIB)
+            today_str = datetime.now(WIB_TIMEZONE).date().isoformat()
+            jobs_count = supabase_client.get_count(
+                "jobs",
+                f"status=eq.published&deadline=gte.{today_str}",
+            )
+            news_count = supabase_client.get_count("news", "status=eq.published")
 
             with local_db.get_connection() as conn:
-                task_stats = conn.execute("""
-                SELECT 
-                    count(*) as total,
-                    sum(case when status='completed' then 1 else 0 end) as completed,
-                    sum(case when status='failed' then 1 else 0 end) as failed,
-                    sum(case when status='pending' then 1 else 0 end) as pending,
-                    sum(case when status='needs_approval' then 1 else 0 end) as needs_approval
-                FROM ai_tasks
-                """).fetchone()
+                agents_data = conn.execute(
+                    "SELECT name, role, department, status, total_tasks, success_tasks FROM ai_agents"
+                ).fetchall()
 
-                agents_data = conn.execute("SELECT name, role, department, status, total_tasks, success_tasks FROM ai_agents").fetchall()
-
-            today_str = datetime.now().strftime("%Y-%m-%d")
-
-            # Generate structured markdown report
             report_md = f"""# Laporan Operasional Harian — InfoLokerKita AI Company
-**Tanggal:** {today_str}
+**Tanggal:** {today_str} (WIB)
 **Penyusun:** AI Manager (Direktur Operasional)
 **Penerima:** Human Founder (CEO)
 
 ---
 
 ## 1. Ringkasan Eksekutif Operasional
-Operasional perusahaan digital InfoLokerKita hari ini berjalan di bawah pengawasan AI Manager. Seluruh divisi AI telah melaksanakan pemeriksaan, kurasi informasi lowongan kerja, pengawasan berita industri, serta audit integritas sistem.
+Operasional perusahaan digital InfoLokerKita hari ini berjalan di bawah pengawasan AI Manager. Seluruh divisi AI telah melaksanakan pemeriksaan, kurasi informasi lowongan kerja, pengawasan berita industri, pengarsipan lowongan kedaluwarsa, serta audit integritas sistem.
 
 - **Status Integritas Sistem:** {'🟢 SEHAT & NORMAL' if audit_res.get('overall_healthy') else '🟡 PERLU PERHATIAN'}
 - **Total Lowongan Aktif di Supabase:** {jobs_count} lowongan
-- **Total Berita & Analisis di Supabase:** {news_count} artikel
-- **Lowongan Kedaluwarsa Teridentifikasi:** {cleanup_res.get('expired_count', 0)}
+- **Total Berita Terbit di Supabase:** {news_count} artikel
+- **Lowongan Kedaluwarsa Teridentifikasi:** {cleanup_res.get('expired_count', 0)} (diarsipkan: {cleanup_res.get('archived_count', 0)})
 
 ---
 
@@ -189,7 +173,6 @@ Operasional perusahaan digital InfoLokerKita hari ini berjalan di bawah pengawas
 *Laporan ini diverifikasi secara otomatis dari data nyata sistem database InfoLokerKita.*
 """
 
-            # Simpan laporan ke SQLite
             with local_db.get_connection() as conn:
                 conn.execute("""
                 INSERT OR REPLACE INTO ai_reports (report_date, report_type, title, summary, metrics_json, content_markdown, created_at)
@@ -202,13 +185,13 @@ Operasional perusahaan digital InfoLokerKita hari ini berjalan di bawah pengawas
                         "jobs_count": jobs_count,
                         "news_count": news_count,
                         "expired_count": cleanup_res.get("expired_count", 0),
+                        "archived_count": cleanup_res.get("archived_count", 0),
                         "overall_healthy": audit_res.get("overall_healthy", True)
                     }),
                     report_md
                 ))
                 conn.commit()
 
-            # Simpan laporan ke file Markdown fisik
             report_file = REPORTS_DIR / f"daily_report_{today_str}.md"
             with open(report_file, "w", encoding="utf-8") as f:
                 f.write(report_md)
@@ -218,6 +201,7 @@ Operasional perusahaan digital InfoLokerKita hari ini berjalan di bawah pengawas
                 "status": "completed",
                 "report_date": today_str,
                 "report_file": str(report_file),
+                "cleanup": cleanup_res,
                 "summary": audit_res.get("summary"),
                 "markdown": report_md
             }
@@ -238,16 +222,23 @@ Operasional perusahaan digital InfoLokerKita hari ini berjalan di bawah pengawas
             return self.run_recruitment_pipeline(target_count=10)
         elif "berita" in cmd_lower or "news" in cmd_lower or "artikel" in cmd_lower:
             return self.run_newsroom_pipeline(article_count=1)
+        elif "arsip" in cmd_lower or "expired" in cmd_lower or "kedaluwarsa" in cmd_lower:
+            return ai_data_manager.cleanup_expired_jobs()
         elif "audit" in cmd_lower or "laporan" in cmd_lower or "report" in cmd_lower:
             return self.run_daily_audit_and_report()
         elif "marketing" in cmd_lower or "promo" in cmd_lower or "sosmed" in cmd_lower:
-            # Ambil sample loker dan berita
-            jobs = supabase_client.query_rows("jobs", "select=slug,title,company_name,location&limit=2&order=created_at.desc")
-            news = supabase_client.query_rows("news", "select=slug,title,category&limit=2&order=created_at.desc")
+            today_wib = datetime.now(WIB_TIMEZONE).date().isoformat()
+            jobs = supabase_client.query_rows(
+                "jobs",
+                f"select=slug,title,company_name,location&status=eq.published&deadline=gte.{today_wib}&limit=2&order=created_at.desc"
+            )
+            news = supabase_client.query_rows(
+                "news",
+                "select=slug,title,category&status=eq.published&limit=2&order=created_at.desc"
+            )
             calendar = ai_marketing.create_daily_content_calendar(jobs, news)
             return {"status": "success", "message": f"Berhasil membuat kalender konten promosi ({len(calendar)} slot materi)."}
         else:
-            # Jalankan siklus harian lengkap
             local_db.log(self.name, "Perintah umum diterima: Menjalankan audit dan sinkronisasi laporan.")
             return self.run_daily_audit_and_report()
 

@@ -1,5 +1,37 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { supabase } from "../lib/supabase";
+import { formatJakartaDate, getJakartaToday, getJobDetailPath } from "../lib/seo";
+
+const todayWib = getJakartaToday();
+let initialJobs: Array<{
+  slug: string;
+  title: string;
+  company_name: string | null;
+  location: string | null;
+  employment_type: string | null;
+  description: string | null;
+  source_url: string | null;
+  apply_url: string | null;
+  published_at: string | null;
+}> = [];
+
+try {
+  const { data } = await supabase
+    .from("jobs")
+    .select("slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at")
+    .eq("status", "published")
+    .not("slug", "is", null)
+    .not("published_at", "is", null)
+    .not("deadline", "is", null)
+    .gte("deadline", todayWib)
+    .order("published_at", { ascending: false })
+    .order("slug", { ascending: true })
+    .limit(12);
+  initialJobs = (data ?? []).filter((j) => Boolean(j.slug));
+} catch {
+  initialJobs = [];
+}
 ---
 
 <BaseLayout
@@ -178,10 +210,45 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     </div>
 
     <p id="job-status" role="status" aria-live="polite">
-      Menghubungkan ke database...
+      {initialJobs.length > 0 ? `Menampilkan ${initialJobs.length} lowongan terbaru.` : "Menghubungkan ke database..."}
     </p>
 
-    <div id="job-list" class="job-grid"></div>
+    <div id="job-list" class="job-grid">
+      {initialJobs.map((job) => {
+        const cleanDesc = (job.description || "").replace(/\\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+        const snippet = cleanDesc.length > 170 ? `${cleanDesc.slice(0, 170).trimEnd()}…` : cleanDesc;
+        const initials = (job.company_name || "PT")
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((w) => w[0])
+          .join("")
+          .toUpperCase();
+        return (
+          <article class="job-card">
+            <div class="job-company">
+              <div class="company-logo">{initials}</div>
+              <span>{job.company_name || "Perusahaan tidak diketahui"}</span>
+            </div>
+            <h3>{job.title}</h3>
+            <div class="job-meta-row">
+              <span class="job-badge job-badge-location">📍 {job.location || "Indonesia"}</span>
+              <span class="job-badge job-badge-type">{job.employment_type || "Penuh Waktu"}</span>
+              {job.published_at && (
+                <span class="job-badge job-badge-date">⏱ {formatJakartaDate(job.published_at)}</span>
+              )}
+            </div>
+            <p class="job-description">{snippet}</p>
+            <div class="job-card-actions">
+              <a href={getJobDetailPath(job.slug)} class="job-source">Lihat detail →</a>
+              {job.source_url && (
+                <a href={job.source_url} target="_blank" rel="nofollow noopener noreferrer" class="job-source" style="color: var(--muted); font-size: 13px;">Sumber resmi ↗</a>
+              )}
+            </div>
+          </article>
+        );
+      })}
+    </div>
   </div>
 </section>
 
@@ -263,7 +330,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             <li><a href="/berita/">Berita Dunia Kerja</a></li>
             <li><a href="#tentang">Tentang Info Loker Kita</a></li>
             <li><a href="#panduan">Panduan Anti-Penipuan</a></li>
-            <li><a href="/hq/">AI Headquarters ⚙️</a></li>
           </ul>
         </div>
 
@@ -588,6 +654,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           "id,slug,title,company_name,company_logo,location,province,city,district,employment_type,description,source_url,apply_url,published_at,deadline"
         )
         .eq("status", "published")
+        .not("slug", "is", null)
+        .not("published_at", "is", null)
+        .not("deadline", "is", null)
         .gte(
           "deadline",
           new Intl.DateTimeFormat("en-CA", {
@@ -597,7 +666,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             day: "2-digit",
           }).format(new Date())
         )
-        .order("published_at", { ascending: false });
+        .order("published_at", { ascending: false })
+        .order("slug", { ascending: true });
 
       if (error) {
         console.error("Gagal mengambil lowongan:", error.message);

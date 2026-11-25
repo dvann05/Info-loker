@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /hq/
+Disallow: /api/
 
 Sitemap: https://infolokerkita.web.id/sitemap.xml

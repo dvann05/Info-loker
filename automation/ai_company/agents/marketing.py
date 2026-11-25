@@ -1,7 +1,9 @@
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List
+import urllib.parse
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+from automation.ai_company.core.config import WIB_TIMEZONE
 from automation.ai_company.core.database import local_db
-from automation.ai_company.core.llm import llm_engine
+
 
 class AIMarketingAgent:
     """Divisi AI Marketing: Pembuatan copy promosi media sosial dan penjadwalan konten."""
@@ -15,8 +17,8 @@ class AIMarketingAgent:
         title = job.get("title", "Lowongan Kerja")
         company = job.get("company_name", "Perusahaan")
         location = job.get("location", "Indonesia")
-        slug = job.get("slug", "")
-        url = f"https://infolokerkita.web.id/lowongan/detail/?slug={slug}"
+        slug = urllib.parse.quote(str(job.get("slug", "")).strip(), safe="")
+        url = f"https://infolokerkita.web.id/lowongan/{slug}/"
 
         if platform == "facebook":
             return f"""🚨 LOWONGAN KERJA TERBARU: {title.upper()}
@@ -44,7 +46,7 @@ Bagikan informasi ini kepada keluarga atau kerabat yang sedang membutuhkan peker
 
 _Catatan: Tidak ada pungutan biaya apapun. Silakan dibagikan._"""
 
-        else: # LinkedIn
+        else:  # LinkedIn
             return f"""Peluang karir terbaru untuk posisi {title} di {company} ({location}).
 
 Bagi rekan-rekan profesional atau talenta muda yang memenuhi kualifikasi dan tertarik mengembangkan karir, informasi lengkap kualifikasi dan pendaftaran dapat diakses melalui:
@@ -55,7 +57,7 @@ Bagi rekan-rekan profesional atau talenta muda yang memenuhi kualifikasi dan ter
     def generate_news_promo_copy(self, article: Dict[str, Any]) -> str:
         """Membuat salinan promosi berita industri ketenagakerjaan."""
         title = article.get("title", "")
-        slug = article.get("slug", "")
+        slug = urllib.parse.quote(str(article.get("slug", "")).strip(), safe="")
         url = f"https://infolokerkita.web.id/berita/{slug}/"
 
         return f"""📰 UPDATE DUNIA KERJA: {title}
@@ -70,9 +72,8 @@ Baca selengkapnya di portal InfoLokerKita:
     def create_daily_content_calendar(self, jobs: List[Dict[str, Any]], news: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Menyusun kalender promosi harian untuk disetujui CEO."""
         calendar = []
-        now = datetime.now(timezone.utc)
+        now = datetime.now(WIB_TIMEZONE)
 
-        # Slot 1: Pagi (08:30 WIB) - Headline Loker
         if jobs:
             top_job = jobs[0]
             copy_fb = self.generate_job_promo_copy(top_job, "facebook")
@@ -84,7 +85,6 @@ Baca selengkapnya di portal InfoLokerKita:
                 "scheduled_for": (now + timedelta(hours=1)).isoformat()
             })
 
-        # Slot 2: Siang (12:30 WIB) - Berita Industri / Tips
         if news:
             top_news = news[0]
             copy_news = self.generate_news_promo_copy(top_news)
@@ -96,7 +96,6 @@ Baca selengkapnya di portal InfoLokerKita:
                 "scheduled_for": (now + timedelta(hours=5)).isoformat()
             })
 
-        # Slot 3: Sore (17:30 WIB) - Roundup Loker
         if len(jobs) > 1:
             second_job = jobs[1]
             copy_wa = self.generate_job_promo_copy(second_job, "whatsapp")
@@ -108,7 +107,6 @@ Baca selengkapnya di portal InfoLokerKita:
                 "scheduled_for": (now + timedelta(hours=10)).isoformat()
             })
 
-        # Simpan ke tabel marketing_calendar di local_db
         with local_db.get_connection() as conn:
             cursor = conn.cursor()
             for item in calendar:

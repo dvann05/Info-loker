@@ -1,22 +1,47 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { supabase } from "../../lib/supabase";
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_URL,
+  buildBreadcrumbJsonLd,
+  cleanMetaText,
+  fetchAllSupabaseRows,
+  formatJakartaDate,
+  getNewsDetailPath,
+  serializeJsonLd,
+  toCanonicalUrl,
+  toIsoOrUndefined,
+  toRasterImageUrl,
+} from "../../lib/seo";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
 
+export const prerender = true;
+
 export async function getStaticPaths() {
-  const { data, error } = await supabase
-    .from("news")
-    .select("slug")
-    .eq("status", "published");
+  const data = await fetchAllSupabaseRows<{ slug: string | null }>((from, to) =>
+    supabase
+      .from("news")
+      .select("slug")
+      .eq("status", "published")
+      .not("slug", "is", null)
+      .order("published_at", { ascending: false })
+      .order("slug", { ascending: true })
+      .range(from, to)
+  );
 
-  if (error) {
-    throw new Error(`Gagal mengambil daftar berita: ${error.message}`);
-  }
-
-  return (data ?? []).map((item) => ({
-    params: { slug: item.slug }
-  }));
+  const seen = new Set<string>();
+  return data
+    .filter((item) => {
+      const s = (item.slug || "").trim();
+      if (!s || seen.has(s)) return false;
+      seen.add(s);
+      return true;
+    })
+    .map((item) => ({
+      params: { slug: item.slug! }
+    }));
 }
 
 const { slug } = Astro.params;
@@ -32,7 +57,8 @@ const { data: article, error } = await supabase
     category,
     source_name,
     source_url,
-    published_at
+    published_at,
+    updated_at
   `)
   .eq("slug", slug)
   .eq("status", "published")
@@ -167,25 +193,23 @@ const sanitizedContent = formatNewsContent(article?.content, article?.title);
 const imageUrl = validUrl(article?.image_url ?? null);
 const sourceUrl = validUrl(article?.source_url ?? null);
 
-const formattedDate = article?.published_at
-  ? new Intl.DateTimeFormat("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    }).format(new Date(article.published_at))
-  : "Tanggal tidak tersedia";
-
-const fullImageUrl = imageUrl
-  ? (imageUrl.startsWith("/") ? `https://infolokerkita.web.id${imageUrl}` : imageUrl)
-  : undefined;
+const formattedDate = formatJakartaDate(article?.published_at);
+const canonicalUrl = slug ? `${SITE_URL}${getNewsDetailPath(slug)}` : toCanonicalUrl(Astro.url.pathname);
+const schemaImageUrl = toRasterImageUrl(imageUrl) || DEFAULT_OG_IMAGE;
+const metaDescription = cleanMetaText(article?.excerpt || article?.title, 160) || article?.title || "";
 
 const articleSchema = article ? {
   "@context": "https://schema.org",
   "@type": "NewsArticle",
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": canonicalUrl,
+  },
   headline: article.title,
-  description: article.excerpt || article.title,
-  image: fullImageUrl ? [fullImageUrl] : undefined,
-  datePublished: article.published_at || undefined,
+  description: metaDescription,
+  image: [schemaImageUrl],
+  datePublished: toIsoOrUndefined(article.published_at),
+  dateModified: toIsoOrUndefined(article.updated_at || article.published_at),
   inLanguage: "id-ID",
   author: {
     "@type": "Organization",
@@ -196,25 +220,40 @@ const articleSchema = article ? {
     name: "Info Loker Kita",
     logo: {
       "@type": "ImageObject",
-      url: "https://infolokerkita.web.id/favicon.svg"
+      url: `${SITE_URL}/logo.png`
     }
   }
 } : null;
+
+const breadcrumbSchema = article ? buildBreadcrumbJsonLd([
+  { name: "Beranda", url: "/" },
+  { name: "Berita", url: "/berita/" },
+  { name: article.title, url: canonicalUrl },
+]) : null;
 ---
 
 {article && !error ? (
   <BaseLayout
     title={`${article.title} — Info Loker Kita`}
-    description={article.excerpt || article.title}
-    ogImage={fullImageUrl}
+    description={metaDescription}
+    ogImage={schemaImageUrl}
     ogType="article"
+    canonical={canonicalUrl}
   >
-    {articleSchema && (
-      <script
-        type="application/ld+json"
-        set:html={JSON.stringify(articleSchema)}
-      />
-    )}
+    <Fragment slot="head">
+      {articleSchema && (
+        <script
+          type="application/ld+json"
+          set:html={serializeJsonLd(articleSchema)}
+        />
+      )}
+      {breadcrumbSchema && (
+        <script
+          type="application/ld+json"
+          set:html={serializeJsonLd(breadcrumbSchema)}
+        />
+      )}
+    </Fragment>
     <main class="article-container">
       <nav class="article-breadcrumbs" aria-label="Breadcrumb">
         <a href="/">Beranda</a>
@@ -251,7 +290,7 @@ const articleSchema = article ? {
         <div class="article-share">
           <span class="share-label">Bagikan artikel ini:</span>
           <a
-            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(article.title + ' ' + (Astro.url ? Astro.url.href : ''))}`}
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${article.title} ${canonicalUrl}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             class="btn-share btn-share-wa"
@@ -298,7 +337,7 @@ const articleSchema = article ? {
 
               return (
                 <article class="related-news-card">
-                  <a href={`/berita/${rel.slug}/`} class="related-card-link">
+                  <a href={getNewsDetailPath(rel.slug)} class="related-card-link">
                     <div class="related-card-image">
                       {relImage ? (
                         <img src={relImage} alt={rel.image_alt || rel.title} loading="lazy" decoding="async" />
@@ -343,6 +382,7 @@ const articleSchema = article ? {
   <BaseLayout
     title="Berita Tidak Ditemukan — Info Loker Kita"
     description="Berita yang kamu cari tidak ditemukan."
+    robots="noindex,follow"
   >
     <main class="not-found">
       <div class="not-found-icon">📰</div>

@@ -1,37 +1,54 @@
 ---
 import "../styles/global.css";
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_URL,
+  cleanMetaText,
+  serializeJsonLd,
+  toCanonicalUrl,
+  toRasterImageUrl,
+} from "../lib/seo";
 
 interface Props {
   title?: string;
   description?: string;
   ogImage?: string;
   ogType?: "website" | "article";
+  robots?: string;
+  canonical?: string;
 }
+
+const DEFAULT_DESCRIPTION =
+  "Info Loker Kita adalah portal informasi lowongan kerja resmi dan terpercaya di Indonesia. Temukan info loker terbaru dari sumber terverifikasi.";
 
 const {
   title = "Info Loker Kita — Temukan Lowongan Kerja Terbaru",
-  description = "Info Loker Kita adalah portal informasi lowongan kerja resmi dan terpercaya di Indonesia. Temukan info loker terbaru dari sumber terverifikasi.",
+  description = DEFAULT_DESCRIPTION,
   ogImage,
-  ogType = "website"
+  ogType = "website",
+  robots = "index,follow,max-image-preview:large",
+  canonical,
 } = Astro.props;
 
-const siteUrl = "https://infolokerkita.web.id";
-const canonicalUrl = new URL(Astro.url.pathname, siteUrl).href;
-const socialImage = ogImage || `${siteUrl}/og-image.png`;
+const metaDescription = cleanMetaText(description, 160) || DEFAULT_DESCRIPTION;
+const canonicalUrl = canonical
+  ? (canonical.startsWith("http") ? canonical : toCanonicalUrl(canonical))
+  : toCanonicalUrl(Astro.url.pathname);
+const socialImage = toRasterImageUrl(ogImage) || DEFAULT_OG_IMAGE;
 
-const schema = {
+const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Info Loker Kita",
   alternateName: ["InfoLokerKita", "Info Loker", "InfoLoker"],
-  url: `${siteUrl}/`,
-  description,
+  url: `${SITE_URL}/`,
+  description: DEFAULT_DESCRIPTION,
   inLanguage: "id-ID",
   potentialAction: {
     "@type": "SearchAction",
-    target: `${siteUrl}/lowongan/?q={search_term_string}`,
-    "query-input": "required name=search_term_string"
-  }
+    target: `${SITE_URL}/lowongan/?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
 };
 ---
 
@@ -42,9 +59,8 @@ const schema = {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <meta name="theme-color" content="#0b6bcb" />
-    <meta name="description" content={description} />
-    <meta name="keywords" content="info loker kita, info loker, infolokerkita, lowongan kerja indonesia, cari loker terbaru, loker bumn, loker fresh graduate" />
-    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="description" content={metaDescription} />
+    <meta name="robots" content={robots} />
     <meta name="format-detection" content="telephone=no" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -65,7 +81,7 @@ const schema = {
     <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content="Info Loker Kita" />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={metaDescription} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={socialImage} />
     <meta property="og:image:alt" content={title} />
@@ -73,13 +89,15 @@ const schema = {
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:description" content={metaDescription} />
     <meta name="twitter:image" content={socialImage} />
+    <meta name="twitter:image:alt" content={title} />
 
     <script
       type="application/ld+json"
-      set:html={JSON.stringify(schema)}
+      set:html={serializeJsonLd(websiteSchema)}
     />
+    <slot name="head" />
   </head>
 
   <body>

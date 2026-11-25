@@ -1,5 +1,41 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { supabase } from "../../lib/supabase";
+import { formatJakartaDate, getJakartaToday, getJobDetailPath } from "../../lib/seo";
+
+const todayWib = getJakartaToday();
+let initialJobs: Array<{
+  slug: string;
+  title: string;
+  company_name: string | null;
+  location: string | null;
+  employment_type: string | null;
+  description: string | null;
+  source_url: string | null;
+  published_at: string | null;
+}> = [];
+let initialTotal = 0;
+
+try {
+  const { data, count } = await supabase
+    .from("jobs")
+    .select(
+      "slug,title,company_name,location,employment_type,description,source_url,published_at",
+      { count: "exact" }
+    )
+    .eq("status", "published")
+    .not("slug", "is", null)
+    .not("published_at", "is", null)
+    .not("deadline", "is", null)
+    .gte("deadline", todayWib)
+    .order("published_at", { ascending: false })
+    .order("slug", { ascending: true })
+    .range(0, 8);
+  initialJobs = (data ?? []).filter((j) => Boolean(j.slug));
+  initialTotal = count ?? initialJobs.length;
+} catch {
+  initialJobs = [];
+}
 ---
 <BaseLayout
   title="Daftar Lowongan Kerja Terbaru | Info Loker Kita"
@@ -11,59 +47,100 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <a class="brand" href="/" aria-label="Info Loker Kita beranda">
         <img src="/favicon.svg" alt="Logo Info Loker Kita" width="38" height="38" class="brand-logo-icon" />
         <span>Info Loker <span>Kita</span></span>
-      </a>  <nav class="nav-links" aria-label="Navigasi utama">
-    <a href="/">Beranda</a>
-    <a href="/lowongan">Lowongan</a>
-  </nav>
-</div>
+      </a>
+      <nav class="nav-links" aria-label="Navigasi utama">
+        <a href="/">Beranda</a>
+        <a href="/lowongan/">Lowongan</a>
+        <a href="/berita/">Berita</a>
+      </nav>
+    </div>
+  </header>
 
-  </header>  <main class="section">
+  <main class="section">
     <div class="container">
       <div class="section-heading">
         <div>
           <h1>Daftar lowongan kerja</h1>
           <p>Temukan peluang kerja dan periksa sumber rekrutmen resminya.</p>
         </div>
-      </div>  <form id="search-form" class="search-panel">
-    <div class="search-field">
-      <label for="keyword">Posisi atau perusahaan</label>
-      <input
-        id="keyword"
-        type="search"
-        placeholder="Contoh: Operator Produksi"
-      />
+      </div>
+
+      <form id="search-form" class="search-panel">
+        <div class="search-field">
+          <label for="keyword">Posisi atau perusahaan</label>
+          <input
+            id="keyword"
+            type="search"
+            placeholder="Contoh: Operator Produksi"
+          />
+        </div>
+
+        <div class="search-field">
+          <label for="province">Provinsi</label>
+          <select id="province"><option value="">Memuat provinsi...</option></select>
+        </div>
+        <div class="search-field">
+          <label for="city">Kota/Kabupaten</label>
+          <select id="city" disabled><option value="">Pilih provinsi dahulu</option></select>
+        </div>
+        <div class="search-field">
+          <label for="district">Kecamatan</label>
+          <select id="district" disabled><option value="">Pilih kota/kabupaten dahulu</option></select>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Cari ↗</button>
+      </form>
+
+      <p id="job-status" role="status" aria-live="polite">
+        {initialJobs.length > 0 ? `${initialTotal} lowongan ditemukan. Halaman 1.` : "Memuat lowongan..."}
+      </p>
+
+      <div id="job-list" class="job-grid">
+        {initialJobs.map((job) => {
+          const cleanDesc = (job.description || "").replace(/\\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+          const snippet = cleanDesc.length > 170 ? `${cleanDesc.slice(0, 170).trimEnd()}…` : cleanDesc;
+          const initials = (job.company_name || "PT")
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((w) => w[0])
+            .join("")
+            .toUpperCase();
+          return (
+            <article class="job-card">
+              <div class="job-company">
+                <div class="company-logo">{initials}</div>
+                <span>{job.company_name || "Perusahaan tidak diketahui"}</span>
+              </div>
+              <h2>{job.title}</h2>
+              <div class="job-meta-row">
+                <span class="job-badge job-badge-location">📍 {job.location || "Indonesia"}</span>
+                <span class="job-badge job-badge-type">{job.employment_type || "Penuh Waktu"}</span>
+                {job.published_at && (
+                  <span class="job-badge job-badge-date">⏱ {formatJakartaDate(job.published_at, { day: "numeric", month: "short", year: "numeric" })}</span>
+                )}
+              </div>
+              <p class="job-description">{snippet}</p>
+              <div class="job-card-actions">
+                <a href={getJobDetailPath(job.slug)} class="job-source">Lihat detail →</a>
+                {job.source_url && (
+                  <a href={job.source_url} target="_blank" rel="nofollow noopener noreferrer" class="job-source" style="color: var(--muted); font-size: 13px;">Sumber resmi ↗</a>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <nav id="pagination" class="pagination" aria-label="Navigasi halaman"></nav>
+
+      <p class="back-home">
+        <a href="/">← Kembali ke beranda</a>
+      </p>
     </div>
+  </main>
 
-    <div class="search-field">
-        <label for="province">Provinsi</label>
-        <select id="province"><option value="">Memuat provinsi...</option></select>
-      </div>
-      <div class="search-field">
-        <label for="city">Kota/Kabupaten</label>
-        <select id="city" disabled><option value="">Pilih provinsi dahulu</option></select>
-      </div>
-      <div class="search-field">
-        <label for="district">Kecamatan</label>
-        <select id="district" disabled><option value="">Pilih kota/kabupaten dahulu</option></select>
-      </div>
-
-    <button class="btn btn-primary" type="submit">Cari ↗</button>
-  </form>
-
-  <p id="job-status" role="status" aria-live="polite">
-    Memuat lowongan...
-  </p>
-
-  <div id="job-list" class="job-grid"></div>
-
-  <nav id="pagination" class="pagination" aria-label="Navigasi halaman"></nav>
-
-  <p class="back-home">
-    <a href="/">← Kembali ke beranda</a>
-  </p>
-</div>
-
-  </main>  <footer class="site-footer">
+  <footer class="site-footer">
     <div class="container">
       <div class="footer-columns">
         <div class="footer-col brand-col">
@@ -112,8 +189,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <p class="footer-subtext">Informasi bersumber dari portal resmi rekrutmen perusahaan dan Karirhub Kemnaker.</p>
       </div>
     </div>
-  </footer>  <script>
+  </footer>
+
+  <script>
     import { supabase } from "../../lib/supabase";
+    import { formatJakartaDate, getJakartaToday, getJobDetailPath } from "../../lib/seo";
     import { setupLocationFilters } from "../../scripts/location-filter";
 
     type Job = {
@@ -146,16 +226,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const initialParams = new URLSearchParams(window.location.search);
     if (keywordInput) keywordInput.value = initialParams.get("q") || "";
 
-
     let currentPage = Math.max(1, Number(initialParams.get("page")) || 1);
-
-    function localToday() {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    }
 
     function escapeLike(value: string) {
       return value.replace(/[\\%_]/g, "\\$&");
@@ -374,7 +445,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         if (job.published_at) {
           const dateBadge = document.createElement("span");
           dateBadge.className = "job-badge job-badge-date";
-          dateBadge.textContent = `⏱ ${new Date(job.published_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}`;
+          dateBadge.textContent = `⏱ ${formatJakartaDate(job.published_at, { day: "numeric", month: "short", year: "numeric" })}`;
           metaRow.append(dateBadge);
         }
 
@@ -393,7 +464,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         actions.className = "job-card-actions";
 
         const detail = document.createElement("a");
-        detail.href = `/lowongan/${encodeURIComponent(job.slug)}/`;
+        detail.href = getJobDetailPath(job.slug);
         detail.textContent = "Lihat detail →";
         detail.className = "job-source";
 
@@ -430,7 +501,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       renderSkeletons(PAGE_SIZE);
       if (pagination) pagination.replaceChildren();
 
-      const today = localToday();
+      const todayWib = getJakartaToday();
       const keyword = (keywordInput?.value || "").trim();
       const province = (provinceInput?.value || "").trim();
       const city = (cityInput?.value || "").trim();
@@ -443,7 +514,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           { count: "exact" }
         )
         .eq("status", "published")
-        .gte("deadline", today)
+        .not("slug", "is", null)
+        .not("published_at", "is", null)
+        .not("deadline", "is", null)
+        .gte("deadline", todayWib)
         .order("published_at", { ascending: false })
         .order("slug", { ascending: true });
 
@@ -504,4 +578,5 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       console.error("Gagal memuat pilihan wilayah:", error);
       void loadJobs();
     });
-  </script></BaseLayout>
+  </script>
+</BaseLayout>

@@ -27,7 +27,7 @@ Sistem operasional perusahaan digital berbasis AI mandiri untuk portal [infoloke
 Dashboard antarmuka khusus CEO dibangun terintegrasi di website:
 
 - **URL Dashboard:** `http://localhost:4321/hq/` (saat local dev) atau `https://infolokerkita.web.id/hq/` (setelah deploy).
-- **Autentikasi CEO:** Dilindungi PIN keamanan (default: `infoloker2026`, dapat diubah di `.env` dengan variabel `CEO_SECRET_PIN`).
+- **Autentikasi CEO:** Dilindungi PIN keamanan (wajib diatur melalui variabel lingkungan `CEO_SECRET_PIN` minimal 8 karakter, tanpa PIN bawaan).
 - **13 Modul Dashboard:**
   1. *Overview:* KPI data real Supabase, status sistem, antrean tugas terbaru.
   2. *AI Employees:* Kartu status dan kinerja 9 divisi AI.
@@ -97,5 +97,6 @@ SUPABASE_SERVICE_ROLE_KEY=...
 # Opsional untuk model bahasa eksternal (sistem otomatis fallback jika kosong):
 GEMINI_API_KEY=...
 # PIN Akses CEO Dashboard:
-CEO_SECRET_PIN=infoloker2026
+CEO_SECRET_PIN=<isi_pin_rahasia_minimal_8_karakter>
+AI_COMPANY_ALLOWED_ORIGINS=https://infolokerkita.web.id,http://localhost:4321
 ```

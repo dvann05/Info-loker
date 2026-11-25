@@ -1,14 +1,16 @@
-import re
 import json
+import re
 import time
-import urllib.request
 import urllib.parse
-from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
-from automation.ai_company.core.database import supabase_client, local_db
-from automation.ai_company.core.task_queue import task_queue
+import urllib.request
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
+from automation.ai_company.core.config import PROJECT_ROOT
+from automation.ai_company.core.database import local_db, supabase_client
 
 API_KARIRHUB = "https://api.kemnaker.go.id/karirhub/vacancy/v2/published-industrial-vacancies"
+REGION_FILE = PROJECT_ROOT / "automation" / "data" / "karirhub_regions.json"
+
 
 class AIRecruitmentAgent:
     """Divisi AI Recruitment: Mencari lowongan terpercaya dari Karirhub dan sumber resmi."""
@@ -16,10 +18,47 @@ class AIRecruitmentAgent:
     def __init__(self):
         self.name = "ai_recruitment"
         self.role = "Spesialis Rekrutmen & Kurasi Loker"
+        self._regions_cache: Dict[str, Dict[str, str]] = {}
+
+    def _load_regions(self) -> Dict[str, Dict[str, str]]:
+        if self._regions_cache:
+            return self._regions_cache
+        try:
+            with open(REGION_FILE, encoding="utf-8") as file:
+                data = json.load(file)
+                if isinstance(data, dict):
+                    self._regions_cache = data
+        except Exception as exc:
+            local_db.log(self.name, f"Gagal memuat karirhub_regions.json: {exc}", level="WARN")
+        return self._regions_cache
+
+    def _resolve_location(self, item: Dict[str, Any]) -> Tuple[str, str]:
+        city = str(item.get("city_name") or "").strip()
+        province = str(item.get("province_name") or "").strip()
+
+        if not city or not province:
+            regions = self._load_regions()
+            for entry in item.get("locations") or []:
+                if not isinstance(entry, str):
+                    continue
+                region_id = entry.split(":", 1)[1].strip() if entry.startswith("city:") else entry.strip()
+                region = regions.get(region_id)
+                if isinstance(region, dict):
+                    if not city and region.get("city"):
+                        city = str(region["city"]).strip()
+                    if not province and region.get("province"):
+                        province = str(region["province"]).strip()
+                    if city and province:
+                        break
+
+        return (
+            city or "Lokasi belum dicantumkan",
+            province or "Belum dicantumkan",
+        )
 
     def fetch_karirhub_page(self, page: int = 1, limit: int = 20) -> List[Dict[str, Any]]:
         url = f"{API_KARIRHUB}?page={page}&limit={limit}"
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 InfoLoker/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 InfoLoker/2.0"})
         try:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
@@ -29,19 +68,38 @@ class AIRecruitmentAgent:
             return []
 
     def get_existing_records(self) -> Tuple[set, set]:
-        """Mengambil slug dan pasangan (judul, perusahaan) yang sudah ada di database untuk mencegah duplikasi konten."""
+        """Mengambil seluruh slug dan pasangan (judul, perusahaan) yang sudah ada untuk mencegah duplikasi."""
+        slugs = set()
+        pairs = set()
+        offset = 0
+        page_size = 1000
+
         try:
-            rows = supabase_client.query_rows("jobs", "select=slug,title,company_name&limit=500&order=created_at.desc")
-            slugs = {r["slug"] for r in rows if "slug" in r}
-            pairs = {
-                (re.sub(r"[^a-z0-9]", "", str(r.get("title", "")).lower()), 
-                 re.sub(r"[^a-z0-9]", "", str(r.get("company_name", "")).lower()))
-                for r in rows if r.get("title") and r.get("company_name")
-            }
+            while True:
+                query = urllib.parse.urlencode({
+                    "select": "slug,title,company_name",
+                    "order": "created_at.desc",
+                    "limit": page_size,
+                    "offset": offset,
+                })
+                rows = supabase_client.query_rows("jobs", query)
+                if not rows:
+                    break
+                for r in rows:
+                    if r.get("slug"):
+                        slugs.add(r["slug"])
+                    if r.get("title") and r.get("company_name"):
+                        pairs.add((
+                            re.sub(r"[^a-z0-9]", "", str(r["title"]).lower()),
+                            re.sub(r"[^a-z0-9]", "", str(r["company_name"]).lower()),
+                        ))
+                if len(rows) < page_size:
+                    break
+                offset += len(rows)
             return slugs, pairs
         except Exception as e:
             local_db.log(self.name, f"Gagal memuat data eksisting: {e}", level="WARN")
-            return set(), set()
+            return slugs, pairs
 
     def discover_vacancies(self, target_count: int = 20, max_pages: int = 5) -> Dict[str, Any]:
         """Menjalankan proses pencarian lowongan kerja terpercaya."""
@@ -52,7 +110,7 @@ class AIRecruitmentAgent:
         discovered = []
         skipped_duplicate = 0
         pages_checked = 0
-        company_batch_counts = {}
+        company_batch_counts: Dict[str, int] = {}
 
         for page in range(1, max_pages + 1):
             pages_checked += 1
@@ -82,7 +140,6 @@ class AIRecruitmentAgent:
                     skipped_duplicate += 1
                     continue
 
-                # Generate slug preview
                 raw_slug = f"{title}-{company}".lower()
                 clean_slug = re.sub(r"[^a-z0-9]+", "-", raw_slug).strip("-") + f"-{job_id}"
 
@@ -90,7 +147,8 @@ class AIRecruitmentAgent:
                     skipped_duplicate += 1
                     continue
 
-                # Tandai sudah ada agar tidak masuk berulang kali
+                city, province = self._resolve_location(item)
+
                 company_batch_counts[norm_company] = company_batch_counts.get(norm_company, 0) + 1
                 existing_pairs.add(pair_key)
                 existing_slugs.add(clean_slug)
@@ -100,8 +158,8 @@ class AIRecruitmentAgent:
                     "title": title,
                     "company_name": company,
                     "company_logo_uri": item.get("company_logo_uri"),
-                    "city": item.get("city_name") or "Lokasi belum dicantumkan",
-                    "province": item.get("province_name") or "Belum dicantumkan",
+                    "city": city,
+                    "province": province,
                     "job_type": item.get("job_type_name") or "Full-time",
                     "platform_link": item.get("platform_link"),
                     "min_salary": item.get("min_salary_amount"),
@@ -112,7 +170,7 @@ class AIRecruitmentAgent:
                     "job_function": item.get("job_function_name"),
                     "industry": item.get("industry_name"),
                     "quota": item.get("available_quota") or item.get("quota"),
-                    "slug": clean_slug
+                    "slug": clean_slug,
                 })
 
                 if len(discovered) >= target_count:
@@ -133,7 +191,7 @@ class AIRecruitmentAgent:
             "skipped_duplicates": skipped_duplicate,
             "pages_scanned": pages_checked,
             "duration_seconds": duration,
-            "candidates": discovered
+            "candidates": discovered,
         }
 
 

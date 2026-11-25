@@ -1,9 +1,10 @@
 import urllib.request
 import urllib.error
-from datetime import datetime, timezone
-from typing import Dict, Any, List
+from datetime import datetime
+from typing import Dict, Any
 from automation.ai_company.core.database import supabase_client, local_db
-from automation.ai_company.core.config import PROJECT_ROOT
+from automation.ai_company.core.config import PROJECT_ROOT, WIB_TIMEZONE
+
 
 class AIAuditorAgent:
     """Divisi AI Auditor: Pemeriksaan 404 URL, link expired, gambar mati, dan integritas sistem."""
@@ -25,7 +26,6 @@ class AIAuditorAgent:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 return resp.status < 400
         except urllib.error.HTTPError as e:
-            # Some platforms return 403 or 405 for HEAD, try GET with byte range
             if e.code in (403, 405):
                 return True
             return False
@@ -33,12 +33,12 @@ class AIAuditorAgent:
             return False
 
     def audit_jobs_database(self, sample_limit: int = 20) -> Dict[str, Any]:
-        """Pemeriksaan kesehatan data lowongan: duplikasi, expired, field kosong."""
+        """Pemeriksaan kesehatan data lowongan published: duplikasi, expired (WIB), field kosong."""
         jobs = supabase_client.query_rows(
             "jobs",
-            f"select=id,slug,title,company_name,deadline,apply_url,status&limit={sample_limit}&order=created_at.desc"
+            f"select=id,slug,title,company_name,deadline,apply_url,status&status=eq.published&limit={sample_limit}&order=created_at.desc"
         )
-        today = datetime.now(timezone.utc).date().isoformat()
+        today_wib = datetime.now(WIB_TIMEZONE).date().isoformat()
 
         expired = []
         missing_apply_url = []
@@ -52,7 +52,7 @@ class AIAuditorAgent:
             seen_slugs.add(slug)
 
             deadline = j.get("deadline")
-            if deadline and deadline < today:
+            if deadline and deadline < today_wib:
                 expired.append(slug)
 
             if not j.get("apply_url"):
@@ -76,7 +76,7 @@ class AIAuditorAgent:
         """Pemeriksaan kesehatan berita: gambar hilang, konten terlalu pendek."""
         news_items = supabase_client.query_rows(
             "news",
-            f"select=id,slug,title,image_url,content,status&limit={sample_limit}&order=created_at.desc"
+            f"select=id,slug,title,image_url,content,status&status=eq.published&limit={sample_limit}&order=created_at.desc"
         )
 
         broken_images = []
@@ -87,13 +87,11 @@ class AIAuditorAgent:
             img = n.get("image_url") or ""
             content = n.get("content") or ""
 
-            # Check if internal image file actually exists
             if img.startswith("/images/berita/"):
                 img_path = PROJECT_ROOT / "public" / img.lstrip("/")
                 if not img_path.exists():
                     broken_images.append(slug)
 
-            # Check content length
             if len(content) < 200:
                 short_articles.append(slug)
 
@@ -111,12 +109,11 @@ class AIAuditorAgent:
     def run_full_audit(self) -> Dict[str, Any]:
         """Menjalankan audit sistem secara menyeluruh dan mencatat temuan."""
         local_db.log(self.name, "Memulai pemeriksaan audit kesehatan sistem menyeluruh...")
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(WIB_TIMEZONE)
 
         jobs_audit = self.audit_jobs_database(sample_limit=25)
         news_audit = self.audit_news_database(sample_limit=20)
 
-        # Audit error logs in local DB
         with local_db.get_connection() as conn:
             err_rows = conn.execute("""
             SELECT count(*) as count FROM ai_logs 

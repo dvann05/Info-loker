@@ -1,40 +1,46 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { supabase } from "../../lib/supabase";
+import {
+  buildBreadcrumbJsonLd,
+  buildJobPostingJsonLd,
+  cleanMetaText,
+  fetchAllSupabaseRows,
+  formatJakartaDate,
+  getJakartaToday,
+  getJobDetailPath,
+  serializeJsonLd,
+} from "../../lib/seo";
 
 export const prerender = true;
 
-const jakartaToday = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Jakarta",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-}).format(new Date());
-
 export async function getStaticPaths() {
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+  const todayWib = getJakartaToday();
 
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("slug,title,company_name,company_logo,location,province,city,employment_type,description,source_url,apply_url,published_at,deadline")
-    .eq("status", "published")
-    .not("slug", "is", null)
-    .not("published_at", "is", null)
-    .not("deadline", "is", null)
-    .gte("deadline", today)
-    .order("published_at", { ascending: false });
+  const data = await fetchAllSupabaseRows<any>((from, to) =>
+    supabase
+      .from("jobs")
+      .select(
+        "slug,title,company_name,company_logo,location,province,city,employment_type,education,experience,salary_min,salary_max,description,requirements,benefits,source_url,apply_url,published_at,deadline,updated_at"
+      )
+      .eq("status", "published")
+      .not("slug", "is", null)
+      .not("published_at", "is", null)
+      .not("deadline", "is", null)
+      .gte("deadline", todayWib)
+      .order("published_at", { ascending: false })
+      .order("slug", { ascending: true })
+      .range(from, to)
+  );
 
-  if (error) {
-    throw new Error(`Gagal mengambil data lowongan: ${error.message}`);
-  }
-
-  return (data ?? [])
-    .filter((job) => job.slug)
+  const seen = new Set<string>();
+  return data
+    .filter((job) => {
+      const slug = (job.slug || "").trim();
+      if (!slug || seen.has(slug)) return false;
+      seen.add(slug);
+      return true;
+    })
     .map((job) => ({
       params: { slug: job.slug },
       props: { job },
@@ -44,36 +50,29 @@ export async function getStaticPaths() {
 const { job } = Astro.props;
 
 const title = `${job.title} — ${job.company_name || "Info Loker Kita"}`;
-const description = (job.description || `Informasi lowongan ${job.title}.`).slice(0, 300);
+const cleanDescription = (job.description || `Informasi lowongan ${job.title}.`)
+  .replace(/\\n/g, "\n")
+  .trim();
+const description = cleanMetaText(cleanDescription, 160) || `Informasi lowongan kerja ${job.title}.`;
 
-const jobSchema = {
-  "@context": "https://schema.org",
-  "@type": "JobPosting",
-  title: job.title,
-  description: job.description || job.title,
-  datePosted: job.published_at
-    ? new Date(job.published_at).toISOString()
-    : undefined,
-  validThrough: `${job.deadline}T23:59:59+07:00`,
-  employmentType: job.employment_type || "FULL_TIME",
-  hiringOrganization: {
-    "@type": "Organization",
-    name: job.company_name || "Perusahaan",
-    ...(job.company_logo ? { logo: job.company_logo } : {}),
-  },
-  jobLocation: {
-    "@type": "Place",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: job.city || job.location || "Indonesia",
-      addressRegion: job.province || "Indonesia",
-      addressCountry: "ID",
-    },
-  },
-};
-
-const jsonLd = JSON.stringify(jobSchema).replace(/</g, "\\u003c");
+const jobSchema = buildJobPostingJsonLd(job);
+const breadcrumbSchema = buildBreadcrumbJsonLd([
+  { name: "Beranda", url: "/" },
+  { name: "Lowongan Kerja", url: "/lowongan/" },
+  { name: job.title, url: getJobDetailPath(job.slug) },
+]);
+const jsonLd = serializeJsonLd(jobSchema);
+const breadcrumbJsonLd = serializeJsonLd(breadcrumbSchema);
 const applyUrl = job.apply_url || job.source_url;
+const requirements = Array.isArray(job.requirements)
+  ? job.requirements.filter(Boolean)
+  : [];
+const hasSalary = job.salary_min != null || job.salary_max != null;
+const salaryText = hasSalary
+  ? `${job.salary_min != null ? `Rp${Number(job.salary_min).toLocaleString("id-ID")}` : ""}${
+      job.salary_min != null && job.salary_max != null ? " – " : ""
+    }${job.salary_max != null ? `Rp${Number(job.salary_max).toLocaleString("id-ID")}` : ""}`
+  : null;
 ---
 
 <BaseLayout
@@ -81,10 +80,35 @@ const applyUrl = job.apply_url || job.source_url;
   description={description}
   ogType="article"
 >
-  <script type="application/ld+json" set:html={jsonLd} />
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={jsonLd} />
+    <script type="application/ld+json" set:html={breadcrumbJsonLd} />
+  </Fragment>
+
+  <header class="site-header">
+    <div class="container navbar">
+      <a class="brand" href="/" aria-label="Info Loker Kita beranda">
+        <img src="/favicon.svg" alt="Logo Info Loker Kita" width="38" height="38" class="brand-logo-icon" />
+        <span>Info Loker <span>Kita</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Navigasi utama">
+        <a href="/">Beranda</a>
+        <a href="/lowongan/">Lowongan</a>
+        <a href="/berita/">Berita</a>
+      </nav>
+    </div>
+  </header>
 
   <main class="section">
     <div class="container">
+      <nav class="job-breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Beranda</a>
+        <span aria-hidden="true">/</span>
+        <a href="/lowongan/">Lowongan</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{job.title}</span>
+      </nav>
+
       <article class="job-card">
         <h1>{job.title}</h1>
 
@@ -96,6 +120,7 @@ const applyUrl = job.apply_url || job.source_url;
               width="48"
               height="48"
               loading="lazy"
+              referrerpolicy="no-referrer"
             />
           )}
           <h2>{job.company_name || "Perusahaan tidak diketahui"}</h2>
@@ -106,14 +131,12 @@ const applyUrl = job.apply_url || job.source_url;
         {job.employment_type && (
           <p><strong>Tipe pekerjaan:</strong> {job.employment_type}</p>
         )}
+        {job.education && <p><strong>Pendidikan:</strong> {job.education}</p>}
+        {job.experience && <p><strong>Pengalaman:</strong> {job.experience}</p>}
+        {salaryText && <p><strong>Perkiraan gaji:</strong> {salaryText}</p>}
         <p>
-          <strong>Tanggal akhir informasi:</strong>
-          {new Date(`${job.deadline}T00:00:00+07:00`).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-            timeZone: "Asia/Jakarta",
-          })}
+          <strong>Tanggal akhir informasi:</strong>{" "}
+          {formatJakartaDate(job.deadline)}
         </p>
         <p class="deadline-note">
           Tanggal akhir informasi ini bukan jaminan batas pendaftaran resmi dari perusahaan.
@@ -123,15 +146,38 @@ const applyUrl = job.apply_url || job.source_url;
         <hr />
 
         <h2>Deskripsi Lowongan</h2>
-        <div class="job-description">{job.description || "Informasi deskripsi belum tersedia."}</div>
+        <div class="job-description">{cleanDescription || "Informasi deskripsi belum tersedia."}</div>
 
-        {applyUrl && (
-          <p>
-            <a href={applyUrl} target="_blank" rel="nofollow noopener noreferrer">
-              Lihat sumber dan informasi pendaftaran resmi
-            </a>
-          </p>
+        {requirements.length > 0 && (
+          <>
+            <h2>Persyaratan & Keahlian</h2>
+            <ul>
+              {requirements.map((item: string) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </>
         )}
+
+        {job.benefits && (
+          <>
+            <h2>Benefit</h2>
+            <p>{job.benefits}</p>
+          </>
+        )}
+
+        <div class="job-detail-actions">
+          {applyUrl && (
+            <a href={applyUrl} target="_blank" rel="nofollow noopener noreferrer" class="btn btn-primary">
+              Lamar / Lihat Pendaftaran Resmi ↗
+            </a>
+          )}
+          {job.source_url && job.source_url !== applyUrl && (
+            <a href={job.source_url} target="_blank" rel="nofollow noopener noreferrer" class="btn btn-secondary">
+              Sumber Resmi ↗
+            </a>
+          )}
+        </div>
       </article>
 
       <p><a href="/lowongan/">← Kembali ke daftar lowongan</a></p>
@@ -140,6 +186,27 @@ const applyUrl = job.apply_url || job.source_url;
 </BaseLayout>
 
 <style>
+  .job-breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    max-width: 900px;
+    margin: 0 auto 14px;
+    font-size: 13.5px;
+    color: var(--muted, #64748b);
+  }
+
+  .job-breadcrumbs a {
+    color: var(--primary, #0b6bcb);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .job-breadcrumbs a:hover {
+    text-decoration: underline;
+  }
+
   .job-card {
     background: var(--card, #fff);
     padding: 24px;
@@ -174,5 +241,12 @@ const applyUrl = job.apply_url || job.source_url;
   .deadline-note {
     font-size: 13px;
     opacity: .75;
+  }
+
+  .job-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
   }
 </style>

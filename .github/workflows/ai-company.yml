@@ -6,27 +6,32 @@ on:
     - cron: "0 22 * * *"
     # 07:00 WIB = 00:00 UTC (Siklus Redaksi Berita & Thumbnail)
     - cron: "0 0 * * *"
-    # 08:00 WIB = 01:00 UTC (Siklus Audit & Laporan Harian CEO)
+    # 08:00 WIB = 01:00 UTC (Siklus Pengarsipan, Audit, & Laporan Harian CEO)
     - cron: "0 1 * * *"
   workflow_dispatch:
     inputs:
       cycle:
-        description: 'Pilih siklus otomasi yang ingin dijalankan'
+        description: "Pilih siklus otomasi yang ingin dijalankan"
         required: true
-        default: 'all'
+        default: "all"
         type: choice
         options:
           - all
-          - '0500'
-          - '0700'
-          - '0800'
+          - "0500"
+          - "0700"
+          - "0800"
 
 permissions:
   contents: write
 
+concurrency:
+  group: ai-company-runner
+  cancel-in-progress: false
+
 jobs:
   run-ai-company:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout Codebase
         uses: actions/checkout@v4
@@ -36,12 +41,29 @@ jobs:
       - name: Setup Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
+          cache: "pip"
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Determine Automation Cycle
+        id: resolve_cycle
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.cycle }}" ]; then
+            CYCLE="${{ github.event.inputs.cycle }}"
+          else
+            case "${{ github.event.schedule }}" in
+              "0 22 * * *") CYCLE="0500" ;;
+              "0 0 * * *")  CYCLE="0700" ;;
+              "0 1 * * *")  CYCLE="0800" ;;
+              *)            CYCLE="all"  ;;
+            esac
+          fi
+          echo "cycle=$CYCLE" >> "$GITHUB_OUTPUT"
+          echo "Menjalankan siklus AI Company: $CYCLE"
 
       - name: Run AI Company Operations
         env:
@@ -52,50 +74,22 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python -m automation.ai_company.publish_single_article --sync-staged
-          CYCLE="${{ github.event.inputs.cycle }}"
-          if [ -z "$CYCLE" ]; then
-            CYCLE="all"
-          fi
-          python -m automation.ai_company.cli run "$CYCLE"
+          python -m automation.ai_company.cli run "${{ steps.resolve_cycle.outputs.cycle }}"
 
       - name: Commit & Push New Thumbnails and Reports
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/images/berita/*.svg automation/ai_company/reports/
+          git add public/images/berita/ automation/ai_company/reports/
           if git diff --staged --quiet; then
             echo "Tidak ada thumbnail atau laporan baru untuk di-commit."
           else
             git commit -m "feat(assets): auto-sync AI news thumbnails and daily report [skip ci]"
+            git pull --rebase origin main
             git push origin main
           fi
 
-  deploy-to-cloudflare:
+  deploy-website:
     needs: run-ai-company
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Codebase
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build website
-        run: npm run build
-        env:
-          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
-
-      - name: Deploy to Cloudflare
-        run: npx wrangler deploy --keep-vars
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit

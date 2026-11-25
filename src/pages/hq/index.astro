@@ -46,7 +46,7 @@ import "../../styles/global.css";
       #auth-modal {
         position: fixed;
         inset: 0;
-        background: rgba(8, 11, 17, 0.95);
+        background: rgba(8, 11, 17, 0.96);
         backdrop-filter: blur(12px);
         display: flex;
         align-items: center;
@@ -59,13 +59,20 @@ import "../../styles/global.css";
         border: 1px solid var(--border-color);
         border-radius: 16px;
         padding: 32px;
-        max-width: 420px;
+        max-width: 440px;
         width: 100%;
         text-align: center;
         box-shadow: 0 20px 40px rgba(0,0,0,0.6);
       }
       .auth-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--accent-blue); }
-      .auth-box p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px; }
+      .auth-box p { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 18px; }
+      .auth-label {
+        display: block;
+        text-align: left;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
       .auth-input {
         width: 100%;
         padding: 12px 16px;
@@ -73,11 +80,17 @@ import "../../styles/global.css";
         border: 1px solid var(--border-color);
         background: var(--bg-main);
         color: #fff;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         text-align: center;
-        letter-spacing: 4px;
-        margin-bottom: 16px;
+        letter-spacing: 3px;
+        margin-bottom: 14px;
         outline: none;
+      }
+      .auth-input-url {
+        letter-spacing: normal;
+        text-align: left;
+        font-size: 0.85rem;
+        font-family: 'JetBrains Mono', monospace;
       }
       .auth-input:focus { border-color: var(--accent-blue); }
       .auth-btn {
@@ -92,11 +105,15 @@ import "../../styles/global.css";
         transition: opacity 0.2s;
       }
       .auth-btn:hover { opacity: 0.9; }
+      .auth-btn:disabled { opacity: 0.6; cursor: wait; }
 
       /* Command Center Layout */
       .app-layout {
         display: flex;
         min-height: 100vh;
+      }
+      .app-layout[hidden] {
+        display: none;
       }
 
       /* Sidebar */
@@ -343,6 +360,7 @@ import "../../styles/global.css";
         color: #a5b4fc;
         max-height: 260px;
         overflow-y: auto;
+        white-space: pre-wrap;
       }
 
       /* Mobile responsiveness */
@@ -360,19 +378,22 @@ import "../../styles/global.css";
   </head>
   <body>
 
-    <!-- CEO PIN Gate -->
+    <!-- CEO PIN Gate (diverifikasi langsung ke API backend AI Company) -->
     <div id="auth-modal">
       <div class="auth-box">
         <div style="font-size: 2.5rem; margin-bottom: 12px;">🛡️</div>
         <h2>InfoLokerKita AI Headquarters</h2>
-        <p>Akses Terbatas: Hanya untuk Human Founder & CEO. Masukkan PIN Otorisasi:</p>
-        <input type="password" id="ceo-pin-input" class="auth-input" placeholder="••••••••" autofocus />
-        <button id="ceo-pin-submit" class="auth-btn">Buka Pusat Kendali</button>
-        <p id="auth-err" style="color: var(--accent-red); font-size: 0.8rem; margin-top: 12px; display: none;">PIN tidak valid. Silakan periksa kembali.</p>
+        <p>Akses Terbatas: PIN CEO diverifikasi langsung melalui server API AI Company.</p>
+        <label class="auth-label" for="api-base-input">Alamat Server API AI Company</label>
+        <input type="url" id="api-base-input" class="auth-input auth-input-url" value="http://127.0.0.1:8787" />
+        <label class="auth-label" for="ceo-pin-input">PIN Otorisasi CEO</label>
+        <input type="password" id="ceo-pin-input" class="auth-input" placeholder="••••••••" autocomplete="current-password" autofocus />
+        <button id="ceo-pin-submit" class="auth-btn" type="button">Verifikasi & Buka Pusat Kendali</button>
+        <p id="auth-err" style="color: var(--accent-red); font-size: 0.82rem; margin-top: 12px; margin-bottom: 0; display: none;"></p>
       </div>
     </div>
 
-    <div class="app-layout">
+    <div class="app-layout" id="hq-app" hidden>
       <!-- Sidebar Navigation -->
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -395,8 +416,8 @@ import "../../styles/global.css";
           <button class="nav-btn" data-tab="settings">⚙️ 13. System Settings</button>
         </nav>
         <div class="sidebar-footer">
-          <div>Website: <a href="/" target="_blank" style="color: var(--accent-blue); text-decoration: none;">infolokerkita.web.id ↗</a></div>
-          <div style="margin-top: 4px;">CEO Engine: v1.0.0 (Live)</div>
+          <div>Website: <a href="/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none;">infolokerkita.web.id ↗</a></div>
+          <div style="margin-top: 4px;">Portal: <a href="/lowongan/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none;">Lowongan</a> · <a href="/berita/" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none;">Berita</a></div>
         </div>
       </aside>
 
@@ -422,29 +443,29 @@ import "../../styles/global.css";
           <section id="tab-overview" class="tab-section active">
             <div class="ceo-command-bar">
               <span style="font-size: 1.2rem; align-self: center;">💬</span>
-              <input type="text" id="ceo-command-input" placeholder="Ketik perintah untuk AI Manager (contoh: 'Cari 10 loker baru', 'Buat artikel berita', 'Audit sistem')..." />
+              <input type="text" id="ceo-command-input" placeholder="Ketik perintah untuk AI Manager (contoh: 'Cari 10 loker baru', 'Buat artikel berita', 'Arsipkan loker expired', 'Audit sistem')..." />
               <button id="btn-send-ceo-command">Kirim ke AI Manager</button>
             </div>
 
             <div class="stat-grid">
               <div class="stat-card">
-                <div class="stat-label">Total Lowongan Aktif (Supabase)</div>
+                <div class="stat-label">Total Lowongan Aktif (WIB)</div>
                 <div class="stat-val" id="stat-jobs-count">...</div>
-                <div style="font-size: 0.78rem; color: var(--accent-blue);">Terkurasi & Terverifikasi</div>
+                <div style="font-size: 0.78rem; color: var(--accent-blue);">Status published & belum kedaluwarsa</div>
               </div>
               <div class="stat-card green">
-                <div class="stat-label">Total Berita Industri (Supabase)</div>
+                <div class="stat-label">Total Berita Terbit (Supabase)</div>
                 <div class="stat-val" id="stat-news-count">...</div>
-                <div style="font-size: 0.78rem; color: var(--accent-green);">Faktual & SEO Friendly</div>
+                <div style="font-size: 0.78rem; color: var(--accent-green);">Status published & terverifikasi</div>
               </div>
               <div class="stat-card orange">
                 <div class="stat-label">Divisi AI Aktif</div>
-                <div class="stat-val">9 / 9</div>
-                <div style="font-size: 0.78rem; color: var(--accent-orange);">AI Manager + 8 Divisi</div>
+                <div class="stat-val" id="stat-agents-count">...</div>
+                <div style="font-size: 0.78rem; color: var(--accent-orange);">AI Manager + Divisi Operasional</div>
               </div>
               <div class="stat-card amber">
-                <div class="stat-label">Status Sistem</div>
-                <div class="stat-val" style="font-size: 1.2rem; color: var(--accent-green);">🟢 ONLINE</div>
+                <div class="stat-label">Status Server AI API</div>
+                <div class="stat-val" id="stat-system-status" style="font-size: 1.2rem; color: var(--accent-amber);">MEMERIKSA...</div>
                 <div style="font-size: 0.78rem; color: var(--text-muted);">Astro + Cloudflare + Supabase</div>
               </div>
             </div>
@@ -452,10 +473,10 @@ import "../../styles/global.css";
             <div class="card">
               <div class="card-header">
                 <div class="card-title">🤖 Briefing AI Manager (Direktur Operasional)</div>
-                <span style="font-size: 0.8rem; color: var(--text-muted);" id="manager-time">Hari ini</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);" id="manager-time">Memuat waktu WIB...</span>
               </div>
               <p style="font-size: 0.92rem; line-height: 1.6; color: #cbd5e1;" id="manager-briefing-text">
-                "Selamat datang, CEO. Seluruh sembilan divisi AI siap menjalankan tugas. Database Supabase terhubung dengan 201 lowongan aktif dan 41 artikel berita. Pipeline otomatisasi siap berjalan pada jadwal 05.00, 07.00, dan 08.00 WIB."
+                Memuat ringkasan operasional terbaru dari database Supabase dan server AI Company...
               </p>
             </div>
 
@@ -487,11 +508,9 @@ import "../../styles/global.css";
           <section id="tab-employees" class="tab-section">
             <div class="card">
               <div class="card-header">
-                <div class="card-title">👥 Struktur Organisasi & 8 Divisi AI</div>
+                <div class="card-title">👥 Struktur Organisasi & Divisi AI</div>
               </div>
-              <div class="stat-grid" id="agents-card-grid">
-                <!-- Dynamically populated -->
-              </div>
+              <div class="stat-grid" id="agents-card-grid"></div>
             </div>
           </section>
 
@@ -500,10 +519,10 @@ import "../../styles/global.css";
             <div class="card">
               <div class="card-header">
                 <div class="card-title">💼 AI Recruitment — Kendali Scraper & Kurasi Loker</div>
-                <button class="btn-action-sm btn-action-primary" id="btn-trigger-recruitment">⚡ Jalankan Pencarian Loker (10 Target)</button>
+                <button class="btn-action-sm btn-action-primary" id="btn-trigger-recruitment">⚡ Jalankan Pencarian Loker</button>
               </div>
               <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
-                AI Recruitment memindai portal Karirhub Kemnaker dan sumber resmi, memprioritaskan perusahaan terpercaya di Indonesia (manufaktur, otomotif, logistik, ritel).
+                AI Recruitment memindai portal Karirhub Kemnaker dan sumber resmi, memetakan wilayah WIB, dan menyaring perusahaan terpercaya di Indonesia.
               </p>
               <div id="recruitment-result-box" style="margin-top: 12px;"></div>
             </div>
@@ -517,7 +536,7 @@ import "../../styles/global.css";
                 <button class="btn-action-sm btn-action-primary" id="btn-trigger-newsroom">⚡ Buat 1 Artikel Berita Baru</button>
               </div>
               <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
-                Memantau feed berita primer (ANTARA News, Kemnaker), menyusun draf faktual tanpa halusinasi, dan menyiapkan untuk database Supabase.
+                Memantau feed berita primer (ANTARA News, Kemnaker), menyusun draf faktual tanpa halusinasi, dan mempublikasikan ke Supabase.
               </p>
               <div id="newsroom-result-box"></div>
             </div>
@@ -527,15 +546,15 @@ import "../../styles/global.css";
           <section id="tab-seo" class="tab-section">
             <div class="card">
               <div class="card-header">
-                <div class="card-title">🔍 AI SEO Specialist — Optimasi Metadata & Keywords</div>
+                <div class="card-title">🔍 AI SEO Specialist — Optimasi Metadata & Sitemap</div>
               </div>
               <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
-                Standar SEO InfoLoker: Keyword density optimal, Meta Title (50-60 karakter), Meta Description (140-160 karakter), serta internal link silang ke lowongan terkait.
+                Standar SEO InfoLokerKita: URL kanonis konsisten, <code>JobPosting</code> & <code>NewsArticle</code> JSON-LD, serta <code>sitemap.xml</code> tersinkronisasi dengan zona waktu WIB.
               </p>
               <div class="stat-grid">
-                <div class="stat-card"><div class="stat-label">Aturan Meta Title</div><div class="stat-val" style="font-size: 1.1rem; color: var(--accent-blue);">Judul + Brand</div></div>
-                <div class="stat-card"><div class="stat-label">Heading Hierarchy</div><div class="stat-val" style="font-size: 1.1rem; color: var(--accent-green);">H1 > H2 > H3</div></div>
-                <div class="stat-card"><div class="stat-label">Internal Linking</div><div class="stat-val" style="font-size: 1.1rem; color: var(--accent-lime);">Aktif Terpasang</div></div>
+                <div class="stat-card"><div class="stat-label">Sitemap XML</div><div class="stat-val" style="font-size: 1rem;"><a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none;">/sitemap.xml ↗</a></div></div>
+                <div class="stat-card"><div class="stat-label">Robots.txt</div><div class="stat-val" style="font-size: 1rem;"><a href="/robots.txt" target="_blank" rel="noopener noreferrer" style="color: var(--accent-green); text-decoration: none;">/robots.txt ↗</a></div></div>
+                <div class="stat-card"><div class="stat-label">Rute Detail Loker</div><div class="stat-val" style="font-size: 1rem; color: var(--accent-lime);">/lowongan/[slug]/</div></div>
               </div>
             </div>
           </section>
@@ -547,7 +566,7 @@ import "../../styles/global.css";
                 <div class="card-title">🎨 AI Designer — Logo Resmi & Generator Thumbnail 16:9</div>
               </div>
               <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
-                Semua artikel berita otomatis dilengkapi thumbnail 16:9 orisinal berkualitas SVG/PNG di <code>public/images/berita/</code> dengan branding InfoLokerKita.
+                Semua artikel berita otomatis dilengkapi thumbnail 16:9 orisinal di <code>public/images/berita/</code> dengan branding InfoLokerKita.
               </p>
             </div>
           </section>
@@ -557,8 +576,9 @@ import "../../styles/global.css";
             <div class="card">
               <div class="card-header">
                 <div class="card-title">🗄️ AI Data Manager — Penjelajah Database Supabase</div>
-                <button class="btn-action-sm" id="btn-cleanup-expired">🧹 Bersihkan Loker Expired</button>
+                <button class="btn-action-sm" id="btn-cleanup-expired">🧹 Arsipkan Loker Expired</button>
               </div>
+              <div id="cleanup-result-box" style="margin-bottom: 12px;"></div>
               <div style="overflow-x: auto; margin-top: 12px;">
                 <table class="data-table">
                   <thead>
@@ -635,17 +655,17 @@ import "../../styles/global.css";
                 <div class="stat-card">
                   <div class="stat-label">Siklus Pagi (05.00 WIB)</div>
                   <div style="font-weight: 700; margin: 6px 0;">Kurasi Loker</div>
-                  <button class="btn-action-sm" onclick="triggerCycle('0500')">Jalankan 05.00</button>
+                  <button class="btn-action-sm" data-cycle="0500">Jalankan 05.00</button>
                 </div>
                 <div class="stat-card green">
                   <div class="stat-label">Siklus Pagi (07.00 WIB)</div>
                   <div style="font-weight: 700; margin: 6px 0;">Redaksi Berita</div>
-                  <button class="btn-action-sm" onclick="triggerCycle('0700')">Jalankan 07.00</button>
+                  <button class="btn-action-sm" data-cycle="0700">Jalankan 07.00</button>
                 </div>
                 <div class="stat-card orange">
                   <div class="stat-label">Siklus Pagi (08.00 WIB)</div>
                   <div style="font-weight: 700; margin: 6px 0;">Audit & Laporan</div>
-                  <button class="btn-action-sm" onclick="triggerCycle('0800')">Jalankan 08.00</button>
+                  <button class="btn-action-sm" data-cycle="0800">Jalankan 08.00</button>
                 </div>
               </div>
             </div>
@@ -658,7 +678,7 @@ import "../../styles/global.css";
                 <div class="card-title">💰 Financial Reports — Saluran Pendapatan Perusahaan</div>
               </div>
               <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
-                Prinsip InfoLoker: Pendapatan hanya dicatat apabila ada transaksi nyata yang terverifikasi.
+                Prinsip InfoLokerKita: Pendapatan hanya dicatat apabila ada transaksi nyata yang terverifikasi.
               </p>
               <div class="stat-grid">
                 <div class="stat-card"><div class="stat-label">Google AdSense</div><div class="stat-val" style="font-size: 1.2rem; color: var(--accent-green);">Rp 0 (Siap Setup)</div></div>
@@ -676,16 +696,16 @@ import "../../styles/global.css";
               </div>
               <div style="display: flex; flex-direction: column; gap: 14px; max-width: 600px;">
                 <div>
+                  <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Alamat API AI Company Aktif</label>
+                  <input type="text" id="cfg-api-base" readonly style="width: 100%; padding: 10px; background: #05070c; border: 1px solid var(--border-color); color: #fff; border-radius: 6px;" />
+                </div>
+                <div>
                   <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Supabase Project URL</label>
                   <input type="text" id="cfg-supabase-url" readonly style="width: 100%; padding: 10px; background: #05070c; border: 1px solid var(--border-color); color: #fff; border-radius: 6px;" value="Terkonfigurasi via .env" />
                 </div>
                 <div>
                   <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">AI Model Engine</label>
                   <input type="text" id="cfg-ai-model" readonly style="width: 100%; padding: 10px; background: #05070c; border: 1px solid var(--border-color); color: #fff; border-radius: 6px;" value="Google Gemini (gemini-2.5-flash) / Heuristic Fallback" />
-                </div>
-                <div>
-                  <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Batas Biaya AI Bulanan (USD)</label>
-                  <input type="text" id="cfg-cost-limit" readonly style="width: 100%; padding: 10px; background: #05070c; border: 1px solid var(--border-color); color: #fff; border-radius: 6px;" value="$10.00 USD" />
                 </div>
               </div>
             </div>
@@ -698,34 +718,129 @@ import "../../styles/global.css";
     <!-- Interactive Client Script -->
     <script>
       import { supabase } from "../../lib/supabase";
+      import { formatJakartaDate, getJakartaToday, getJobDetailPath } from "../../lib/seo";
 
-      const DEFAULT_API_BASE = "http://localhost:8787";
-      let activeApiBase = DEFAULT_API_BASE;
+      const DEFAULT_API_BASE = "http://127.0.0.1:8787";
+      let activeApiBase = (sessionStorage.getItem("hq_api_base") || DEFAULT_API_BASE).replace(/\/+$/, "");
       let ceoPin = sessionStorage.getItem("ceo_pin") || "";
 
-      // Auth check
       const authModal = document.getElementById("auth-modal");
-      const pinInput = document.getElementById("ceo-pin-input") as HTMLInputElement;
-      const pinSubmit = document.getElementById("ceo-pin-submit");
+      const hqApp = document.getElementById("hq-app");
+      const apiBaseInput = document.getElementById("api-base-input") as HTMLInputElement | null;
+      const pinInput = document.getElementById("ceo-pin-input") as HTMLInputElement | null;
+      const pinSubmit = document.getElementById("ceo-pin-submit") as HTMLButtonElement | null;
       const authErr = document.getElementById("auth-err");
 
-      function checkAuth() {
-        if (ceoPin) {
-          authModal?.remove();
-          initDashboard();
+      if (apiBaseInput) {
+        apiBaseInput.value = activeApiBase;
+      }
+
+      function escapeHtml(s: unknown): string {
+        return String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function showAuthError(message: string) {
+        if (!authErr) return;
+        authErr.textContent = message;
+        authErr.style.display = "block";
+      }
+
+      function clearAuthError() {
+        if (!authErr) return;
+        authErr.textContent = "";
+        authErr.style.display = "none";
+      }
+
+      function lockDashboard(reason?: string) {
+        sessionStorage.removeItem("ceo_pin");
+        ceoPin = "";
+        if (hqApp) hqApp.hidden = true;
+        if (authModal) authModal.style.display = "flex";
+        if (reason) showAuthError(reason);
+      }
+
+      async function apiFetch(path: string, options: RequestInit = {}) {
+        const headers = new Headers(options.headers || {});
+        headers.set("X-CEO-PIN", ceoPin);
+        if (options.body && !headers.has("Content-Type")) {
+          headers.set("Content-Type", "application/json");
+        }
+        const resp = await fetch(`${activeApiBase}${path}`, {
+          ...options,
+          headers,
+        });
+        if (resp.status === 401) {
+          lockDashboard("Sesi otorisasi ditolak atau kedaluwarsa. Masukkan PIN CEO yang valid.");
+          throw new Error("Unauthorized");
+        }
+        return resp;
+      }
+
+      async function verifyAndUnlock(pin: string, apiBase: string): Promise<boolean> {
+        const normalizedBase = apiBase.trim().replace(/\/+$/, "");
+        if (!normalizedBase) {
+          showAuthError("Alamat server API AI Company tidak boleh kosong.");
+          return false;
+        }
+        if (!pin) {
+          showAuthError("Masukkan PIN CEO terlebih dahulu.");
+          return false;
+        }
+
+        try {
+          const resp = await fetch(`${normalizedBase}/api/auth/verify`, {
+            method: "GET",
+            headers: { "X-CEO-PIN": pin },
+          });
+
+          if (resp.ok) {
+            activeApiBase = normalizedBase;
+            ceoPin = pin;
+            sessionStorage.setItem("hq_api_base", activeApiBase);
+            sessionStorage.setItem("ceo_pin", ceoPin);
+            clearAuthError();
+            if (authModal) authModal.style.display = "none";
+            if (hqApp) hqApp.hidden = false;
+            const cfgApi = document.getElementById("cfg-api-base") as HTMLInputElement | null;
+            if (cfgApi) cfgApi.value = activeApiBase;
+            void initDashboard();
+            return true;
+          }
+
+          if (resp.status === 401) {
+            showAuthError("PIN CEO tidak valid. Akses ditolak oleh server.");
+          } else if (resp.status === 503) {
+            showAuthError("Server belum mengonfigurasi CEO_SECRET_PIN di environment/.env.");
+          } else if (resp.status === 403) {
+            showAuthError("Origin situs ini belum masuk daftar AI_COMPANY_ALLOWED_ORIGINS di server.");
+          } else {
+            showAuthError(`Verifikasi gagal (HTTP ${resp.status}).`);
+          }
+          return false;
+        } catch {
+          showAuthError(
+            "Tidak dapat terhubung ke server AI Company. Jalankan: python -m automation.ai_company.cli server"
+          );
+          return false;
         }
       }
 
-      pinSubmit?.addEventListener("click", () => {
+      pinSubmit?.addEventListener("click", async () => {
+        if (!pinSubmit || !pinInput) return;
         const val = pinInput.value.trim();
-        if (val) {
-          // Store pin in session
-          ceoPin = val;
-          sessionStorage.setItem("ceo_pin", val);
-          authModal?.remove();
-          initDashboard();
-        } else {
-          if (authErr) authErr.style.display = "block";
+        const apiBase = apiBaseInput?.value.trim() || DEFAULT_API_BASE;
+        pinSubmit.disabled = true;
+        pinSubmit.textContent = "Memverifikasi...";
+        try {
+          await verifyAndUnlock(val, apiBase);
+        } finally {
+          pinSubmit.disabled = false;
+          pinSubmit.textContent = "Verifikasi & Buka Pusat Kendali";
         }
       });
 
@@ -734,8 +849,7 @@ import "../../styles/global.css";
       });
 
       document.getElementById("btn-logout")?.addEventListener("click", () => {
-        sessionStorage.removeItem("ceo_pin");
-        window.location.reload();
+        lockDashboard();
       });
 
       // Navigation tab switching
@@ -754,8 +868,6 @@ import "../../styles/global.css";
           if (targetSection) targetSection.classList.add("active");
 
           if (pageTitle) pageTitle.textContent = btn.textContent?.replace(/^[^\s]+\s+/, "") || "Command Center";
-
-          // Close mobile sidebar if open
           document.getElementById("sidebar")?.classList.remove("open");
         });
       });
@@ -765,183 +877,297 @@ import "../../styles/global.css";
       });
 
       async function initDashboard() {
-        loadSupabaseStats();
-        loadRecentTasks();
-        renderOrgChart();
+        const managerTime = document.getElementById("manager-time");
+        if (managerTime) {
+          managerTime.textContent = `${formatJakartaDate(new Date().toISOString())} (WIB)`;
+        }
+        await Promise.all([
+          loadSupabaseStats(),
+          loadApiStatus(),
+          loadRecentTasks(),
+        ]);
       }
 
       async function loadSupabaseStats() {
+        const todayWib = getJakartaToday();
         try {
-          const { count: jobsCount } = await supabase.from("jobs").select("id", { count: "exact", head: true });
-          const { count: newsCount } = await supabase.from("news").select("id", { count: "exact", head: true });
+          const [jobsRes, newsRes, recentRes] = await Promise.all([
+            supabase
+              .from("jobs")
+              .select("id", { count: "exact", head: true })
+              .eq("status", "published")
+              .not("deadline", "is", null)
+              .gte("deadline", todayWib),
+            supabase
+              .from("news")
+              .select("id", { count: "exact", head: true })
+              .eq("status", "published"),
+            supabase
+              .from("jobs")
+              .select("title,company_name,location,deadline,slug")
+              .eq("status", "published")
+              .not("deadline", "is", null)
+              .gte("deadline", todayWib)
+              .order("published_at", { ascending: false })
+              .limit(8),
+          ]);
+
+          const activeJobs = jobsRes.count || 0;
+          const publishedNews = newsRes.count || 0;
 
           const jobsEl = document.getElementById("stat-jobs-count");
           const newsEl = document.getElementById("stat-news-count");
-          if (jobsEl) jobsEl.textContent = String(jobsCount || 0);
-          if (newsEl) newsEl.textContent = String(newsCount || 0);
+          if (jobsEl) jobsEl.textContent = String(activeJobs);
+          if (newsEl) newsEl.textContent = String(publishedNews);
 
-          // Populate jobs table preview
-          const { data: recentJobs } = await supabase.from("jobs").select("title,company_name,location,deadline,slug").order("created_at", { ascending: false }).limit(6);
+          const briefingEl = document.getElementById("manager-briefing-text");
+          if (briefingEl) {
+            briefingEl.textContent =
+              `Selamat datang, CEO. Database Supabase saat ini mencatat ${activeJobs} lowongan kerja aktif (batas pendaftaran >= ${todayWib} WIB) dan ${publishedNews} artikel berita terbit. Jadwal otomatis berjalan pada 05.00, 05.30, 07.00, dan 08.00 WIB.`;
+          }
+
           const tbody = document.getElementById("supabase-jobs-tbody");
-          if (tbody && recentJobs) {
-            tbody.innerHTML = recentJobs.map(j => `
-              <tr>
-                <td><strong>${escapeHtml(j.title)}</strong></td>
-                <td>${escapeHtml(j.company_name)}</td>
-                <td>${escapeHtml(j.location)}</td>
-                <td>${j.deadline || 'Tidak dibatasi'}</td>
-                <td><a href="/lowongan/detail/?slug=${encodeURIComponent(j.slug)}" target="_blank" style="color: var(--accent-blue); text-decoration: none;">Lihat ↗</a></td>
-              </tr>
-            `).join("");
+          const recentJobs = recentRes.data || [];
+          if (tbody) {
+            if (!recentJobs.length) {
+              tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Belum ada lowongan aktif saat ini.</td></tr>';
+            } else {
+              tbody.innerHTML = recentJobs.map((j) => `
+                <tr>
+                  <td><strong>${escapeHtml(j.title)}</strong></td>
+                  <td>${escapeHtml(j.company_name)}</td>
+                  <td>${escapeHtml(j.location)}</td>
+                  <td>${escapeHtml(j.deadline ? formatJakartaDate(j.deadline) : "Tidak dibatasi")}</td>
+                  <td><a href="${getJobDetailPath(j.slug)}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-blue); text-decoration: none;">Lihat ↗</a></td>
+                </tr>
+              `).join("");
+            }
           }
         } catch (e) {
           console.error("Gagal memuat statistik Supabase:", e);
         }
       }
 
+      async function loadApiStatus() {
+        const statusEl = document.getElementById("stat-system-status");
+        const agentsEl = document.getElementById("stat-agents-count");
+
+        try {
+          const resp = await apiFetch("/api/status");
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const data = await resp.json();
+          const metrics = data.metrics || {};
+
+          if (statusEl) {
+            statusEl.textContent = "🟢 ONLINE";
+            statusEl.style.color = "var(--accent-green)";
+          }
+          if (agentsEl) {
+            const activeCount = metrics.active_agents_count ?? 0;
+            const totalCount = metrics.total_agents_count ?? (data.agents?.length || 0);
+            agentsEl.textContent = `${activeCount} / ${totalCount}`;
+          }
+          if (Array.isArray(data.agents)) {
+            renderOrgChart(data.agents);
+          }
+        } catch {
+          if (statusEl) {
+            statusEl.textContent = "🔴 OFFLINE";
+            statusEl.style.color = "var(--accent-red)";
+          }
+          if (agentsEl) agentsEl.textContent = "—";
+        }
+      }
+
       async function loadRecentTasks() {
         try {
-          const resp = await fetch(`${activeApiBase}/api/tasks`);
+          const resp = await apiFetch("/api/tasks");
           if (resp.ok) {
             const data = await resp.json();
-            const tasks = data.tasks || [];
-            renderTaskRows(tasks);
+            renderTaskRows(data.tasks || []);
           } else {
-            fallbackTaskRender();
+            renderTaskError("Gagal memuat daftar tugas dari server API.");
           }
-        } catch (e) {
-          fallbackTaskRender();
+        } catch {
+          renderTaskError("Server API tidak terjangkau.");
         }
+      }
+
+      function renderTaskError(msg: string) {
+        const row = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">${escapeHtml(msg)}</td></tr>`;
+        const tbody = document.getElementById("overview-tasks-tbody");
+        const fullTbody = document.getElementById("full-tasks-tbody");
+        if (tbody) tbody.innerHTML = row;
+        if (fullTbody) fullTbody.innerHTML = row;
       }
 
       function renderTaskRows(tasks: any[]) {
         const tbody = document.getElementById("overview-tasks-tbody");
         const fullTbody = document.getElementById("full-tasks-tbody");
-        const rows = tasks.slice(0, 8).map(t => `
-          <tr>
-            <td><code>${t.task_id}</code></td>
-            <td><strong>${t.agent_name}</strong></td>
-            <td>${escapeHtml(t.title)}</td>
-            <td><span class="badge-status ${t.status}">${t.status.toUpperCase()}</span></td>
-            <td>${t.completed_at ? new Date(t.completed_at).toLocaleTimeString("id-ID") : '-'}</td>
-          </tr>
-        `).join("");
-
-        if (tbody) tbody.innerHTML = rows || '<tr><td colspan="5" style="text-align: center;">Belum ada tugas tercatat.</td></tr>';
-        if (fullTbody) fullTbody.innerHTML = rows || '<tr><td colspan="5" style="text-align: center;">Belum ada tugas tercatat.</td></tr>';
-      }
-
-      function fallbackTaskRender() {
-        const tbody = document.getElementById("overview-tasks-tbody");
-        if (tbody) {
-          tbody.innerHTML = `
+        const rows = tasks.slice(0, 15).map((t) => {
+          const safeStatus = escapeHtml(String(t.status || "pending").toLowerCase());
+          const timeLabel = t.completed_at
+            ? formatJakartaDate(t.completed_at, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+            : "-";
+          return `
             <tr>
-              <td><code>task_auto_live</code></td>
-              <td><strong>ai_manager</strong></td>
-              <td>Sinkronisasi live Supabase & verifikasi operasional</td>
-              <td><span class="badge-status completed">ONLINE</span></td>
-              <td>${new Date().toLocaleTimeString("id-ID")}</td>
+              <td><code>${escapeHtml(t.task_id)}</code></td>
+              <td><strong>${escapeHtml(t.agent_name)}</strong></td>
+              <td>${escapeHtml(t.title)}</td>
+              <td><span class="badge-status ${safeStatus}">${escapeHtml(String(t.status || "").toUpperCase())}</span></td>
+              <td>${escapeHtml(timeLabel)}</td>
             </tr>
           `;
-        }
+        }).join("");
+
+        const emptyRow = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Belum ada tugas tercatat.</td></tr>';
+        if (tbody) tbody.innerHTML = rows || emptyRow;
+        if (fullTbody) fullTbody.innerHTML = rows || emptyRow;
       }
 
-      function renderOrgChart() {
+      function renderOrgChart(agents: any[]) {
         const container = document.getElementById("agents-card-grid");
         if (!container) return;
-        const agents = [
-          { name: "ai_manager", role: "Direktur Operasional", dept: "Executive", desc: "Pusat orkestrasi seluruh divisi dan pelaporan resmi kepada CEO." },
-          { name: "ai_recruitment", role: "Spesialis Rekrutmen", dept: "Recruitment", desc: "Kurasi dan pencarian lowongan terpercaya dari Karirhub & mitra." },
-          { name: "ai_verification", role: "Verifikator Integritas", dept: "Verification", desc: "Anti-fraud, keabsahan domain perusahaan, dan validitas tanggal." },
-          { name: "ai_newsroom", role: "Editor Berita Industri", dept: "Newsroom", desc: "Riset fakta berita primer dan penyusunan artikel terstruktur." },
-          { name: "ai_seo_specialist", role: "Spesialis SEO", dept: "SEO", desc: "Keywords LSI, metadata optimal, dan tautan internal linking." },
-          { name: "ai_designer", role: "Desainer Grafis", dept: "Design", desc: "Resolusi logo resmi dan pembuatan thumbnail berita 16:9." },
-          { name: "ai_data_manager", role: "Manajer Database", dept: "Data Management", desc: "Sinkronisasi Supabase, deduplikasi slug, dan arsip data." },
-          { name: "ai_marketing", role: "Strategis Pemasaran", dept: "Marketing", desc: "Copy Facebook/WA/Telegram dan kalender konten promosi." },
-          { name: "ai_auditor", role: "Auditor Sistem", dept: "Audit", desc: "Pemeriksaan URL 404, loker expired, dan integritas platform." }
-        ];
-
-        container.innerHTML = agents.map(a => `
-          <div class="stat-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size: 0.75rem; color: var(--accent-blue); font-weight:700;">${a.dept}</span>
-              <span class="badge-status completed">AKTIF</span>
+        container.innerHTML = agents.map((a) => {
+          const isActive = a.status === "active";
+          return `
+            <div class="stat-card">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size: 0.75rem; color: var(--accent-blue); font-weight:700;">${escapeHtml(a.department)}</span>
+                <span class="badge-status ${isActive ? "completed" : "pending"}">${isActive ? "AKTIF" : escapeHtml(String(a.status || "STANDBY").toUpperCase())}</span>
+              </div>
+              <div style="font-weight: 800; font-size: 1.05rem; margin-top: 8px;">${escapeHtml(a.name)}</div>
+              <div style="font-size: 0.85rem; color: #fff; margin-bottom: 6px;">${escapeHtml(a.role)}</div>
+              <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">${escapeHtml(a.description || "")}</p>
             </div>
-            <div style="font-weight: 800; font-size: 1.05rem; margin-top: 8px;">${a.name}</div>
-            <div style="font-size: 0.85rem; color: #fff; margin-bottom: 6px;">${a.role}</div>
-            <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">${a.desc}</p>
-          </div>
-        `).join("");
+          `;
+        }).join("");
+      }
+
+      function renderResultBox(containerId: string, payload: unknown) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        el.innerHTML = `<pre class="log-box">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>`;
       }
 
       // CEO Command submission
-      const cmdInput = document.getElementById("ceo-command-input") as HTMLInputElement;
-      const cmdBtn = document.getElementById("btn-send-ceo-command");
+      const cmdInput = document.getElementById("ceo-command-input") as HTMLInputElement | null;
+      const cmdBtn = document.getElementById("btn-send-ceo-command") as HTMLButtonElement | null;
 
       cmdBtn?.addEventListener("click", async () => {
         const text = cmdInput?.value.trim();
-        if (!text) return;
+        if (!text || !cmdBtn) return;
+        cmdBtn.disabled = true;
         cmdBtn.textContent = "Mengirim...";
         try {
-          const resp = await fetch(`${activeApiBase}/api/ceo/command`, {
+          const resp = await apiFetch("/api/ceo/command", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CEO-PIN": ceoPin
-            },
-            body: JSON.stringify({ command: text })
+            body: JSON.stringify({ command: text }),
           });
+          const data = await resp.json();
           if (resp.ok) {
-            const data = await resp.json();
             alert("Instruksi berhasil diproses oleh AI Manager!\n\n" + JSON.stringify(data.result?.summary || data.result?.message || data.result, null, 2));
-            cmdInput.value = "";
-            loadSupabaseStats();
-            loadRecentTasks();
+            if (cmdInput) cmdInput.value = "";
+            await Promise.all([loadSupabaseStats(), loadRecentTasks(), loadApiStatus()]);
           } else {
-            alert("Gagal memproses instruksi. Pastikan server daemon AI Company berjalan.");
+            alert(data.error || "Gagal memproses instruksi.");
           }
         } catch (e) {
-          alert("Server AI Company lokal belum berjalan. Anda dapat menjalankan di terminal:\npython -m automation.ai_company.cli server");
+          if ((e as Error).message !== "Unauthorized") {
+            alert("Server AI Company lokal tidak terjangkau.");
+          }
         } finally {
+          cmdBtn.disabled = false;
           cmdBtn.textContent = "Kirim ke AI Manager";
         }
       });
 
-      // Quick action triggers
-      (window as any).triggerCycle = async function(cycle: string) {
+      async function triggerCycle(cycle: string, resultBoxId?: string) {
         try {
-          const resp = await fetch(`${activeApiBase}/api/automation/trigger`, {
+          const resp = await apiFetch("/api/automation/trigger", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "X-CEO-PIN": ceoPin },
-            body: JSON.stringify({ cycle })
+            body: JSON.stringify({ cycle }),
           });
+          const data = await resp.json();
           if (resp.ok) {
+            if (resultBoxId) renderResultBox(resultBoxId, data.result);
             alert(`Siklus ${cycle} WIB berhasil dieksekusi!`);
-            loadSupabaseStats();
-            loadRecentTasks();
+            await Promise.all([loadSupabaseStats(), loadRecentTasks(), loadApiStatus()]);
           } else {
-            alert("Gagal mengeksekusi siklus. Periksa server daemon.");
+            alert(data.error || "Gagal mengeksekusi siklus.");
           }
         } catch (e) {
-          alert("Jalankan server daemon di terminal:\npython -m automation.ai_company.cli server");
+          if ((e as Error).message !== "Unauthorized") {
+            alert("Jalankan server daemon di terminal:\npython -m automation.ai_company.cli server");
+          }
         }
-      };
-
-      document.getElementById("btn-trigger-recruitment")?.addEventListener("click", () => {
-        (window as any).triggerCycle("0500");
-      });
-      document.getElementById("btn-trigger-newsroom")?.addEventListener("click", () => {
-        (window as any).triggerCycle("0700");
-      });
-      document.getElementById("btn-run-audit-now")?.addEventListener("click", () => {
-        (window as any).triggerCycle("0800");
-      });
-
-      function escapeHtml(s: string) {
-        return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       }
 
-      checkAuth();
+      document.querySelectorAll<HTMLButtonElement>("[data-cycle]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const cycle = btn.getAttribute("data-cycle") || "all";
+          void triggerCycle(cycle);
+        });
+      });
+
+      document.getElementById("btn-trigger-recruitment")?.addEventListener("click", () => {
+        void triggerCycle("0500", "recruitment-result-box");
+      });
+      document.getElementById("btn-trigger-newsroom")?.addEventListener("click", () => {
+        void triggerCycle("0700", "newsroom-result-box");
+      });
+      document.getElementById("btn-run-audit-now")?.addEventListener("click", () => {
+        void triggerCycle("0800", "audit-results-box");
+      });
+      document.getElementById("btn-quick-report")?.addEventListener("click", () => {
+        void triggerCycle("0800", "audit-results-box");
+      });
+      document.getElementById("btn-refresh-tasks")?.addEventListener("click", () => {
+        void loadRecentTasks();
+      });
+
+      document.getElementById("btn-cleanup-expired")?.addEventListener("click", async () => {
+        try {
+          const resp = await apiFetch("/api/data/cleanup-expired", { method: "POST", body: "{}" });
+          const data = await resp.json();
+          if (resp.ok) {
+            renderResultBox("cleanup-result-box", data.result);
+            await loadSupabaseStats();
+          } else {
+            alert(data.error || "Gagal mengarsipkan lowongan kedaluwarsa.");
+          }
+        } catch (e) {
+          if ((e as Error).message !== "Unauthorized") {
+            alert("Server AI Company lokal tidak terjangkau.");
+          }
+        }
+      });
+
+      document.getElementById("btn-generate-calendar")?.addEventListener("click", async () => {
+        try {
+          const resp = await apiFetch("/api/ceo/command", {
+            method: "POST",
+            body: JSON.stringify({ command: "marketing promo" }),
+          });
+          const data = await resp.json();
+          if (resp.ok) {
+            renderResultBox("marketing-calendar-box", data.result);
+          } else {
+            alert(data.error || "Gagal membuat kalender promosi.");
+          }
+        } catch (e) {
+          if ((e as Error).message !== "Unauthorized") {
+            alert("Server AI Company lokal tidak terjangkau.");
+          }
+        }
+      });
+
+      // Jika ada sesi tersimpan, tetap verifikasi ke server sebelum membuka dashboard
+      if (ceoPin) {
+        void verifyAndUnlock(ceoPin, activeApiBase).then((ok) => {
+          if (!ok) lockDashboard();
+        });
+      }
     </script>
   </body>
 </html>

@@ -2,22 +2,42 @@ name: Backfill Draft Karirhub
 
 on:
   workflow_dispatch:
+    inputs:
+      start_page:
+        description: "Halaman awal pemindaian Karirhub (kosongkan untuk lanjut dari automation_state)"
+        required: false
+        default: ""
+        type: string
+      max_pages:
+        description: "Jumlah maksimum halaman yang dipindai per eksekusi"
+        required: false
+        default: "100"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: karirhub-backfill
+  cancel-in-progress: false
 
 jobs:
   backfill:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Perbarui draft Karirhub
         run: python automation/sources/karirhub_backfill.py
         env:
           SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          KARIRHUB_BACKFILL_START_PAGE: ${{ inputs.start_page }}
+          KARIRHUB_BACKFILL_MAX_PAGES: ${{ inputs.max_pages }}

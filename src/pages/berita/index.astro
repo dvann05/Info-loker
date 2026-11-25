@@ -1,5 +1,37 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { supabase } from "../../lib/supabase";
+import { formatJakartaDate, getNewsDetailPath } from "../../lib/seo";
+
+let initialNews: Array<{
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  category: string;
+  image_url: string | null;
+  image_alt: string | null;
+  source_name: string | null;
+  published_at: string | null;
+}> = [];
+let initialTotalNews = 0;
+
+try {
+  const { data, count } = await supabase
+    .from("news")
+    .select(
+      "slug,title,excerpt,category,image_url,image_alt,source_name,published_at",
+      { count: "exact" }
+    )
+    .eq("status", "published")
+    .not("slug", "is", null)
+    .order("published_at", { ascending: false })
+    .order("slug", { ascending: true })
+    .range(0, 11);
+  initialNews = (data ?? []).filter((n) => Boolean(n.slug));
+  initialTotalNews = count ?? initialNews.length;
+} catch {
+  initialNews = [];
+}
 ---
 
 <BaseLayout
@@ -75,10 +107,38 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         
 
         <div id="news-status" class="news-status" aria-live="polite">
-          Memuat berita terbaru...
+          {initialNews.length > 0 ? `Menampilkan ${initialNews.length} dari ${initialTotalNews} berita` : "Memuat berita terbaru..."}
         </div>
 
-        <div id="news-list" class="news-grid"></div>
+        <div id="news-list" class="news-grid">
+          {initialNews.map((article) => (
+            <article class="news-card">
+              {article.image_url ? (
+                <div class="news-image-wrapper">
+                  <img
+                    src={article.image_url}
+                    alt={article.image_alt || article.title}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              ) : (
+                <div class="news-image-placeholder">📰</div>
+              )}
+              <div class="news-card-body">
+                <span class="news-category">{article.category}</span>
+                <h3 class="news-card-title">
+                  <a href={getNewsDetailPath(article.slug)}>{article.title}</a>
+                </h3>
+                <time class="news-date" datetime={article.published_at ?? undefined}>
+                  {formatJakartaDate(article.published_at)}
+                </time>
+                {article.excerpt && <p class="news-excerpt">{article.excerpt}</p>}
+                {article.source_name && <p class="news-source">Sumber: {article.source_name}</p>}
+              </div>
+            </article>
+          ))}
+        </div>
           <button id="load-more-news" class="load-more-news" type="button" hidden>
             Muat Berita Lainnya
           </button>
@@ -320,6 +380,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           { count: "exact" }
         )
         .eq("status", "published")
+        .not("slug", "is", null)
         .ilike("title", `%${searchTerm}%`)
         .order("published_at", { ascending: false })
         .range(from, to);

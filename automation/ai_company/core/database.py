@@ -9,11 +9,14 @@ from typing import Dict, Any, List, Optional
 from automation.ai_company.core.config import (
     SUPABASE_URL,
     SUPABASE_KEY,
-    LOCAL_DB_PATH
+    LOCAL_DB_PATH,
+    WIB_TIMEZONE,
 )
+
 
 class SupabaseClient:
     """Supabase REST API Client for reading and writing data."""
+
     def __init__(self, url: str = SUPABASE_URL, key: str = SUPABASE_KEY):
         self.url = url.rstrip('/') if url else ''
         self.key = key
@@ -28,7 +31,14 @@ class SupabaseClient:
             headers.update(extra)
         return headers
 
-    def request(self, endpoint: str, method: str = "GET", data: Any = None, extra_headers: Optional[Dict[str, str]] = None, timeout: int = 30) -> Any:
+    def request(
+        self,
+        endpoint: str,
+        method: str = "GET",
+        data: Any = None,
+        extra_headers: Optional[Dict[str, str]] = None,
+        timeout: int = 30
+    ) -> Any:
         if not self.url or not self.key:
             return None
 
@@ -57,7 +67,7 @@ class SupabaseClient:
                 if attempt == 3:
                     raise
                 time.sleep(2 ** attempt)
-            except Exception as e:
+            except Exception:
                 if attempt == 3:
                     raise
                 time.sleep(2 ** attempt)
@@ -81,39 +91,97 @@ class SupabaseClient:
             endpoint = f"{table}?{query}" if query else table
             res = self.request(endpoint)
             return res if isinstance(res, list) else []
-        except Exception as e:
+        except Exception:
             return []
 
-    def insert_rows(self, table: str, rows: List[Dict[str, Any]]) -> bool:
+    def insert_rows(
+        self,
+        table: str,
+        rows: List[Dict[str, Any]],
+        ignore_duplicates: bool = False,
+        on_conflict: Optional[str] = None,
+    ) -> bool:
         if not rows:
             return True
+        now_iso = datetime.now(WIB_TIMEZONE).isoformat()
+        prepared = [
+            {**row, "updated_at": row.get("updated_at") or now_iso}
+            for row in rows
+        ]
+        prefer = "resolution=ignore-duplicates,return=minimal" if ignore_duplicates else "return=minimal"
+        endpoint = f"{table}?on_conflict={urllib.parse.quote(on_conflict, safe='')}" if on_conflict else table
         try:
             self.request(
-                table,
+                endpoint,
                 method="POST",
-                data=rows,
-                extra_headers={"Prefer": "return=minimal"}
+                data=prepared,
+                extra_headers={"Prefer": prefer}
             )
             return True
         except Exception as e:
             raise RuntimeError(f"Gagal memasukkan data ke {table}: {e}")
 
-    def update_row(self, table: str, match_field: str, match_val: str, data: Dict[str, Any]) -> bool:
+    def upsert_rows(
+        self,
+        table: str,
+        rows: List[Dict[str, Any]],
+        on_conflict: str = "slug",
+    ) -> List[Dict[str, Any]]:
+        if not rows:
+            return []
+        now_iso = datetime.now(WIB_TIMEZONE).isoformat()
+        prepared = [
+            {**row, "updated_at": row.get("updated_at") or now_iso}
+            for row in rows
+        ]
+        endpoint = f"{table}?on_conflict={urllib.parse.quote(on_conflict, safe='')}"
         try:
-            endpoint = f"{table}?{match_field}=eq.{urllib.parse.quote(match_val)}"
+            res = self.request(
+                endpoint,
+                method="POST",
+                data=prepared,
+                extra_headers={"Prefer": "resolution=merge-duplicates,return=representation"}
+            )
+            return res if isinstance(res, list) else []
+        except Exception as e:
+            raise RuntimeError(f"Gagal upsert data ke {table}: {e}")
+
+    def update_row(self, table: str, match_field: str, match_val: str, data: Dict[str, Any]) -> bool:
+        payload = dict(data)
+        payload.setdefault("updated_at", datetime.now(WIB_TIMEZONE).isoformat())
+        try:
+            endpoint = f"{table}?{match_field}=eq.{urllib.parse.quote(str(match_val), safe='')}"
             self.request(
                 endpoint,
                 method="PATCH",
-                data=data,
+                data=payload,
                 extra_headers={"Prefer": "return=minimal"}
             )
             return True
         except Exception as e:
             raise RuntimeError(f"Gagal memperbarui {table}: {e}")
 
+    def update_rows(self, table: str, filter_query: str, data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        if not filter_query:
+            raise ValueError("filter_query wajib diisi untuk mencegah pembaruan seluruh tabel.")
+        payload = dict(data)
+        payload.setdefault("updated_at", datetime.now(WIB_TIMEZONE).isoformat())
+        try:
+            endpoint = f"{table}?{filter_query.lstrip('?')}"
+            res = self.request(
+                endpoint,
+                method="PATCH",
+                data=payload,
+                extra_headers={"Prefer": "return=representation"}
+            )
+            return res if isinstance(res, list) else []
+        except Exception as e:
+            raise RuntimeError(f"Gagal memperbarui baris pada {table}: {e}")
+
 
 class LocalDatabase:
     """SQLite Local Database for AI Organization State, Tasks, and Logs."""
+
     def __init__(self, db_path=LOCAL_DB_PATH):
         self.db_path = str(db_path)
         self.init_schema()
