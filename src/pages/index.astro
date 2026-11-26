@@ -190,7 +190,22 @@ try {
               return (
                 <article class="job-card">
                   <div class="job-company">
-                    <div class="company-logo">{initials}</div>
+                    <div class="company-logo">
+                      {job.company_logo ? (
+                        <img
+                          src={job.company_logo}
+                          alt={`Logo ${job.company_name || "perusahaan"}`}
+                          width="40"
+                          height="40"
+                          loading="lazy"
+                          decoding="async"
+                          referrerpolicy="no-referrer"
+                          data-initials={initials}
+                        />
+                      ) : (
+                        initials
+                      )}
+                    </div>
                     <span>{job.company_name || "Perusahaan tidak diketahui"}</span>
                   </div>
                   <h3><a href={getJobDetailPath(job.slug)}>{job.title}</a></h3>
@@ -346,6 +361,17 @@ try {
     if (provinceInput && cityInput && districtInput) {
       void setupLocationFilters(provinceInput, cityInput, districtInput);
     }
+
+    document.querySelector("#job-list")?.addEventListener(
+      "error",
+      (e) => {
+        const img = e.target;
+        if (img instanceof HTMLImageElement && img.dataset.initials) {
+          img.replaceWith(document.createTextNode(img.dataset.initials));
+        }
+      },
+      true
+    );
 
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
