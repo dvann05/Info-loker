@@ -8,6 +8,7 @@ let initialJobs: Array<{
   slug: string;
   title: string;
   company_name: string | null;
+  company_logo: string | null;
   location: string | null;
   employment_type: string | null;
   description: string | null;
@@ -19,7 +20,9 @@ let initialJobs: Array<{
 try {
   const { data } = await supabase
     .from("jobs")
-    .select("slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at")
+    .select(
+      "slug,title,company_name,company_logo,location,employment_type,description,source_url,apply_url,published_at"
+    )
     .eq("status", "published")
     .not("slug", "is", null)
     .not("published_at", "is", null)
@@ -38,287 +41,257 @@ try {
   title="Info Loker Kita — Portal Informasi Lowongan Kerja Indonesia Terbaru"
   description="Cari info lowongan kerja terbaru di Info Loker Kita berdasarkan posisi, perusahaan, dan lokasi di seluruh Indonesia. Periksa sumber resmi sebelum melamar."
 >
-
   <header class="site-header">
     <div class="container navbar">
       <a class="brand" href="/" aria-label="Info Loker Kita beranda">
-        <img src="/favicon.svg" alt="Logo Info Loker Kita" width="38" height="38" class="brand-logo-icon" />
+        <img src="/favicon.svg" alt="Logo Info Loker Kita" width="34" height="34" class="brand-logo-icon" />
         <span>Info Loker <span>Kita</span></span>
-      </a>  <nav class="nav-links" aria-label="Navigasi utama">
-    <a href="/berita/">Berita</a>
-    <a href="/lowongan/">Lowongan Kerja</a>
-    <a href="#tentang">Tentang</a>
-    <a href="#panduan">Panduan</a>
-    <a class="nav-cta" href="/lowongan/">Cari Kerja ↗</a>
-  </nav>
-</div>
+      </a>
+      <nav class="nav-links" aria-label="Navigasi utama">
+        <a href="/berita/">Berita</a>
+        <a href="/lowongan/">Lowongan Kerja</a>
+        <a href="#tentang">Tentang</a>
+        <a href="#panduan">Panduan</a>
+        <a class="nav-cta" href="/lowongan/">Cari Kerja ↗</a>
+      </nav>
+    </div>
+  </header>
 
-  </header>  <main>
+  <main>
     <section class="hero">
       <div class="container hero-content">
         <div class="eyebrow">
           <span class="eyebrow-dot"></span>
-          INFO LOKER KITA — INFORMASI KERJA DALAM SATU TEMPAT
-        </div>    <h1>
-      Temukan lowongan kerja<br />
-      yang <span>tepat untukmu.</span>
-    </h1>
+          INFO LOKER KITA — INFORMASI KERJA RESMI
+        </div>
 
-    <p class="hero-description">
-      Info Loker Kita menyajikan informasi lowongan kerja terbaru dari perusahaan resmi di Indonesia.
-      Cari peluang karir berdasarkan posisi dan lokasi, serta periksa persyaratan sebelum melamar.
-    </p>
+        <h1>
+          Temukan lowongan kerja<br />
+          yang <span>tepat untukmu.</span>
+        </h1>
 
-    <form class="search-panel" id="search-form">
-      <div class="search-field">
-        <label for="keyword">Posisi atau perusahaan</label>
-        <input
-          id="keyword"
-          name="q"
-          type="search"
-          placeholder="Contoh: Operator Produksi"
-        />
+        <p class="hero-description">
+          Informasi lowongan kerja terbaru dari perusahaan resmi di Indonesia.
+          Cari peluang karir berdasarkan posisi dan lokasi, serta periksa sumber resmi sebelum melamar.
+        </p>
+
+        <form class="search-panel" id="search-form" action="/lowongan/" method="get">
+          <div class="search-field">
+            <label for="keyword">Posisi atau perusahaan</label>
+            <input
+              id="keyword"
+              name="q"
+              type="search"
+              placeholder="Contoh: Operator Produksi"
+            />
+          </div>
+
+          <div class="search-field">
+            <label for="province">Provinsi</label>
+            <select id="province" name="provinsi"><option value="">Semua provinsi</option></select>
+          </div>
+          <div class="search-field">
+            <label for="city">Kota/Kabupaten</label>
+            <select id="city" name="kota" disabled><option value="">Pilih provinsi dahulu</option></select>
+          </div>
+          <div class="search-field">
+            <label for="district">Kecamatan</label>
+            <select id="district" name="kecamatan" disabled><option value="">Pilih kota/kabupaten dahulu</option></select>
+          </div>
+
+          <button class="btn btn-primary" type="submit">
+            Cari Lowongan ↗
+          </button>
+        </form>
+
+        <p class="hero-note">
+          Selalu periksa informasi dan tautan rekrutmen resmi sebelum melamar. 100% gratis tanpa pungutan.
+        </p>
       </div>
+    </section>
 
-      <div class="search-field">
-        <label for="province">Provinsi</label>
-        <select id="province"><option value="">Memuat provinsi...</option></select>
+    <section class="section categories-section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <h2>Kategori Populer</h2>
+            <p>Jelajahi lowongan berdasarkan sektor industri utama.</p>
+          </div>
+        </div>
+        <div class="category-grid">
+          <a href="/lowongan/?q=Operator+Produksi" class="category-chip">
+            <span class="cat-icon">🏭</span>
+            <span class="cat-info">
+              <strong>Manufaktur & Pabrik</strong>
+              <small>Operator, QA, Teknisi</small>
+            </span>
+          </a>
+          <a href="/lowongan/?q=Gudang" class="category-chip">
+            <span class="cat-icon">📦</span>
+            <span class="cat-info">
+              <strong>Gudang & Logistik</strong>
+              <small>Staff Gudang, Driver</small>
+            </span>
+          </a>
+          <a href="/lowongan/?q=Administrasi" class="category-chip">
+            <span class="cat-icon">💼</span>
+            <span class="cat-info">
+              <strong>Administrasi</strong>
+              <small>Admin, Data Entry, HR</small>
+            </span>
+          </a>
+          <a href="/lowongan/?q=Sales" class="category-chip">
+            <span class="cat-icon">🛒</span>
+            <span class="cat-info">
+              <strong>Ritel & Penjualan</strong>
+              <small>Kasir, Pramuniaga, SPG</small>
+            </span>
+          </a>
+          <a href="/lowongan/?q=Teknisi" class="category-chip">
+            <span class="cat-icon">🔧</span>
+            <span class="cat-info">
+              <strong>Teknik & Otomotif</strong>
+              <small>Mekanik, Maintenance</small>
+            </span>
+          </a>
+          <a href="/lowongan/?q=IT" class="category-chip">
+            <span class="cat-icon">💻</span>
+            <span class="cat-info">
+              <strong>Teknologi & IT</strong>
+              <small>Staff IT, Desain</small>
+            </span>
+          </a>
+        </div>
       </div>
-      <div class="search-field">
-        <label for="city">Kota/Kabupaten</label>
-        <select id="city" disabled><option value="">Pilih provinsi dahulu</option></select>
+    </section>
+
+    <section class="section" id="lowongan">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <h2>Lowongan terbaru</h2>
+            <p>Menampilkan {initialJobs.length} lowongan aktif terbaru dari Info Loker Kita.</p>
+          </div>
+          <a href="/lowongan/" class="section-link">Lihat semua lowongan →</a>
+        </div>
+
+        {initialJobs.length > 0 ? (
+          <div id="job-list" class="job-grid">
+            {initialJobs.map((job) => {
+              const cleanDesc = (job.description || "").replace(/\\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+              const snippet = cleanDesc.length > 140 ? `${cleanDesc.slice(0, 140).trimEnd()}…` : cleanDesc;
+              const initials = (job.company_name || "PT")
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join("")
+                .toUpperCase();
+              return (
+                <article class="job-card">
+                  <div class="job-company">
+                    <div class="company-logo">{initials}</div>
+                    <span>{job.company_name || "Perusahaan tidak diketahui"}</span>
+                  </div>
+                  <h3><a href={getJobDetailPath(job.slug)}>{job.title}</a></h3>
+                  <div class="job-meta-row">
+                    <span class="job-badge job-badge-location">📍 {job.location || "Indonesia"}</span>
+                    <span class="job-badge job-badge-type">{job.employment_type || "Penuh Waktu"}</span>
+                    {job.published_at && (
+                      <span class="job-badge job-badge-date">⏱ {formatJakartaDate(job.published_at, { day: "numeric", month: "short", year: "numeric" })}</span>
+                    )}
+                  </div>
+                  <p class="job-description">{snippet}</p>
+                  <div class="job-card-actions">
+                    <a href={getJobDetailPath(job.slug)} class="job-source">Lihat detail →</a>
+                    {job.source_url && (
+                      <a href={job.source_url} target="_blank" rel="nofollow noopener noreferrer" class="job-source job-source-muted">Sumber resmi ↗</a>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div class="empty-state">
+            <div class="empty-state-icon">💼</div>
+            <h3 class="empty-state-title">Lihat daftar lowongan terbaru</h3>
+            <p class="empty-state-desc">Buka halaman lowongan kerja untuk menelusuri seluruh peluang yang tersedia.</p>
+            <a href="/lowongan/" class="btn btn-primary">Buka Daftar Lowongan →</a>
+          </div>
+        )}
+
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="/lowongan/" class="btn btn-primary">Lihat Semua Lowongan Kerja →</a>
+        </div>
       </div>
-      <div class="search-field">
-        <label for="district">Kecamatan</label>
-        <select id="district" disabled><option value="">Pilih kota/kabupaten dahulu</option></select>
-      </div>
+    </section>
 
-      <button class="btn btn-primary" type="submit">
-        Cari Lowongan ↗
-      </button>
-    </form>
+    <section class="section" id="tentang">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <h2>Mencari kerja lebih terarah</h2>
+            <p>Informasi disusun supaya pencari kerja lebih mudah menemukan peluang yang relevan.</p>
+          </div>
+        </div>
 
-    <p class="hero-note">
-      Selalu periksa informasi dan tautan rekrutmen resmi sebelum melamar.
-    </p>
-
-    <div class="hero-stats">
-      <div class="stat-item">
-        <span class="stat-number">1.500+</span>
-        <span class="stat-label">Lowongan Aktif</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <span class="stat-number">400+</span>
-        <span class="stat-label">Perusahaan Resmi</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <span class="stat-number">38</span>
-        <span class="stat-label">Provinsi Indonesia</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat-item">
-        <span class="stat-number">100%</span>
-        <span class="stat-label">Bebas Pungli / Gratis</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="section categories-section">
-  <div class="container">
-    <div class="section-heading">
-      <div>
-        <h2>Kategori Industri Populer</h2>
-        <p>Jelajahi lowongan kerja berdasarkan sektor industri utama.</p>
-      </div>
-    </div>
-    <div class="category-grid">
-      <button type="button" class="category-chip" data-query="Operator Produksi">
-        <span class="cat-icon">🏭</span>
-        <span class="cat-info">
-          <strong>Manufaktur & Pabrik</strong>
-          <small>Operator, QA, Teknisi</small>
-        </span>
-      </button>
-      <button type="button" class="category-chip" data-query="Gudang">
-        <span class="cat-icon">📦</span>
-        <span class="cat-info">
-          <strong>Gudang & Logistik</strong>
-          <small>Staff Gudang, Driver, Packer</small>
-        </span>
-      </button>
-      <button type="button" class="category-chip" data-query="Administrasi">
-        <span class="cat-icon">💼</span>
-        <span class="cat-info">
-          <strong>Administrasi & Kantor</strong>
-          <small>Admin, Data Entry, HR</small>
-        </span>
-      </button>
-      <button type="button" class="category-chip" data-query="Sales">
-        <span class="cat-icon">🛒</span>
-        <span class="cat-info">
-          <strong>Ritel & Penjualan</strong>
-          <small>Kasir, Pramuniaga, SPG</small>
-        </span>
-      </button>
-      <button type="button" class="category-chip" data-query="Teknisi">
-        <span class="cat-icon">🔧</span>
-        <span class="cat-info">
-          <strong>Teknik & Otomotif</strong>
-          <small>Mekanik, Maintenance</small>
-        </span>
-      </button>
-      <button type="button" class="category-chip" data-query="IT">
-        <span class="cat-icon">💻</span>
-        <span class="cat-info">
-          <strong>Teknologi & Digital</strong>
-          <small>Staff IT, Desain, Sosmed</small>
-        </span>
-      </button>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="lowongan">
-  <div class="container">
-
-    <nav class="portal-switcher" aria-label="Pilih kategori informasi">
-      <a href="/lowongan/" class="portal-card is-active">
-        <span class="portal-icon">💼</span>
-        <span>
-          <strong>Lowongan Kerja</strong>
-          <small>Temukan pekerjaan terbaru</small>
-        </span>
-      </a>
-
-      <a href="/berita/" class="portal-card">
-        <span class="portal-icon">📰</span>
-        <span>
-          <strong>Berita</strong>
-          <small>Informasi dan berita dunia kerja</small>
-        </span>
-      </a>
-    </nav>
-
-    <div class="section-heading">
-      <div>
-        <h2>Lowongan terbaru</h2>
-        <p>Informasi lowongan yang tersedia di database Info Loker Kita.</p>
-      </div>
-    </div>
-
-    <p id="job-status" role="status" aria-live="polite">
-      {initialJobs.length > 0 ? `Menampilkan ${initialJobs.length} lowongan terbaru.` : "Menghubungkan ke database..."}
-    </p>
-
-    <div id="job-list" class="job-grid">
-      {initialJobs.map((job) => {
-        const cleanDesc = (job.description || "").replace(/\\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-        const snippet = cleanDesc.length > 170 ? `${cleanDesc.slice(0, 170).trimEnd()}…` : cleanDesc;
-        const initials = (job.company_name || "PT")
-          .split(/\s+/)
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((w) => w[0])
-          .join("")
-          .toUpperCase();
-        return (
-          <article class="job-card">
-            <div class="job-company">
-              <div class="company-logo">{initials}</div>
-              <span>{job.company_name || "Perusahaan tidak diketahui"}</span>
-            </div>
-            <h3>{job.title}</h3>
-            <div class="job-meta-row">
-              <span class="job-badge job-badge-location">📍 {job.location || "Indonesia"}</span>
-              <span class="job-badge job-badge-type">{job.employment_type || "Penuh Waktu"}</span>
-              {job.published_at && (
-                <span class="job-badge job-badge-date">⏱ {formatJakartaDate(job.published_at)}</span>
-              )}
-            </div>
-            <p class="job-description">{snippet}</p>
-            <div class="job-card-actions">
-              <a href={getJobDetailPath(job.slug)} class="job-source">Lihat detail →</a>
-              {job.source_url && (
-                <a href={job.source_url} target="_blank" rel="nofollow noopener noreferrer" class="job-source" style="color: var(--muted); font-size: 13px;">Sumber resmi ↗</a>
-              )}
-            </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">⌕</div>
+            <h3>Pencarian terarah</h3>
+            <p>Temukan lowongan berdasarkan kata kunci dan lokasi kerja.</p>
           </article>
-        );
-      })}
-    </div>
-  </div>
-</section>
 
-<section class="section" id="tentang">
-  <div class="container">
-    <div class="section-heading">
-      <div>
-        <h2>Mencari kerja lebih terarah</h2>
-        <p>
-          Informasi disusun supaya pencari kerja lebih mudah menemukan
-          peluang yang relevan.
-        </p>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">✓</div>
+            <h3>Sumber rekrutmen</h3>
+            <p>Periksa sumber dan tautan rekrutmen asli sebelum melamar.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">◷</div>
+            <h3>Tanggal yang jelas</h3>
+            <p>Periksa tanggal publikasi dan batas pendaftaran lowongan.</p>
+          </article>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="feature-grid">
-      <article class="feature-card">
-        <div class="feature-icon" aria-hidden="true">⌕</div>
-        <h3>Pencarian terarah</h3>
-        <p>Temukan lowongan berdasarkan kata kunci dan lokasi kerja.</p>
-      </article>
+    <section class="section" id="panduan">
+      <div class="container">
+        <div class="trust-banner">
+          <div>
+            <h2>Periksa sebelum melamar</h2>
+            <p>
+              Pastikan lowongan masih dibuka. Waspadai permintaan uang,
+              biaya rekrutmen mencurigakan, dan tautan tidak resmi.
+            </p>
+          </div>
 
-      <article class="feature-card">
-        <div class="feature-icon" aria-hidden="true">✓</div>
-        <h3>Sumber rekrutmen</h3>
-        <p>Periksa sumber dan tautan rekrutmen asli sebelum melamar.</p>
-      </article>
-
-      <article class="feature-card">
-        <div class="feature-icon" aria-hidden="true">◷</div>
-        <h3>Tanggal yang jelas</h3>
-        <p>Periksa tanggal publikasi dan batas pendaftaran lowongan.</p>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="panduan">
-  <div class="container">
-    <div class="trust-banner">
-      <div>
-        <h2>Periksa sebelum melamar</h2>
-        <p>
-          Pastikan lowongan masih dibuka. Waspadai permintaan uang,
-          biaya rekrutmen mencurigakan, dan tautan tidak resmi.
-        </p>
+          <a
+            class="btn"
+            href="https://kemnaker.go.id/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Situs Kemnaker ↗
+          </a>
+        </div>
       </div>
+    </section>
+  </main>
 
-      <a
-        class="btn"
-        href="https://kemnaker.go.id/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Situs Kemnaker ↗
-      </a>
-    </div>
-  </div>
-</section>
-
-  </main>  <footer class="site-footer">
+  <footer class="site-footer">
     <div class="container">
       <div class="footer-columns">
         <div class="footer-col brand-col">
           <a class="brand" href="/" aria-label="Info Loker Kita beranda">
-            <img src="/favicon.svg" alt="Logo Info Loker Kita" width="38" height="38" class="brand-logo-icon" />
+            <img src="/favicon.svg" alt="Logo Info Loker Kita" width="34" height="34" class="brand-logo-icon" />
             <span>Info Loker <span>Kita</span></span>
           </a>
           <p class="footer-description">
-            Info Loker Kita adalah portal informasi lowongan kerja resmi di Indonesia. Dihubungkan dengan data rekrutmen terpercaya untuk karir yang transparan, aman, dan 100% bebas biaya pungutan.
+            Info Loker Kita adalah portal informasi lowongan kerja resmi di Indonesia. Transparan, aman, dan 100% bebas biaya pungutan.
           </p>
           <div class="footer-badge">🛡️ Bebas Pungutan Biaya 100%</div>
         </div>
@@ -346,7 +319,7 @@ try {
         <div class="footer-col">
           <h4>Verifikasi & Regulasi</h4>
           <p class="footer-text-muted">
-            Info Loker Kita tidak pernah memungut biaya apapun dari pelamar kerja. Waspadai segala bentuk penipuan tiket travel atau rekrutmen berbayar.
+            Info Loker Kita tidak pernah memungut biaya apapun dari pelamar kerja. Waspadai penipuan rekrutmen berbayar.
           </p>
           <a href="https://kemnaker.go.id" target="_blank" rel="noopener noreferrer" class="footer-external-link">
             Situs Resmi Kemnaker RI ↗
@@ -356,351 +329,39 @@ try {
 
       <div class="footer-bottom">
         <p>© {new Date().getFullYear()} Info Loker Kita. Hak cipta dilindungi.</p>
-        <p class="footer-subtext">Informasi bersumber dari portal resmi rekrutmen perusahaan dan Karirhub Kemnaker.</p>
+        <p>Informasi bersumber dari portal resmi rekrutmen perusahaan dan Karirhub Kemnaker.</p>
       </div>
     </div>
-  </footer>  <script>
-    import { supabase } from "../lib/supabase";
-    import { setupLocationFilters } from "../scripts/location-filter";
+  </footer>
 
-    type Job = {
-      id: string;
-      slug: string;
-      title: string;
-      company_name: string;
-      company_logo: string | null;
-      location: string;
-      province: string | null;
-      city: string | null;
-      district: string | null;
-      employment_type: string | null;
-      description: string;
-      source_url: string;
-      apply_url: string | null;
-      published_at: string | null;
-      deadline: string | null;
-    };
+  <script>
+    import { setupLocationFilters } from "../scripts/location-filter";
 
     const form = document.querySelector<HTMLFormElement>("#search-form");
     const keywordInput = document.querySelector<HTMLInputElement>("#keyword");
     const provinceInput = document.querySelector<HTMLSelectElement>("#province");
     const cityInput = document.querySelector<HTMLSelectElement>("#city");
     const districtInput = document.querySelector<HTMLSelectElement>("#district");
-    const jobList = document.querySelector<HTMLDivElement>("#job-list");
-    const jobStatus = document.querySelector<HTMLParagraphElement>("#job-status");
 
-    let jobs: Job[] = [];
-
-    function formatDate(value: string | null): string {
-      if (!value) return "Tanggal tidak tersedia";
-
-      return new Date(value).toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-    }
-
-    function renderSkeletons(count = 6) {
-      if (!jobList) return;
-      jobList.replaceChildren();
-
-      for (let i = 0; i < count; i++) {
-        const card = document.createElement("div");
-        card.className = "job-skeleton-card";
-
-        const header = document.createElement("div");
-        header.className = "job-skeleton-header";
-
-        const avatar = document.createElement("div");
-        avatar.className = "skeleton job-skeleton-avatar";
-
-        const headerText = document.createElement("div");
-        headerText.style.display = "flex";
-        headerText.style.flexDirection = "column";
-        headerText.style.gap = "8px";
-        headerText.style.flex = "1";
-
-        const title = document.createElement("div");
-        title.className = "skeleton job-skeleton-title";
-
-        const company = document.createElement("div");
-        company.className = "skeleton job-skeleton-text";
-
-        headerText.append(title, company);
-        header.append(avatar, headerText);
-
-        const badges = document.createElement("div");
-        badges.className = "job-skeleton-badges";
-        const b1 = document.createElement("div");
-        b1.className = "skeleton job-skeleton-badge";
-        const b2 = document.createElement("div");
-        b2.className = "skeleton job-skeleton-badge";
-        badges.append(b1, b2);
-
-        const desc = document.createElement("div");
-        desc.className = "skeleton job-skeleton-desc";
-
-        const footer = document.createElement("div");
-        footer.className = "job-skeleton-footer";
-        const link = document.createElement("div");
-        link.className = "skeleton job-skeleton-text";
-        link.style.width = "40%";
-        const btn = document.createElement("div");
-        btn.className = "skeleton job-skeleton-btn";
-        footer.append(link, btn);
-
-        card.append(header, badges, desc, footer);
-        jobList.append(card);
-      }
-    }
-
-    function renderJobs(items: Job[]) {
-      if (!jobList || !jobStatus) return;
-
-      jobList.replaceChildren();
-
-      if (items.length === 0) {
-        jobStatus.textContent = "0 lowongan ditemukan.";
-        const empty = document.createElement("div");
-        empty.className = "empty-state";
-
-        const icon = document.createElement("div");
-        icon.className = "empty-state-icon";
-        icon.textContent = "🔍";
-
-        const title = document.createElement("h3");
-        title.className = "empty-state-title";
-        title.textContent = "Belum ada lowongan yang sesuai";
-
-        const desc = document.createElement("p");
-        desc.className = "empty-state-desc";
-        desc.textContent = "Coba gunakan kata kunci lain atau pilih wilayah yang lebih luas.";
-
-        const resetBtn = document.createElement("button");
-        resetBtn.className = "btn btn-secondary";
-        resetBtn.textContent = "Reset Pencarian";
-        resetBtn.type = "button";
-        resetBtn.onclick = () => {
-          if (keywordInput) keywordInput.value = "";
-          if (provinceInput) {
-            provinceInput.value = "";
-            provinceInput.dispatchEvent(new Event("change"));
-          }
-          filterJobs();
-        };
-
-        empty.append(icon, title, desc, resetBtn);
-        jobList.append(empty);
-        return;
-      }
-
-      jobStatus.textContent = `${items.length} lowongan ditemukan.`;
-
-      for (const job of items) {
-        const card = document.createElement("article");
-        card.className = "job-card";
-
-        const company = document.createElement("div");
-        company.className = "job-company";
-
-        const logo = document.createElement("div");
-        logo.className = "company-logo";
-
-        const initials = (job.company_name || "PT")
-          .split(/\s+/)
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((word) => word[0])
-          .join("")
-          .toUpperCase();
-
-        if (job.company_logo) {
-          const image = document.createElement("img");
-          image.src = job.company_logo;
-          image.alt = `Logo ${job.company_name}`;
-          image.loading = "lazy";
-          image.onerror = () => {
-            logo.replaceChildren();
-            logo.textContent = initials;
-          };
-          logo.append(image);
-        } else {
-          logo.textContent = initials;
-        }
-
-        const companyName = document.createElement("span");
-        companyName.textContent = job.company_name || "Perusahaan tidak diketahui";
-
-        company.append(logo, companyName);
-
-        const title = document.createElement("h3");
-        title.textContent = job.title;
-
-        const metaRow = document.createElement("div");
-        metaRow.className = "job-meta-row";
-
-        const locBadge = document.createElement("span");
-        locBadge.className = "job-badge job-badge-location";
-        locBadge.textContent = `📍 ${job.location}`;
-
-        const typeBadge = document.createElement("span");
-        typeBadge.className = "job-badge job-badge-type";
-        typeBadge.textContent = job.employment_type || "Penuh Waktu";
-
-        const verifiedBadge = document.createElement("span");
-        verifiedBadge.className = "job-badge job-badge-verified";
-        verifiedBadge.textContent = "✓ Resmi Kemnaker";
-
-        metaRow.append(locBadge, typeBadge, verifiedBadge);
-
-        if (job.published_at) {
-          const dateBadge = document.createElement("span");
-          dateBadge.className = "job-badge job-badge-date";
-          dateBadge.textContent = `⏱ ${formatDate(job.published_at)}`;
-          metaRow.append(dateBadge);
-        }
-
-        const cleanDescription = (job.description || "")
-          .replace(/\\n/g, "\n")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim();
-
-        const description = document.createElement("p");
-        description.textContent =
-          cleanDescription.length > 170
-            ? `${cleanDescription.slice(0, 170).trimEnd()}…`
-            : cleanDescription;
-        description.className = "job-description";
-
-        const actions = document.createElement("div");
-        actions.className = "job-card-actions";
-
-        const detail = document.createElement("a");
-        detail.href = `/lowongan/${encodeURIComponent(job.slug)}/`;
-        detail.textContent = "Lihat detail →";
-        detail.className = "job-source";
-
-        const source = document.createElement("a");
-        source.href = job.source_url;
-        source.target = "_blank";
-        source.rel = "noopener noreferrer";
-        source.textContent = "Sumber resmi ↗";
-        source.className = "job-source";
-        source.style.color = "var(--muted)";
-        source.style.fontSize = "13px";
-
-        actions.append(detail, source);
-
-        if (job.apply_url) {
-          const apply = document.createElement("a");
-          apply.href = job.apply_url;
-          apply.target = "_blank";
-          apply.rel = "noopener noreferrer";
-          apply.textContent = "Lamar ↗";
-          apply.className = "btn btn-primary";
-          actions.append(apply);
-        }
-
-        card.append(
-          company,
-          title,
-          metaRow,
-          description,
-          actions
-        );
-
-        jobList.append(card);
-      }
-    }
-
-    function filterJobs() {
-      const keyword = (keywordInput?.value || "").trim().toLowerCase();
-      const province = (provinceInput?.value || "").trim().toLowerCase();
-      const city = (cityInput?.value || "").trim().toLowerCase();
-      const district = (districtInput?.value || "").trim().toLowerCase();
-
-      const filtered = jobs.filter((job) => {
-        const searchable = [
-          job.title,
-          job.company_name,
-          job.location,
-          job.description,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        const matchesKeyword = !keyword || searchable.includes(keyword);
-        const matchesProvince = !province || (job.province || "").toLowerCase() === province;
-        const cityName = (job.city || job.location || "").toLowerCase();
-        const matchesCity = !city || cityName.includes(city);
-        const matchesDistrict = !district || (job.district || "").toLowerCase() === district;
-
-        return matchesKeyword && matchesProvince && matchesCity && matchesDistrict;
-      });
-
-      renderJobs(filtered);
-    }
-
-    async function loadJobs() {
-      if (!jobStatus) return;
-
-      jobStatus.textContent = "Memuat lowongan terbaru...";
-      renderSkeletons(6);
-
-      const { data, error } = await supabase
-        .from("jobs")
-        .select(
-          "id,slug,title,company_name,company_logo,location,province,city,district,employment_type,description,source_url,apply_url,published_at,deadline"
-        )
-        .eq("status", "published")
-        .not("slug", "is", null)
-        .not("published_at", "is", null)
-        .not("deadline", "is", null)
-        .gte(
-          "deadline",
-          new Intl.DateTimeFormat("en-CA", {
-            timeZone: "Asia/Jakarta",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          }).format(new Date())
-        )
-        .order("published_at", { ascending: false })
-        .order("slug", { ascending: true });
-
-      if (error) {
-        console.error("Gagal mengambil lowongan:", error.message);
-        if (jobList) jobList.replaceChildren();
-        jobStatus.textContent =
-          "Lowongan belum dapat dimuat. Periksa konfigurasi Supabase dan kebijakan akses tabel jobs.";
-        return;
-      }
-
-      jobs = (data || []) as Job[];
-      filterJobs();
+    if (provinceInput && cityInput && districtInput) {
+      void setupLocationFilters(provinceInput, cityInput, districtInput);
     }
 
     form?.addEventListener("submit", (event) => {
       event.preventDefault();
-      filterJobs();
-      document.querySelector("#lowongan")?.scrollIntoView({ behavior: "smooth" });
+      const params = new URLSearchParams();
+      const q = (keywordInput?.value || "").trim();
+      const prov = (provinceInput?.value || "").trim();
+      const city = (cityInput?.value || "").trim();
+      const dist = (districtInput?.value || "").trim();
+
+      if (q) params.set("q", q);
+      if (prov) params.set("provinsi", prov);
+      if (city) params.set("kota", city);
+      if (dist) params.set("kecamatan", dist);
+
+      const qs = params.toString();
+      window.location.href = qs ? `/lowongan/?${qs}` : "/lowongan/";
     });
-
-    document.querySelectorAll<HTMLButtonElement>(".category-chip").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const query = btn.getAttribute("data-query") || "";
-        if (keywordInput) {
-          keywordInput.value = query;
-          filterJobs();
-          document.querySelector("#lowongan")?.scrollIntoView({ behavior: "smooth" });
-        }
-      });
-    });
-
-    void setupLocationFilters(provinceInput!, cityInput!, districtInput!)
-      .then(() => filterJobs())
-      .catch((error) => console.error("Gagal memuat pilihan wilayah:", error));
-
-    void loadJobs();
-  </script></BaseLayout>
+  </script>
+</BaseLayout>

@@ -19,25 +19,30 @@ if (currentPath === "/lowongan/detail") {
   }
 }
 
-try {
-  const ua = navigator.userAgent;
+const sendVisit = () => {
+  try {
+    const ua = navigator.userAgent;
+    const device = /tablet|ipad/i.test(ua)
+      ? "Tablet"
+      : /mobile|android|iphone/i.test(ua)
+        ? "Mobile"
+        : "Desktop";
 
-  const device = /tablet|ipad/i.test(ua)
-    ? "Tablet"
-    : /mobile|android|iphone/i.test(ua)
-      ? "Mobile"
-      : "Desktop";
+    void fetch("/api/visit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: location.pathname,
+        referrer: document.referrer,
+        device,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
+};
 
-  void fetch("/api/visit", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      path: location.pathname,
-      referrer: document.referrer,
-      device
-    }),
-    keepalive: true
-  }).catch(() => {});
-} catch {}
+if ("requestIdleCallback" in window) {
+  window.requestIdleCallback(sendVisit, { timeout: 3000 });
+} else {
+  setTimeout(sendVisit, 1500);
+}

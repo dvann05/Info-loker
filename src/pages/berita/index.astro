@@ -32,15 +32,30 @@ try {
 } catch {
   initialNews = [];
 }
+
+const hasMoreInitial = initialNews.length > 0 && initialNews.length < initialTotalNews;
 ---
 
 <BaseLayout
   title="Berita Dunia Kerja Terbaru | Info Loker Kita"
   description="Berita industri, perusahaan, dunia kerja, dan tips karier terbaru dari Info Loker Kita."
 >
-  <section class="section">
-    <div class="container">
+  <header class="site-header">
+    <div class="container navbar">
+      <a class="brand" href="/" aria-label="Info Loker Kita beranda">
+        <img src="/favicon.svg" alt="Logo Info Loker Kita" width="34" height="34" class="brand-logo-icon" />
+        <span>Info Loker <span>Kita</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Navigasi utama">
+        <a href="/">Beranda</a>
+        <a href="/lowongan/">Lowongan</a>
+        <a href="/berita/">Berita</a>
+      </nav>
+    </div>
+  </header>
 
+  <main class="section">
+    <div class="container">
       <nav class="portal-switcher" aria-label="Pilih kategori informasi">
         <a href="/lowongan/" class="portal-card">
           <span class="portal-icon">💼</span>
@@ -62,38 +77,11 @@ try {
       <header class="news-intro">
         <h1>Berita Dunia Kerja</h1>
         <p>
-          Ikuti perkembangan industri, perusahaan, dunia kerja,
-          dan informasi karier di Indonesia.
+          Ikuti perkembangan industri, perusahaan, dunia kerja, dan informasi karier di Indonesia.
         </p>
       </header>
 
-      <div class="news-topics">
-        <article class="news-topic">
-          <span>🏭</span>
-          <h2>Berita Industri</h2>
-          <p>Informasi perkembangan industri dan perusahaan.</p>
-        </article>
-
-        <article class="news-topic">
-          <span>💼</span>
-          <h2>Dunia Kerja</h2>
-          <p>Informasi ketenagakerjaan dan perkembangan pekerjaan.</p>
-        </article>
-
-        <article class="news-topic">
-          <span>📈</span>
-          <h2>Karier & Pengembangan</h2>
-          <p>Tips karier, keterampilan, dan pengembangan diri.</p>
-        </article>
-      </div>
-
       <section class="news-section" aria-labelledby="news-heading">
-        <div class="news-heading">
-          <div>
-            <h2 id="news-heading">Berita Terbaru</h2>
-            <p>Informasi dan perkembangan dunia kerja.</p>
-          </div>
-        </div>
         <div class="news-search">
           <label for="news-search-input">Cari berita</label>
           <input
@@ -104,13 +92,16 @@ try {
           />
         </div>
 
-        
-
         <div id="news-status" class="news-status" aria-live="polite">
           {initialNews.length > 0 ? `Menampilkan ${initialNews.length} dari ${initialTotalNews} berita` : "Memuat berita terbaru..."}
         </div>
 
-        <div id="news-list" class="news-grid">
+        <div
+          id="news-list"
+          class="news-grid"
+          data-ssr={initialNews.length > 0 ? "1" : "0"}
+          data-total={String(initialTotalNews)}
+        >
           {initialNews.map((article) => (
             <article class="news-card">
               {article.image_url ? (
@@ -139,13 +130,13 @@ try {
             </article>
           ))}
         </div>
-          <button id="load-more-news" class="load-more-news" type="button" hidden>
-            Muat Berita Lainnya
-          </button>
-      </section>
 
+        <button id="load-more-news" class="load-more-news" type="button" hidden={!hasMoreInitial}>
+          Muat Berita Lainnya
+        </button>
+      </section>
     </div>
-  </section>
+  </main>
 </BaseLayout>
 
 <script>
@@ -153,56 +144,49 @@ try {
 
   const list = document.querySelector<HTMLElement>("#news-list");
   const status = document.querySelector<HTMLElement>("#news-status");
+  const searchInput = document.querySelector<HTMLInputElement>("#news-search-input");
+  const loadMoreButton = document.querySelector<HTMLButtonElement>("#load-more-news");
 
-  function createElement(
-    tag: string,
-    className: string,
-    text?: string
-  ) {
-    const element = document.createElement(tag);
-    element.className = className;
+  const PAGE_SIZE = 12;
+  const hasSsr = list?.dataset.ssr === "1";
+  let currentPage = hasSsr ? 1 : 0;
+  let totalNews = Number(list?.dataset.total || "0");
+  let isLoading = false;
+  let searchTerm = "";
+  let searchTimer: ReturnType<typeof setTimeout> | undefined;
+  let requestVersion = 0;
 
-    if (text) {
-      element.textContent = text;
-    }
-
-    return element;
+  function createEl(tag: string, className: string, text?: string) {
+    const el = document.createElement(tag);
+    el.className = className;
+    if (text) el.textContent = text;
+    return el;
   }
 
   function validUrl(value: string | null) {
     if (!value) return null;
     if (value.startsWith("/")) return value;
-
     try {
       const url = new URL(value);
-
-      if (url.protocol === "https:" || url.protocol === "http:") {
-        return url.href;
-      }
+      if (url.protocol === "https:" || url.protocol === "http:") return url.href;
     } catch {
       return null;
     }
-
     return null;
   }
 
   function formatDate(value: string | null) {
     if (!value) return "Tanggal tidak tersedia";
-
     const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "Tanggal tidak tersedia";
-    }
-
+    if (Number.isNaN(date.getTime())) return "Tanggal tidak tersedia";
     return new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
       month: "long",
-      year: "numeric"
+      year: "numeric",
     }).format(date);
   }
 
-  function renderNews(article: {
+  function buildNewsCard(article: {
     slug: string;
     title: string;
     excerpt: string | null;
@@ -210,148 +194,47 @@ try {
     image_url: string | null;
     image_alt: string | null;
     source_name: string | null;
-    source_url: string | null;
     published_at: string | null;
   }) {
-    if (!list) return;
-
-    const card = createElement("article", "news-card");
-
+    const card = createEl("article", "news-card");
     const imageUrl = validUrl(article.image_url);
 
     if (imageUrl) {
-      const imageWrapper = createElement("div", "news-image-wrapper");
+      const imageWrapper = createEl("div", "news-image-wrapper");
       const image = document.createElement("img");
-
       image.src = imageUrl;
       image.alt = article.image_alt || article.title;
       image.loading = "lazy";
       image.decoding = "async";
-
       image.addEventListener("error", () => {
-        imageWrapper.replaceChildren(
-          createElement("span", "news-image-fallback", "📰")
-        );
-      });
-
+        imageWrapper.replaceChildren(createEl("span", "news-image-fallback", "📰"));
+      }, { once: true });
       imageWrapper.appendChild(image);
       card.appendChild(imageWrapper);
     } else {
-      card.appendChild(
-        createElement("div", "news-image-placeholder", "📰")
-      );
+      card.appendChild(createEl("div", "news-image-placeholder", "📰"));
     }
 
-    const body = createElement("div", "news-card-body");
+    const body = createEl("div", "news-card-body");
+    body.appendChild(createEl("span", "news-category", article.category));
 
-    body.appendChild(
-      createElement("span", "news-category", article.category)
-    );
-
-    const title = createElement("h3", "news-card-title");
+    const title = createEl("h3", "news-card-title");
     const titleLink = document.createElement("a");
-
     titleLink.href = `/berita/${encodeURIComponent(article.slug)}/`;
     titleLink.textContent = article.title;
-
     title.appendChild(titleLink);
     body.appendChild(title);
 
-    body.appendChild(
-      createElement(
-        "time",
-        "news-date",
-        formatDate(article.published_at)
-      )
-    );
+    const time = createEl("time", "news-date", formatDate(article.published_at));
+    if (article.published_at) time.setAttribute("datetime", article.published_at);
+    body.appendChild(time);
 
-    if (article.published_at) {
-      const time = body.querySelector("time");
-      time?.setAttribute("datetime", article.published_at);
-    }
-
-    if (article.excerpt) {
-      body.appendChild(
-        createElement("p", "news-excerpt", article.excerpt)
-      );
-    }
-
-    if (article.source_name) {
-      body.appendChild(
-        createElement(
-          "p",
-          "news-source",
-          `Sumber: ${article.source_name}`
-        )
-      );
-    }
-
-    const sourceUrl = validUrl(article.source_url);
-
-    if (sourceUrl) {
-      const link = document.createElement("a");
-
-      link.className = "news-read-more";
-      link.href = sourceUrl;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = "Baca sumber berita ↗";
-
-      body.appendChild(link);
-    }
+    if (article.excerpt) body.appendChild(createEl("p", "news-excerpt", article.excerpt));
+    if (article.source_name) body.appendChild(createEl("p", "news-source", `Sumber: ${article.source_name}`));
 
     card.appendChild(body);
-    list.appendChild(card);
+    return card;
   }
-
-  function renderNewsSkeletons(count = 6) {
-    if (!list) return;
-    list.replaceChildren();
-
-    for (let i = 0; i < count; i++) {
-      const card = createElement("div", "news-card skeleton-news-card");
-      const img = createElement("div", "skeleton");
-      img.style.width = "100%";
-      img.style.aspectRatio = "16 / 9";
-
-      const body = createElement("div", "news-card-body");
-      body.style.display = "flex";
-      body.style.flexDirection = "column";
-      body.style.gap = "10px";
-      body.style.padding = "20px";
-
-      const badge = createElement("div", "skeleton");
-      badge.style.width = "75px";
-      badge.style.height = "22px";
-      badge.style.borderRadius = "9999px";
-
-      const title = createElement("div", "skeleton");
-      title.style.width = "90%";
-      title.style.height = "24px";
-
-      const text = createElement("div", "skeleton");
-      text.style.width = "100%";
-      text.style.height = "40px";
-
-      body.append(badge, title, text);
-      card.append(img, body);
-      list.append(card);
-    }
-  }
-
-  const PAGE_SIZE = 12;
-  let currentPage = 0;
-  let totalNews = 0;
-  let isLoading = false;
-  let searchTerm = "";
-  let searchTimer: ReturnType<typeof setTimeout> | undefined;
-  let requestVersion = 0;
-
-  const searchInput =
-    document.querySelector<HTMLInputElement>("#news-search-input");
-
-  const loadMoreButton =
-    document.querySelector<HTMLButtonElement>("#load-more-news");
 
   async function loadNews() {
     if (!list || !status || isLoading) return;
@@ -360,8 +243,7 @@ try {
     const thisRequest = requestVersion;
 
     if (currentPage === 0) {
-      status.textContent = "Memuat berita terbaru...";
-      renderNewsSkeletons(6);
+      status.textContent = "Memuat berita...";
     }
 
     if (loadMoreButton) {
@@ -373,17 +255,22 @@ try {
       const from = currentPage * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      const { data, error, count } = await supabase
+      let query = supabase
         .from("news")
         .select(
-          "slug,title,excerpt,category,image_url,image_alt,source_name,source_url,published_at",
+          "slug,title,excerpt,category,image_url,image_alt,source_name,published_at",
           { count: "exact" }
         )
         .eq("status", "published")
         .not("slug", "is", null)
-        .ilike("title", `%${searchTerm}%`)
         .order("published_at", { ascending: false })
         .range(from, to);
+
+      if (searchTerm) {
+        query = query.ilike("title", `%${searchTerm}%`);
+      }
+
+      const { data, error, count } = await query;
 
       if (thisRequest !== requestVersion) return;
       if (error) throw error;
@@ -393,42 +280,36 @@ try {
       if (!data || data.length === 0) {
         if (currentPage === 0) {
           list.replaceChildren();
-          status.textContent = "Belum ada berita yang diterbitkan.";
+          status.textContent = "Belum ada berita yang sesuai.";
         }
-
         if (loadMoreButton) loadMoreButton.hidden = true;
         return;
       }
 
-      if (currentPage === 0) {
-        list.replaceChildren();
+      const frag = document.createDocumentFragment();
+      for (const article of data) {
+        frag.appendChild(buildNewsCard(article));
       }
 
-      data.forEach((article) => renderNews(article));
+      if (currentPage === 0) {
+        list.replaceChildren(frag);
+      } else {
+        list.appendChild(frag);
+      }
 
-      const displayedNews = Math.min(
-        (currentPage + 1) * PAGE_SIZE,
-        totalNews
-      );
-
-      status.textContent =
-        `Menampilkan ${displayedNews} dari ${totalNews} berita`;
-
+      const displayedNews = Math.min((currentPage + 1) * PAGE_SIZE, totalNews);
+      status.textContent = `Menampilkan ${displayedNews} dari ${totalNews} berita`;
       currentPage++;
 
       if (loadMoreButton) {
-        const hasMore = displayedNews < totalNews;
-        loadMoreButton.hidden = !hasMore;
+        loadMoreButton.hidden = displayedNews >= totalNews;
         loadMoreButton.disabled = false;
         loadMoreButton.textContent = "Muat Berita Lainnya";
       }
     } catch (error) {
       if (thisRequest !== requestVersion) return;
-
       console.error("Gagal memuat berita:", error);
-      status.textContent =
-        "Berita belum dapat dimuat. Silakan coba beberapa saat lagi.";
-
+      status.textContent = "Berita belum dapat dimuat. Silakan coba lagi.";
       if (loadMoreButton) {
         loadMoreButton.hidden = false;
         loadMoreButton.disabled = false;
@@ -441,53 +322,36 @@ try {
 
   searchInput?.addEventListener("input", () => {
     clearTimeout(searchTimer);
-
     searchTimer = setTimeout(() => {
       searchTerm = searchInput.value.trim();
       currentPage = 0;
       totalNews = 0;
       requestVersion++;
-
-      if (list) list.replaceChildren();
-      if (status) status.textContent = "Mencari berita...";
       if (loadMoreButton) loadMoreButton.hidden = true;
-
-      loadNews();
-    }, 400);
+      void loadNews();
+    }, 350);
   });
 
-  loadMoreButton?.addEventListener("click", loadNews);
+  loadMoreButton?.addEventListener("click", () => void loadNews());
 
-  loadNews();
+  if (!hasSsr) {
+    void loadNews();
+  }
 </script>
 
 <style is:global>
   .news-section {
-    margin-top: 48px;
-  }
-
-  .news-heading {
-    margin-bottom: 22px;
-  }
-
-  .news-heading h2 {
-    margin: 0 0 6px;
-    font-size: clamp(22px, 4vw, 30px);
-  }
-
-  .news-heading p {
-    margin: 0;
-    color: var(--muted, #64748b);
+    margin-top: 24px;
   }
 
   .news-search {
-    margin-bottom: 22px;
+    margin-bottom: 18px;
   }
 
   .news-search label {
     display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
+    margin-bottom: 6px;
+    font-size: 13.5px;
     font-weight: 700;
   }
 
@@ -495,42 +359,38 @@ try {
     display: block;
     width: 100%;
     max-width: 520px;
-    padding: 13px 15px;
+    padding: 11px 14px;
     border: 1px solid var(--border, #e2e8f0);
     border-radius: 10px;
     background: var(--surface, #fff);
-    color: var(--text, #0f172a);
+    color: var(--text, #172b4d);
     font: inherit;
   }
 
-  .news-search input:focus {
-    outline: 2px solid var(--primary, #2563eb);
-    outline-offset: 2px;
-  }
-
   .news-status {
-    margin-bottom: 18px;
-    color: var(--muted, #64748b);
-    font-size: 14px;
+    margin-bottom: 16px;
+    color: var(--muted, #5a6a82);
+    font-size: 13.5px;
   }
 
   .news-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 22px;
+    gap: 18px;
   }
 
   .news-card {
     overflow: hidden;
     border: 1px solid var(--border, #e2e8f0);
-    border-radius: 16px;
+    border-radius: 14px;
     background: var(--surface, #fff);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 320px;
+    transition: border-color 0.15s ease;
   }
 
   .news-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+    border-color: #93c5fd;
   }
 
   .news-image-wrapper,
@@ -553,103 +413,62 @@ try {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 42px;
+    font-size: 38px;
   }
 
   .news-card-body {
-    padding: 18px;
+    padding: 16px;
   }
 
   .news-category {
     display: inline-block;
-    padding: 5px 10px;
-    border-radius: 20px;
-    background: #eff6ff;
-    color: #2563eb;
-    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: var(--primary-subtle, #e8f3fc);
+    color: var(--primary, #0b6bcb);
+    font-size: 11.5px;
     font-weight: 700;
   }
 
   .news-card-title {
-    margin: 13px 0 8px;
-    font-size: 18px;
-    line-height: 1.45;
-  }
-
-  .news-card-title a {
-    color: inherit;
-    text-decoration: none;
+    margin: 10px 0 6px;
+    font-size: 16.5px;
+    line-height: 1.4;
   }
 
   .news-card-title a:hover {
-    color: var(--primary, #2563eb);
+    color: var(--primary, #0b6bcb);
   }
 
   .news-date {
     display: block;
-    color: var(--muted, #64748b);
+    color: var(--muted, #5a6a82);
     font-size: 12px;
   }
 
   .news-excerpt {
-    margin: 13px 0;
-    color: var(--muted, #64748b);
-    font-size: 14px;
-    line-height: 1.7;
+    margin: 10px 0;
+    color: var(--muted, #5a6a82);
+    font-size: 13.5px;
+    line-height: 1.6;
   }
 
   .news-source {
-    margin: 12px 0;
-    color: var(--muted, #64748b);
+    margin: 8px 0 0;
+    color: var(--muted, #5a6a82);
     font-size: 12px;
-  }
-
-  .news-read-more {
-    display: inline-block;
-    margin-top: 8px;
-    color: var(--primary, #2563eb);
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-  }
-
-  .news-read-more:hover {
-    text-decoration: underline;
-  }
-
-  @media (max-width: 850px) {
-    .news-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (max-width: 560px) {
-    .news-grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-
-    .news-card-body {
-      padding: 15px;
-    }
   }
 
   .load-more-news {
     display: block;
-    margin: 30px auto 0;
-    padding: 13px 28px;
+    margin: 24px auto 0;
+    padding: 12px 24px;
     border: 0;
     border-radius: 10px;
-    background: var(--primary, #2563eb);
+    background: var(--primary, #0b6bcb);
     color: #fff;
     font-size: 14px;
     font-weight: 700;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
-  }
-
-  .load-more-news:hover {
-    opacity: 0.88;
   }
 
   .load-more-news:disabled {
@@ -661,4 +480,16 @@ try {
     display: none;
   }
 
+  @media (max-width: 850px) {
+    .news-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .news-grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+  }
 </style>

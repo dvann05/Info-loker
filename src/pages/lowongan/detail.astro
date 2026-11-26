@@ -78,21 +78,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       const todayWib = getJakartaToday();
 
-      status.textContent = "";
-      const skeleton = document.createElement("div");
-      skeleton.className = "job-skeleton-card";
-      skeleton.innerHTML = `
-        <div class="job-skeleton-header">
-          <div class="skeleton job-skeleton-avatar"></div>
-          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
-            <div class="skeleton job-skeleton-title"></div>
-            <div class="skeleton job-skeleton-text"></div>
-          </div>
-        </div>
-        <div class="job-skeleton-desc" style="height: 100px;"></div>
-        <div class="job-skeleton-desc" style="height: 160px;"></div>
-      `;
-      detail.replaceChildren(skeleton);
+      status.textContent = "Memuat detail lowongan...";
+      detail.replaceChildren();
 
       const { data: job, error } = await supabase
         .from("jobs")
@@ -110,6 +97,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         status.textContent = "Lowongan tidak ditemukan atau sudah tidak tersedia.";
         return;
       }
+
+      status.textContent = "";
 
       const comp = job.company_name ? ` di ${job.company_name}` : "";
       document.title = `${job.title}${comp} — Info Loker Kita`;
