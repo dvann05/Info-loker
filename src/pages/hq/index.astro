@@ -430,17 +430,17 @@ import "../../styles/global.css";
       }
       .office-stage-wrap {
         position: relative;
-        background: #070b14;
-        border: 1px solid #1e293b;
+        background: #f5efe4;
+        border: 1px solid #d6cbb8;
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), inset 0 0 40px rgba(56, 189, 248, 0.06);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
         margin-bottom: 20px;
       }
       #ai-office-canvas {
         display: block;
         width: 100%;
-        height: 540px;
+        height: 580px;
         cursor: pointer;
         touch-action: manipulation;
       }
@@ -1671,17 +1671,17 @@ import "../../styles/global.css";
         renderer.toneMappingExposure = 1.15;
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0b1220);
-        scene.fog = new THREE.FogExp2(0x0b1220, 0.011);
+        scene.background = new THREE.Color(0xf4ede0);
+        scene.fog = new THREE.FogExp2(0xf4ede0, 0.006);
 
-        const camera = new THREE.PerspectiveCamera(44, 16 / 9, 0.1, 140);
+        const camera = new THREE.PerspectiveCamera(45, 16 / 9, 0.1, 160);
 
-        // Orbit Camera State — Default: Atas Belakang (nyaman melihat seluruh ruangan kantor)
+        // Orbit Camera State — Default: Atas Belakang Lebih Tinggi (nyaman & luas)
         let camYaw = 0.0;
-        let camPitch = 0.68;
-        let camDist = 25.5;
+        let camPitch = 0.84;
+        let camDist = 29.0;
         let targetX = 0;
-        let targetZ = -0.6;
+        let targetZ = -1.2;
         let autoOrbit = false;
         let dragging = false;
         let dragStartX = 0;
@@ -1692,28 +1692,28 @@ import "../../styles/global.css";
           const x = targetX + camDist * Math.sin(camYaw) * Math.cos(camPitch);
           const y = camDist * Math.sin(camPitch);
           const z = targetZ + camDist * Math.cos(camYaw) * Math.cos(camPitch);
-          camera.position.set(x, Math.max(3.8, y), z);
-          camera.lookAt(targetX, 1.3, targetZ);
+          camera.position.set(x, Math.max(4.5, y), z);
+          camera.lookAt(targetX, 1.0, targetZ);
         }
 
         setCameraPresetFn = (preset) => {
           if (preset === "iso") {
             autoOrbit = false;
             camYaw = 0.0;
-            camPitch = 0.68;
-            camDist = 25.5;
+            camPitch = 0.84;
+            camDist = 29.0;
             targetX = 0;
-            targetZ = -0.6;
+            targetZ = -1.2;
             document.getElementById("btn-cam-iso")?.classList.add("active");
             document.getElementById("btn-cam-ceo")?.classList.remove("active");
             document.getElementById("btn-cam-orbit")?.classList.remove("active");
           } else if (preset === "ceo") {
             autoOrbit = false;
             camYaw = 0.08;
-            camPitch = 0.42;
-            camDist = 9.2;
+            camPitch = 0.52;
+            camDist = 10.2;
             targetX = 0;
-            targetZ = -7.2;
+            targetZ = -7.6;
             document.getElementById("btn-cam-iso")?.classList.remove("active");
             document.getElementById("btn-cam-ceo")?.classList.add("active");
             document.getElementById("btn-cam-orbit")?.classList.remove("active");
@@ -1723,72 +1723,79 @@ import "../../styles/global.css";
           }
         };
 
-        // Pencahayaan Kantor Modern (terang, hangat & realistis)
-        scene.add(new THREE.HemisphereLight(0xf1f5f9, 0x334155, 1.05));
-        const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.35);
-        dirLight.position.set(10, 24, 14);
+        // Pencahayaan Kantor Siang Hari Cerah & Hangat (Cream Terang)
+        scene.add(new THREE.HemisphereLight(0xfffdf7, 0xe7dcc8, 1.35));
+        const dirLight = new THREE.DirectionalLight(0xfffaf0, 1.25);
+        dirLight.position.set(12, 28, 16);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.set(1024, 1024);
-        dirLight.shadow.camera.left = -16;
-        dirLight.shadow.camera.right = 16;
-        dirLight.shadow.camera.top = 16;
-        dirLight.shadow.camera.bottom = -16;
+        dirLight.shadow.camera.left = -20;
+        dirLight.shadow.camera.right = 20;
+        dirLight.shadow.camera.top = 20;
+        dirLight.shadow.camera.bottom = -20;
         scene.add(dirLight);
 
-        const officeLight1 = new THREE.PointLight(0xe0f2fe, 0.9, 26);
-        officeLight1.position.set(-6, 7.5, 2);
+        const officeLight1 = new THREE.PointLight(0xfffbeb, 0.75, 34);
+        officeLight1.position.set(-8, 9, 2);
         scene.add(officeLight1);
 
-        const officeLight2 = new THREE.PointLight(0xfef3c7, 0.9, 26);
-        officeLight2.position.set(6, 7.5, 2);
+        const officeLight2 = new THREE.PointLight(0xfffbeb, 0.75, 34);
+        officeLight2.position.set(8, 9, 2);
         scene.add(officeLight2);
 
-        const ceoSpot = new THREE.PointLight(0xfde68a, 1.1, 16);
-        ceoSpot.position.set(0, 6.2, -7.2);
+        const ceoSpot = new THREE.PointLight(0xfef3c7, 0.85, 20);
+        ceoSpot.position.set(0, 7.2, -7.6);
         scene.add(ceoSpot);
 
-        // Tekstur Lantai Kantor Kayu Parket / Ubin Modern
+        // Tekstur Lantai Kantor Kayu Cream Terang & Bersih
         function createOfficeFloorTexture() {
           const fc = document.createElement("canvas");
           fc.width = 512;
           fc.height = 512;
           const fctx = fc.getContext("2d")!;
-          fctx.fillStyle = "#c8b6a0";
+          fctx.fillStyle = "#efe6d5";
           fctx.fillRect(0, 0, 512, 512);
-          // Motif papan kayu parket kantor hangat
           const plankH = 32;
           const plankW = 128;
           for (let row = 0; row < 512 / plankH; row++) {
             const offset = (row % 2) * (plankW / 2);
             for (let col = -1; col < 512 / plankW + 1; col++) {
-              const shade = 188 + ((row * 17 + col * 31) % 22);
-              fctx.fillStyle = `rgb(${shade}, ${shade - 16}, ${shade - 36})`;
+              const shade = 232 + ((row * 13 + col * 23) % 14);
+              fctx.fillStyle = `rgb(${shade}, ${shade - 8}, ${shade - 22})`;
               fctx.fillRect(col * plankW + offset + 1, row * plankH + 1, plankW - 2, plankH - 2);
             }
           }
           const tex = new THREE.CanvasTexture(fc);
           tex.wrapS = THREE.RepeatWrapping;
           tex.wrapT = THREE.RepeatWrapping;
-          tex.repeat.set(5, 5);
+          tex.repeat.set(7, 7);
           tex.colorSpace = THREE.SRGBColorSpace;
           return tex;
         }
 
-        // Lantai Utama Gedung Kantor
-        const floor = new THREE.Mesh(
-          new THREE.BoxGeometry(24, 0.45, 22),
-          new THREE.MeshStandardMaterial({ map: createOfficeFloorTexture(), roughness: 0.55, metalness: 0.05 })
+        // Lantai Utama Gedung Kantor Lebih Luas (32 x 28) + Teras Cream di Sekeliling
+        const outerGround = new THREE.Mesh(
+          new THREE.PlaneGeometry(120, 120),
+          new THREE.MeshStandardMaterial({ color: 0xf4ede0, roughness: 0.9 })
         );
-        floor.position.set(0, -0.225, 0);
+        outerGround.rotation.x = -Math.PI / 2;
+        outerGround.position.y = -0.46;
+        scene.add(outerGround);
+
+        const floor = new THREE.Mesh(
+          new THREE.BoxGeometry(30, 0.45, 26),
+          new THREE.MeshStandardMaterial({ map: createOfficeFloorTexture(), roughness: 0.45, metalness: 0.04 })
+        );
+        floor.position.set(0, -0.225, 0.4);
         floor.receiveShadow = true;
         scene.add(floor);
 
-        // Karpet Elegan per Zona Divisi Kantor
+        // Karpet Elegan Bernuansa Cream & Pastel Modern per Zona Divisi
         const zoneMats = [
-          { x: 0, z: -7.5, w: 10.0, d: 4.6, carpet: 0x334155, trim: 0xd97706, raised: true },
-          { x: 0, z: -3.0, w: 15.0, d: 3.4, carpet: 0x1e3a5f, trim: 0x38bdf8, raised: false },
-          { x: 0, z: 1.8, w: 19.2, d: 4.0, carpet: 0x1e3a34, trim: 0x22c55e, raised: false },
-          { x: 0, z: 6.8, w: 19.6, d: 4.0, carpet: 0x2e2447, trim: 0xa855f7, raised: false },
+          { x: 0, z: -7.5, w: 11.4, d: 4.8, carpet: 0xf3e8d2, trim: 0xd97706, raised: true },
+          { x: 0, z: -3.0, w: 16.5, d: 3.6, carpet: 0xe6eff6, trim: 0x0284c7, raised: false },
+          { x: 0, z: 1.8, w: 21.0, d: 4.2, carpet: 0xe4f3ea, trim: 0x16a34a, raised: false },
+          { x: 0, z: 6.8, w: 21.6, d: 4.2, carpet: 0xf1eaf8, trim: 0x9333ea, raised: false },
         ];
         for (const zm of zoneMats) {
           const pad = new THREE.Mesh(
@@ -1800,211 +1807,232 @@ import "../../styles/global.css";
           scene.add(pad);
 
           const rim = new THREE.Mesh(
-            new THREE.BoxGeometry(zm.w + 0.16, 0.05, zm.d + 0.16),
-            new THREE.MeshStandardMaterial({ color: zm.trim, roughness: 0.4 })
+            new THREE.BoxGeometry(zm.w + 0.18, 0.05, zm.d + 0.18),
+            new THREE.MeshStandardMaterial({ color: zm.trim, roughness: 0.45 })
           );
           rim.position.set(zm.x, 0.01, zm.z);
           scene.add(rim);
         }
 
         // ===================================================
-        // ARSITEKTUR DINDING KANTOR, JENDELA KOTA & PERABOTAN
+        // ARSITEKTUR DINDING KANTOR CREAM TERANG & LUAS
         // ===================================================
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.75 });
-        const trimDarkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 });
+        const wallCreamMat = new THREE.MeshStandardMaterial({ color: 0xfbf6ec, roughness: 0.72 });
+        const wallAccentCreamMat = new THREE.MeshStandardMaterial({ color: 0xeadcc6, roughness: 0.65 });
+        const trimWarmWoodMat = new THREE.MeshStandardMaterial({ color: 0xc29b70, roughness: 0.48, metalness: 0.08 });
+        const trimDarkMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.45, metalness: 0.25 });
         const glassMat = new THREE.MeshPhysicalMaterial({
-          color: 0xbae6fd,
+          color: 0xe0f2fe,
           transparent: true,
-          opacity: 0.24,
+          opacity: 0.28,
           roughness: 0.08,
-          metalness: 0.15,
+          metalness: 0.1,
         });
 
-        // Dinding Kiri & Kanan Kantor (ketinggian nyaman agar tidak menghalangi kamera)
-        const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.6, 21.6), wallMat);
-        leftWall.position.set(-11.8, 2.3, -0.2);
+        // Dinding Kiri & Kanan Kantor (Cat Cream Terang, Lebih Luas di X = ±14.8)
+        const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.2, 26), wallCreamMat);
+        leftWall.position.set(-14.8, 2.6, 0.4);
         leftWall.receiveShadow = true;
         scene.add(leftWall);
 
-        const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.35, 4.6, 21.6), wallMat);
-        rightWall.position.set(11.8, 2.3, -0.2);
+        const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5.2, 26), wallCreamMat);
+        rightWall.position.set(14.8, 2.6, 0.4);
         rightWall.receiveShadow = true;
         scene.add(rightWall);
 
-        // Dinding Belakang Panorama Kaca + Siluet Gedung Kota
-        const backWallLow = new THREE.Mesh(new THREE.BoxGeometry(24, 1.0, 0.35), trimDarkMat);
-        backWallLow.position.set(0, 0.5, -10.8);
+        // Lis Plint Kayu Cream di Bawah Dinding Kiri & Kanan
+        const leftBaseboard = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.36, 26), wallAccentCreamMat);
+        leftBaseboard.position.set(-14.78, 0.18, 0.4);
+        scene.add(leftBaseboard);
+        const rightBaseboard = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.36, 26), wallAccentCreamMat);
+        rightBaseboard.position.set(14.78, 0.18, 0.4);
+        scene.add(rightBaseboard);
+
+        // Dinding Depan Rendah Warna Cream Terang (menghilangkan area hitam di depan!)
+        const frontLowWall = new THREE.Mesh(new THREE.BoxGeometry(30, 0.75, 0.38), wallCreamMat);
+        frontLowWall.position.set(0, 0.375, 13.2);
+        frontLowWall.receiveShadow = true;
+        scene.add(frontLowWall);
+        const frontTopTrim = new THREE.Mesh(new THREE.BoxGeometry(30.1, 0.12, 0.44), trimWarmWoodMat);
+        frontTopTrim.position.set(0, 0.78, 13.2);
+        scene.add(frontTopTrim);
+
+        // Dinding Belakang Panorama Kaca Berbingkai Cream Terang
+        const backWallLow = new THREE.Mesh(new THREE.BoxGeometry(30, 1.15, 0.4), wallCreamMat);
+        backWallLow.position.set(0, 0.575, -12.4);
         scene.add(backWallLow);
 
-        const backWindow = new THREE.Mesh(new THREE.BoxGeometry(23.2, 3.6, 0.12), glassMat);
-        backWindow.position.set(0, 2.8, -10.8);
+        const backWindow = new THREE.Mesh(new THREE.BoxGeometry(29.2, 3.8, 0.12), glassMat);
+        backWindow.position.set(0, 3.05, -12.4);
         scene.add(backWindow);
 
-        const backHeaderBeam = new THREE.Mesh(new THREE.BoxGeometry(24, 0.35, 0.4), trimDarkMat);
-        backHeaderBeam.position.set(0, 4.65, -10.8);
+        const backHeaderBeam = new THREE.Mesh(new THREE.BoxGeometry(30, 0.45, 0.45), wallCreamMat);
+        backHeaderBeam.position.set(0, 5.15, -12.4);
         scene.add(backHeaderBeam);
 
-        // Pilar Jendela Aluminium
-        for (let wx = -10; wx <= 10; wx += 4) {
-          const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.18, 4.6, 0.24), trimDarkMat);
-          mullion.position.set(wx, 2.3, -10.75);
+        // Pilar Jendela Warna Cream Hangat
+        for (let wx = -12; wx <= 12; wx += 4) {
+          const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.22, 5.2, 0.28), wallAccentCreamMat);
+          mullion.position.set(wx, 2.6, -12.35);
           scene.add(mullion);
         }
 
-        // Siluet Gedung Pencakar Langit di Luar Jendela Belakang
+        // Pemandangan Gedung Kota Cerah Bernuansa Cream/Langit di Luar Jendela
         const skylineCoords = [
-          [-14, 7, -15, 2.4, 9], [-10, 6, -16, 2.8, 12], [-6, 5, -15.5, 2.2, 8],
-          [-2, 7.5, -16.5, 3.0, 14], [2.5, 6, -15.5, 2.5, 10], [6.5, 8, -16.5, 2.8, 15],
-          [11, 5.5, -15, 2.6, 11], [14.5, 6.5, -16, 2.2, 9],
+          [-16, 7, -18, 2.8, 10], [-11, 6, -19, 3.2, 13], [-6, 5, -18.5, 2.6, 9],
+          [-1.5, 7.5, -19.5, 3.4, 15], [3.5, 6, -18.5, 2.8, 11], [8.5, 8, -19.5, 3.2, 16],
+          [13.5, 5.5, -18, 2.8, 12], [17.5, 6.5, -19, 2.6, 10],
         ];
-        for (const [bx, by, bz, bw, bh] of skylineCoords) {
+        for (const [bx, _by, bz, bw, bh] of skylineCoords) {
           const bldg = new THREE.Mesh(
-            new THREE.BoxGeometry(bw, bh, 2.2),
-            new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 })
+            new THREE.BoxGeometry(bw, bh, 2.4),
+            new THREE.MeshStandardMaterial({ color: 0xe5dccb, roughness: 0.75 })
           );
           bldg.position.set(bx, bh / 2 - 2, bz);
           scene.add(bldg);
-          // Lampu jendela gedung kota
           const winLit = new THREE.Mesh(
             new THREE.PlaneGeometry(bw * 0.65, bh * 0.65),
-            new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.2 })
+            new THREE.MeshBasicMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.45 })
           );
-          winLit.position.set(bx, bh / 2 - 1.5, bz + 1.12);
+          winLit.position.set(bx, bh / 2 - 1.5, bz + 1.22);
           scene.add(winLit);
         }
 
         // Papan Nama Perusahaan Besar di Dinding Belakang Ruang CEO
-        const brandSign = createLabelSprite(THREE, "🏢 INFOLOKERKITA AI HEADQUARTERS", "#f59e0b", true);
-        brandSign.scale.set(6.8, 1.15, 1);
-        brandSign.position.set(0, 4.2, -10.35);
+        const brandSign = createLabelSprite(THREE, "🏢 INFOLOKERKITA AI HEADQUARTERS", "#d97706", true);
+        brandSign.scale.set(7.6, 1.25, 1);
+        brandSign.position.set(0, 4.5, -11.9);
         scene.add(brandSign);
 
         // Partisi Kaca Ruang CEO (Samping Kiri & Kanan)
-        const ceoGlassL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.8, 4.6), glassMat);
-        ceoGlassL.position.set(-5.0, 1.5, -7.5);
+        const ceoGlassL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3.0, 4.8), glassMat);
+        ceoGlassL.position.set(-5.7, 1.6, -7.5);
         scene.add(ceoGlassL);
-        const ceoGlassR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.8, 4.6), glassMat);
-        ceoGlassR.position.set(5.0, 1.5, -7.5);
+        const ceoGlassR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3.0, 4.8), glassMat);
+        ceoGlassR.position.set(5.7, 1.6, -7.5);
         scene.add(ceoGlassR);
 
-        // Whiteboard Strategi di Dinding Kiri
-        const wbFrame = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.0, 4.4), trimDarkMat);
-        wbFrame.position.set(-11.55, 2.5, 1.8);
+        // Whiteboard Strategi di Dinding Kiri (X = -14.5)
+        const wbFrame = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.2, 5.0), trimWarmWoodMat);
+        wbFrame.position.set(-14.52, 2.7, 1.8);
         scene.add(wbFrame);
         const wbSurface = new THREE.Mesh(
-          new THREE.BoxGeometry(0.14, 1.8, 4.2),
-          new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 })
+          new THREE.BoxGeometry(0.14, 2.0, 4.8),
+          new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 })
         );
-        wbSurface.position.set(-11.52, 2.5, 1.8);
+        wbSurface.position.set(-14.49, 2.7, 1.8);
         scene.add(wbSurface);
 
-        // TV Monitor Besar di Dinding Kanan
-        const tvFrame = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.1, 4.2), trimDarkMat);
-        tvFrame.position.set(11.55, 2.6, 1.8);
+        // TV Monitor Besar di Dinding Kanan (X = 14.5)
+        const tvFrame = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.3, 4.8), trimDarkMat);
+        tvFrame.position.set(14.52, 2.8, 1.8);
         scene.add(tvFrame);
         const tvScreen = new THREE.Mesh(
-          new THREE.PlaneGeometry(3.9, 1.85),
+          new THREE.PlaneGeometry(4.5, 2.05),
           new THREE.MeshBasicMaterial({ map: createScreenTexture(THREE, "#38bdf8") })
         );
-        tvScreen.position.set(11.46, 2.6, 1.8);
+        tvScreen.position.set(14.43, 2.8, 1.8);
         tvScreen.rotation.y = -Math.PI / 2;
         scene.add(tvScreen);
 
-        // Sofa Tamu & Meja Kopi di Sudut Kiri Depan (Lounge Kantor)
-        const sofaMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 });
-        const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.55, 1.2), sofaMat);
-        sofaBase.position.set(-8.6, 0.28, -8.2);
+        // Sofa Tamu Cream Hangat & Meja Kopi di Sudut Kiri Belakang (Lounge Kantor)
+        const sofaMat = new THREE.MeshStandardMaterial({ color: 0xd6c7b2, roughness: 0.82 });
+        const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.58, 1.3), sofaMat);
+        sofaBase.position.set(-10.6, 0.29, -8.8);
         sofaBase.castShadow = true;
         scene.add(sofaBase);
-        const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.85, 0.28), sofaMat);
-        sofaBack.position.set(-8.6, 0.82, -8.68);
+        const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.9, 0.3), sofaMat);
+        sofaBack.position.set(-10.6, 0.85, -9.32);
         scene.add(sofaBack);
         const coffeeTable = new THREE.Mesh(
-          new THREE.BoxGeometry(1.8, 0.42, 0.9),
-          new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.4 })
+          new THREE.BoxGeometry(2.0, 0.44, 1.0),
+          trimWarmWoodMat
         );
-        coffeeTable.position.set(-8.6, 0.21, -6.7);
+        coffeeTable.position.set(-10.6, 0.22, -7.1);
         coffeeTable.castShadow = true;
         scene.add(coffeeTable);
 
         // Pantry Mini (Dispenser Air + Mesin Kopi) di Sisi Kiri Tengah
         const pantryCab = new THREE.Mesh(
-          new THREE.BoxGeometry(1.1, 1.0, 2.6),
-          new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.5 })
+          new THREE.BoxGeometry(1.3, 1.05, 3.2),
+          new THREE.MeshStandardMaterial({ color: 0xfbf6ec, roughness: 0.45 })
         );
-        pantryCab.position.set(-10.8, 0.5, -3.0);
+        pantryCab.position.set(-13.6, 0.52, -3.0);
         pantryCab.castShadow = true;
         scene.add(pantryCab);
         const gallon = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.24, 0.24, 0.55, 12),
+          new THREE.CylinderGeometry(0.26, 0.26, 0.6, 12),
           new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 })
         );
-        gallon.position.set(-10.8, 1.32, -3.7);
+        gallon.position.set(-13.6, 1.36, -3.8);
         scene.add(gallon);
         const coffeeMaker = new THREE.Mesh(
-          new THREE.BoxGeometry(0.45, 0.52, 0.45),
-          new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5 })
+          new THREE.BoxGeometry(0.5, 0.56, 0.5),
+          new THREE.MeshStandardMaterial({ color: 0x78350f, metalness: 0.35 })
         );
-        coffeeMaker.position.set(-10.8, 1.26, -2.3);
+        coffeeMaker.position.set(-13.6, 1.32, -2.2);
         scene.add(coffeeMaker);
 
-        // Rak Buku / Arsip Kantor di Sisi Kanan Tengah
+        // Rak Buku / Arsip Kantor Kayu Cerah di Sisi Kanan Tengah
         const shelf = new THREE.Mesh(
-          new THREE.BoxGeometry(0.85, 2.8, 2.6),
-          new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.65 })
+          new THREE.BoxGeometry(0.95, 3.0, 3.2),
+          trimWarmWoodMat
         );
-        shelf.position.set(10.9, 1.4, -3.0);
+        shelf.position.set(13.8, 1.5, -3.0);
         shelf.castShadow = true;
         scene.add(shelf);
         for (let b = 0; b < 3; b++) {
           const binder = new THREE.Mesh(
-            new THREE.BoxGeometry(0.65, 0.42, 2.2),
+            new THREE.BoxGeometry(0.7, 0.44, 2.7),
             new THREE.MeshStandardMaterial({ color: [0x2563eb, 0x16a34a, 0xd97706][b] })
           );
-          binder.position.set(10.82, 0.65 + b * 0.78, -3.0);
+          binder.position.set(13.7, 0.7 + b * 0.82, -3.0);
           scene.add(binder);
         }
 
         // 3D Supabase Server Rack (Sudut Kanan Belakang)
         const rackGroup = new THREE.Group();
-        rackGroup.position.set(8.8, 0, -8.4);
+        rackGroup.position.set(11.4, 0, -9.2);
         const rackBody = new THREE.Mesh(
-          new THREE.BoxGeometry(1.5, 3.2, 1.25),
-          new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.6 })
+          new THREE.BoxGeometry(1.6, 3.3, 1.3),
+          new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.35, metalness: 0.45 })
         );
-        rackBody.position.y = 1.6;
+        rackBody.position.y = 1.65;
         rackBody.castShadow = true;
         rackGroup.add(rackBody);
         const serverLeds: any[] = [];
         for (let r = 0; r < 6; r++) {
           const led = new THREE.Mesh(
-            new THREE.BoxGeometry(0.18, 0.08, 0.06),
+            new THREE.BoxGeometry(0.2, 0.09, 0.06),
             new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x22c55e, emissiveIntensity: 0.9 })
           );
-          led.position.set(-0.36 + (r % 2) * 0.72, 0.6 + r * 0.42, 0.64);
+          led.position.set(-0.38 + (r % 2) * 0.76, 0.65 + r * 0.42, 0.67);
           rackGroup.add(led);
           serverLeds.push(led);
         }
-        const rackLabel = createLabelSprite(THREE, "🗄️ SERVER SUPABASE", "#06b6d4", false);
-        rackLabel.position.set(0, 3.85, 0);
+        const rackLabel = createLabelSprite(THREE, "🗄️ SERVER SUPABASE", "#0284c7", false);
+        rackLabel.position.set(0, 3.95, 0);
         rackGroup.add(rackLabel);
         scene.add(rackGroup);
 
-        // Tanaman Hias Pot Kantor di Sudut-Sudut Ruangan
-        const plantCoords = [[-10.6, -9.6], [10.6, -9.6], [-10.8, 6.8], [10.8, 6.8], [-5.4, -5.2], [5.4, -5.2]];
+        // Tanaman Hias Pot Cream di Sudut-Sudut Ruangan Kantor Luas
+        const plantCoords = [
+          [-13.4, -11.0], [13.4, -11.0], [-13.4, 11.4], [13.4, 11.4],
+          [-6.2, -5.2], [6.2, -5.2], [-13.4, 6.8], [13.4, 6.8],
+        ];
         for (const [px, pz] of plantCoords) {
           const pot = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.38, 0.28, 0.6, 8),
-            new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 })
+            new THREE.CylinderGeometry(0.42, 0.3, 0.65, 8),
+            new THREE.MeshStandardMaterial({ color: 0xfbf6ec, roughness: 0.4 })
           );
-          pot.position.set(px, 0.3, pz);
+          pot.position.set(px, 0.325, pz);
           pot.castShadow = true;
           scene.add(pot);
           const bush = new THREE.Mesh(
-            new THREE.DodecahedronGeometry(0.58, 0),
-            new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 })
+            new THREE.DodecahedronGeometry(0.64, 0),
+            new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.6 })
           );
-          bush.position.set(px, 0.98, pz);
+          bush.position.set(px, 1.05, pz);
           bush.castShadow = true;
           scene.add(bush);
         }
@@ -2333,15 +2361,15 @@ import "../../styles/global.css";
         window.addEventListener("pointerup", onPointerUp);
         canvas.addEventListener("wheel", onWheel, { passive: false });
 
-        // Titik Nongkrong / Pantry / Ngobrol / Jalan-Jalan di Kantor
+        // Titik Nongkrong / Pantry / Ngobrol / Jalan-Jalan di Kantor Luas
         const OFFICE_WAYPOINTS = [
-          { x: -9.3, z: -3.0, type: "coffee" },   // Pantry Mesin Kopi & Dispenser
-          { x: -8.2, z: -6.0, type: "chat" },     // Sofa Lounge Kantor
+          { x: -12.0, z: -3.0, type: "coffee" },  // Pantry Mesin Kopi & Dispenser
+          { x: -10.2, z: -6.4, type: "chat" },    // Sofa Lounge Kantor
           { x: -1.4, z: -0.6, type: "chat" },     // Lorong Tengah Kiri
           { x: 1.4, z: -0.6, type: "chat" },      // Lorong Tengah Kanan
-          { x: -9.8, z: 1.8, type: "walk" },      // Depan Whiteboard
-          { x: 9.6, z: 1.8, type: "walk" },       // Depan TV Monitor
-          { x: 9.4, z: -3.0, type: "walk" },      // Depan Rak Buku Arsip
+          { x: -12.4, z: 1.8, type: "walk" },     // Depan Whiteboard
+          { x: 12.2, z: 1.8, type: "walk" },      // Depan TV Monitor
+          { x: 12.0, z: -3.0, type: "walk" },     // Depan Rak Buku Arsip
           { x: 0.0, z: 4.3, type: "walk" },       // Lorong Divisi Loker & Berita
         ];
 
@@ -2378,8 +2406,8 @@ import "../../styles/global.css";
           } else if (next === "coffee") {
             // 50% ngopi di pantry, 50% ngopi santai di meja sendiri
             if (Math.random() < 0.55) {
-              rig.targetX = -9.2 + (Math.random() - 0.5) * 1.2;
-              rig.targetZ = -3.0 + (Math.random() - 0.5) * 1.6;
+              rig.targetX = -11.9 + (Math.random() - 0.5) * 1.2;
+              rig.targetZ = -3.0 + (Math.random() - 0.5) * 1.8;
             } else {
               rig.targetX = rig.homeX;
               rig.targetZ = rig.homeZ;
