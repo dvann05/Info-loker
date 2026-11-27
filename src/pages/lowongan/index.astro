@@ -8,6 +8,7 @@ let initialJobs: Array<{
   slug: string;
   title: string;
   company_name: string | null;
+  company_logo: string | null;
   location: string | null;
   employment_type: string | null;
   description: string | null;
@@ -21,7 +22,7 @@ try {
   const { data, count } = await supabase
     .from("jobs")
     .select(
-      "slug,title,company_name,location,employment_type,description,source_url,apply_url,published_at",
+      "slug,title,company_name,company_logo,location,employment_type,description,source_url,apply_url,published_at",
       { count: "exact" }
     )
     .eq("status", "published")
@@ -114,7 +115,22 @@ try {
           return (
             <article class="job-card">
               <div class="job-company">
-                <div class="company-logo">{initials}</div>
+                <div class="company-logo">
+                  {job.company_logo ? (
+                    <img
+                      src={job.company_logo}
+                      alt={`Logo ${job.company_name || "perusahaan"}`}
+                      width="40"
+                      height="40"
+                      loading="lazy"
+                      decoding="async"
+                      referrerpolicy="no-referrer"
+                      data-initials={initials}
+                    />
+                  ) : (
+                    initials
+                  )}
+                </div>
                 <span>{job.company_name || "Perusahaan tidak diketahui"}</span>
               </div>
               <h2><a href={getJobDetailPath(job.slug)}>{job.title}</a></h2>
@@ -537,6 +553,17 @@ try {
         district: initialDistrict,
       });
     }
+
+    jobList?.addEventListener(
+      "error",
+      (e) => {
+        const img = e.target;
+        if (img instanceof HTMLImageElement && img.dataset.initials) {
+          img.replaceWith(document.createTextNode(img.dataset.initials));
+        }
+      },
+      true
+    );
 
     const hasFilters = Boolean(initialQuery || initialProvince || initialCity || initialDistrict);
     const hasSsr = jobList?.dataset.ssr === "1";
