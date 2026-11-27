@@ -16,9 +16,9 @@ on:
         default: false
         type: boolean
   workflow_call:
-  schedule:
-    # 05:30 WIB = 22:30 UTC (Impor harian Karirhub + arsip kedaluwarsa, dilanjutkan deploy)
-    - cron: "30 22 * * *"
+  # Jadwal impor lama 05:30 WIB dinonaktifkan agar hemat kuota & hanya mengikuti jadwal AI Company:
+  # - 05:00 WIB (1x/hari): 3-5 Loker Perusahaan Bonafit
+  # - 07:00, 12:00, 17:00 WIB (3x/hari): Berita Industri SEO
 
 permissions:
   contents: read

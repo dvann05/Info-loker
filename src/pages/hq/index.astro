@@ -592,16 +592,16 @@ import "../../styles/global.css";
           <section id="tab-office" class="tab-section active">
             <div class="office-toolbar">
               <div class="office-hud-pills">
-                <span class="hud-pill"><span class="dot-live"></span> 3D ROBLOX AI OFFICE</span>
-                <span class="hud-pill">💼 Loker Bonafit: <strong id="office-jobs-count">...</strong> <span style="color:#64748b;">(1x/hari • 3–5)</span></span>
-                <span class="hud-pill">📰 Berita Industri: <strong id="office-news-count">...</strong> <span style="color:#64748b;">(3x/hari • Pagi/Siang/Sore)</span></span>
+                <span class="hud-pill" id="office-mode-badge"><span class="dot-live"></span> STANDBY HEMAT TOKEN</span>
+                <span class="hud-pill">💼 Loker Bonafit: <strong id="office-jobs-count">...</strong> <span style="color:#64748b;">(05:00 WIB)</span></span>
+                <span class="hud-pill">📰 Berita Industri: <strong id="office-news-count">...</strong> <span style="color:#64748b;">(07:00 • 12:00 • 17:00 WIB)</span></span>
                 <span class="hud-pill">🕒 <span id="office-clock">--:-- WIB</span></span>
               </div>
               <div class="office-controls">
-                <button class="office-btn active" data-office-mode="auto">✨ Otomatis</button>
-                <button class="office-btn" data-office-mode="0500">💼 Loker Bonafit</button>
-                <button class="office-btn" data-office-mode="0700">📰 Berita SEO</button>
-                <button class="office-btn" data-office-mode="0800">🛡️ Audit</button>
+                <button class="office-btn active" data-office-mode="auto">🕒 Sesuai Jadwal</button>
+                <button class="office-btn" data-office-mode="0500">💼 Simulasi Loker</button>
+                <button class="office-btn" data-office-mode="0700">📰 Simulasi Berita</button>
+                <button class="office-btn" data-office-mode="0800">🛡️ Simulasi Audit</button>
                 <button class="office-btn active" id="btn-cam-iso">🎥 Atas Belakang</button>
                 <button class="office-btn" id="btn-cam-ceo">👑 Ruang CEO</button>
                 <button class="office-btn" id="btn-cam-orbit">🔄 Auto-Putar</button>
@@ -2191,10 +2191,33 @@ import "../../styles/global.css";
         let lastOrbSpawn = 0;
         let lastBubbleTime = 0;
 
-        function spawnDataOrb() {
-          const pool = officeMode === "auto"
-            ? FLOW_ROUTES
-            : FLOW_ROUTES.filter((r) => r.cycle === officeMode);
+        function getCurrentScheduledCycleWib(): { cycle: "0500" | "0700" | "0800" | null; label: string; nextLabel: string } {
+          const parts = new Intl.DateTimeFormat("en-GB", {
+            timeZone: "Asia/Jakarta",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          }).formatToParts(new Date());
+          const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+          const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+          // Aktif selama jendela 20 menit di setiap jam jadwal (05:00, 07:00, 08:00, 12:00, 17:00 WIB)
+          if (hour === 5 && minute < 20) return { cycle: "0500", label: "⚡ AKTIF: LOKER BONAFIT (05:00 WIB)", nextLabel: "07:00 WIB (Berita Pagi)" };
+          if (hour === 7 && minute < 20) return { cycle: "0700", label: "⚡ AKTIF: BERITA PAGI (07:00 WIB)", nextLabel: "08:00 WIB (Audit)" };
+          if (hour === 8 && minute < 20) return { cycle: "0800", label: "⚡ AKTIF: AUDIT & LAPORAN (08:00 WIB)", nextLabel: "12:00 WIB (Berita Siang)" };
+          if (hour === 12 && minute < 20) return { cycle: "0700", label: "⚡ AKTIF: BERITA SIANG (12:00 WIB)", nextLabel: "17:00 WIB (Berita Sore)" };
+          if (hour === 17 && minute < 20) return { cycle: "0700", label: "⚡ AKTIF: BERITA SORE (17:00 WIB)", nextLabel: "05:00 WIB (Loker Bonafit)" };
+
+          let nextLabel = "05:00 WIB (Loker Bonafit)";
+          if (hour >= 5 && hour < 7) nextLabel = "07:00 WIB (Berita Pagi)";
+          else if (hour >= 7 && hour < 8) nextLabel = "08:00 WIB (Audit)";
+          else if (hour >= 8 && hour < 12) nextLabel = "12:00 WIB (Berita Siang)";
+          else if (hour >= 12 && hour < 17) nextLabel = "17:00 WIB (Berita Sore)";
+          return { cycle: null, label: `💤 STANDBY HEMAT TOKEN (Berikutnya: ${nextLabel})`, nextLabel };
+        }
+
+        function spawnDataOrb(effectiveCycle: "0500" | "0700" | "0800" | null) {
+          if (!effectiveCycle) return;
+          const pool = FLOW_ROUTES.filter((r) => r.cycle === effectiveCycle);
           if (!pool.length) return;
           const route = pool[Math.floor(Math.random() * pool.length)];
           const a = getAgentById(route.from);
@@ -2293,13 +2316,30 @@ import "../../styles/global.css";
           if (!officePaused) {
             if (autoOrbit) camYaw += 0.0022;
 
-            // Animate each Roblox character typing & nodding
+            const sched = getCurrentScheduledCycleWib();
+            const effectiveCycle = officeMode === "auto" ? sched.cycle : officeMode;
+            const isWorkingNow = effectiveCycle !== null;
+
+            const modeBadge = document.getElementById("office-mode-badge");
+            if (modeBadge) {
+              const badgeText = officeMode === "auto"
+                ? sched.label
+                : `🎬 SIMULASI VISUAL (${officeMode} WIB • 0 Token AI)`;
+              if (modeBadge.dataset.last !== badgeText) {
+                modeBadge.dataset.last = badgeText;
+                modeBadge.innerHTML = `<span class="dot-live" style="background:${isWorkingNow ? "#22c55e" : "#f59e0b"};"></span> ${escapeHtml(badgeText)}`;
+              }
+            }
+
+            // Animate each Roblox character: mengetik cepat saat jam jadwal, santai/standby di luar jadwal
+            const armSpeed = isWorkingNow ? 11 : 2.2;
+            const armAmp = isWorkingNow ? 0.16 : 0.03;
             Object.values(agentRigs).forEach((rig: any, idx: number) => {
               const { roblox, selRing, agent } = rig;
-              roblox.leftArm.rotation.x = -1.05 + Math.sin(t * 11 + idx * 1.4) * 0.16;
-              roblox.rightArm.rotation.x = -1.05 + Math.cos(t * 11 + idx * 1.4) * 0.16;
-              roblox.head.rotation.y = Math.sin(t * 1.6 + idx * 2.1) * 0.18;
-              roblox.head.rotation.x = Math.sin(t * 2.4 + idx) * 0.06;
+              roblox.leftArm.rotation.x = -1.05 + Math.sin(t * armSpeed + idx * 1.4) * armAmp;
+              roblox.rightArm.rotation.x = -1.05 + Math.cos(t * armSpeed + idx * 1.4) * armAmp;
+              roblox.head.rotation.y = Math.sin(t * 1.3 + idx * 2.1) * 0.16;
+              roblox.head.rotation.x = Math.sin(t * 2.0 + idx) * 0.05;
               selRing.visible = agent.id === selectedAgentId;
               if (selRing.visible) {
                 const s = 1 + Math.sin(t * 5) * 0.06;
@@ -2309,34 +2349,43 @@ import "../../styles/global.css";
 
             // Blink Server Rack LEDs
             serverLeds.forEach((led, idx) => {
-              const on = Math.sin(t * 6 + idx * 1.7) > 0;
+              const on = Math.sin(t * (isWorkingNow ? 6 : 2) + idx * 1.7) > 0;
               led.material.emissiveIntensity = on ? 1.2 : 0.15;
             });
 
-            // Walking Roblox Courier Bot
-            courierT += 0.0045;
-            if (courierT >= 1) {
-              courierT = 0;
-              courierFrom = courierTo;
-              courierTo = Math.floor(Math.random() * OFFICE_AGENTS.length);
-              if (courierTo === courierFrom) courierTo = (courierTo + 1) % OFFICE_AGENTS.length;
+            // Walking Roblox Courier Bot (hanya patroli saat jam kerja/simulasi, parkir tenang saat standby)
+            if (isWorkingNow) {
+              courierT += 0.0045;
+              if (courierT >= 1) {
+                courierT = 0;
+                courierFrom = courierTo;
+                courierTo = Math.floor(Math.random() * OFFICE_AGENTS.length);
+                if (courierTo === courierFrom) courierTo = (courierTo + 1) % OFFICE_AGENTS.length;
+              }
+              const aFrom = OFFICE_AGENTS[courierFrom];
+              const aTo = OFFICE_AGENTS[courierTo];
+              const cx = aFrom.x3d + (aTo.x3d - aFrom.x3d) * courierT;
+              const cz = aFrom.z3d + (aTo.z3d - aFrom.z3d) * courierT;
+              courierRig.group.position.set(cx, 0.05 + Math.abs(Math.sin(t * 10)) * 0.08, cz);
+              courierRig.group.rotation.y = Math.atan2(aTo.x3d - aFrom.x3d, aTo.z3d - aFrom.z3d);
+              const swing = Math.sin(t * 10) * 0.65;
+              courierRig.leftArm.rotation.x = swing;
+              courierRig.rightArm.rotation.x = -swing;
+              courierRig.leftLeg.rotation.x = -swing;
+              courierRig.rightLeg.rotation.x = swing;
+            } else {
+              courierRig.group.position.set(-8.6, 0.05, -5.0);
+              courierRig.group.rotation.y = 0;
+              courierRig.leftArm.rotation.x = 0;
+              courierRig.rightArm.rotation.x = 0;
+              courierRig.leftLeg.rotation.x = 0;
+              courierRig.rightLeg.rotation.x = 0;
             }
-            const aFrom = OFFICE_AGENTS[courierFrom];
-            const aTo = OFFICE_AGENTS[courierTo];
-            const cx = aFrom.x3d + (aTo.x3d - aFrom.x3d) * courierT;
-            const cz = aFrom.z3d + (aTo.z3d - aFrom.z3d) * courierT;
-            courierRig.group.position.set(cx, 0.05 + Math.abs(Math.sin(t * 10)) * 0.08, cz);
-            courierRig.group.rotation.y = Math.atan2(aTo.x3d - aFrom.x3d, aTo.z3d - aFrom.z3d);
-            const swing = Math.sin(t * 10) * 0.65;
-            courierRig.leftArm.rotation.x = swing;
-            courierRig.rightArm.rotation.x = -swing;
-            courierRig.leftLeg.rotation.x = -swing;
-            courierRig.rightLeg.rotation.x = swing;
 
-            // Spawn & move 3D Data Orbs
-            if (nowMs - lastOrbSpawn > 900 && orbs.length < 14) {
+            // Spawn & move 3D Data Orbs HANYA saat jam jadwal atau saat CEO menekan tombol simulasi
+            if (isWorkingNow && nowMs - lastOrbSpawn > 950 && orbs.length < 12) {
               lastOrbSpawn = nowMs;
-              spawnDataOrb();
+              spawnDataOrb(effectiveCycle);
             }
             for (let i = orbs.length - 1; i >= 0; i--) {
               const o = orbs[i];
@@ -2355,13 +2404,17 @@ import "../../styles/global.css";
             }
 
             // Switch floating speech bubble periodically
-            if (nowMs - lastBubbleTime > 3800) {
+            if (nowMs - lastBubbleTime > 4500) {
               lastBubbleTime = nowMs;
-              const picked = OFFICE_AGENTS[Math.floor(Math.random() * OFFICE_AGENTS.length)];
-              const txt = picked.id === "datamanager" && liveJobsCount > 0
-                ? `Sync ${liveJobsCount} loker & ${liveNewsCount} berita!`
-                : picked.tasks[Math.floor(Math.random() * picked.tasks.length)];
-              setBubble(picked.id, txt);
+              if (isWorkingNow) {
+                const picked = OFFICE_AGENTS[Math.floor(Math.random() * OFFICE_AGENTS.length)];
+                const txt = picked.id === "datamanager" && liveJobsCount > 0
+                  ? `Sync ${liveJobsCount} loker & ${liveNewsCount} berita!`
+                  : picked.tasks[Math.floor(Math.random() * picked.tasks.length)];
+                setBubble(picked.id, txt);
+              } else {
+                setBubble("manager", `Mode Hemat Token • Jadwal berikutnya: ${sched.nextLabel}`);
+              }
             }
 
             // Gentle float on bubble
