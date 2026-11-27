@@ -1601,6 +1601,15 @@ import "../../styles/global.css";
         rHand.position.set(0, -0.82, 0);
         rightArm.add(rHand);
 
+        // Gelas Kopi 3D di tangan kanan (muncul saat mode ngopi!)
+        const cup = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.11, 0.09, 0.22, 8),
+          new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 })
+        );
+        cup.position.set(0, -0.94, 0.12);
+        cup.visible = false;
+        rightArm.add(cup);
+
         // Blocky Legs
         const legGeo = new THREE.BoxGeometry(0.44, 0.98, 0.46);
         legGeo.translate(0, -0.45, 0);
@@ -1617,7 +1626,7 @@ import "../../styles/global.css";
         if (sitting) rightLeg.rotation.x = -Math.PI / 2.2;
         group.add(rightLeg);
 
-        return { group, head, leftArm, rightArm, leftLeg, rightLeg };
+        return { group, torso, head, leftArm, rightArm, leftLeg, rightLeg, cup };
       }
 
       async function startAiOfficeAnimation() {
@@ -2117,15 +2126,15 @@ import "../../styles/global.css";
           kb.position.set(0, 1.14, 0.72);
           station.add(kb);
 
-          // Roblox 3D Character seated at workstation
+          // Roblox 3D Character (diletakkan di scene utama agar bisa bebas berdiri, ngopi, ngobrol, & jalan-jalan!)
           const roblox = createRobloxCharacter(THREE, agent, true);
-          roblox.group.position.set(0, 0.05, -0.05);
-          station.add(roblox.group);
+          roblox.group.position.set(agent.x3d, baseY + 0.05, agent.z3d - 0.05);
+          scene.add(roblox.group);
 
-          // Floating Nameplate
+          // Floating Nameplate mengikuti karakter Roblox
           const nameplate = createLabelSprite(THREE, `${agent.emoji} ${agent.shortName}`, agent.color, false);
           nameplate.position.set(0, 3.25, 0);
-          station.add(nameplate);
+          roblox.group.add(nameplate);
 
           // Selection Ring on Floor
           const selRing = new THREE.Mesh(
@@ -2148,7 +2157,22 @@ import "../../styles/global.css";
           clickTargets.push(hitbox);
 
           scene.add(station);
-          agentRigs[agent.id] = { station, roblox, selRing, agent };
+          const initialActivities = ["relax", "coffee", "chat", "walk"] as const;
+          agentRigs[agent.id] = {
+            station,
+            roblox,
+            selRing,
+            agent,
+            homeX: agent.x3d,
+            homeY: baseY + 0.05,
+            homeZ: agent.z3d - 0.05,
+            activity: agent.isCeo ? "coffee" : initialActivities[clickTargets.length % initialActivities.length],
+            nextSwitchAt: performance.now() + 4000 + Math.random() * 8000,
+            targetX: agent.x3d,
+            targetZ: agent.z3d - 0.05,
+            chatLookX: 0,
+            chatLookZ: -0.5,
+          };
         }
 
         // Floating Active Speech Bubble Sprite
@@ -2309,6 +2333,76 @@ import "../../styles/global.css";
         window.addEventListener("pointerup", onPointerUp);
         canvas.addEventListener("wheel", onWheel, { passive: false });
 
+        // Titik Nongkrong / Pantry / Ngobrol / Jalan-Jalan di Kantor
+        const OFFICE_WAYPOINTS = [
+          { x: -9.3, z: -3.0, type: "coffee" },   // Pantry Mesin Kopi & Dispenser
+          { x: -8.2, z: -6.0, type: "chat" },     // Sofa Lounge Kantor
+          { x: -1.4, z: -0.6, type: "chat" },     // Lorong Tengah Kiri
+          { x: 1.4, z: -0.6, type: "chat" },      // Lorong Tengah Kanan
+          { x: -9.8, z: 1.8, type: "walk" },      // Depan Whiteboard
+          { x: 9.6, z: 1.8, type: "walk" },       // Depan TV Monitor
+          { x: 9.4, z: -3.0, type: "walk" },      // Depan Rak Buku Arsip
+          { x: 0.0, z: 4.3, type: "walk" },       // Lorong Divisi Loker & Berita
+        ];
+
+        const IDLE_BUBBLES: Record<string, string[]> = {
+          relax: ["Duduk santai tunggu jadwal 😌", "Istirahat sejenak, hemat token!", "Santai dulu sebelum jam tayang"],
+          coffee: ["Ngopi dulu biar makin fokus ☕", "Ambil kopi hangat di pantry ☕", "Seruput kopi sambil cek info"],
+          chat: ["Ngobrol strategi PT bonafit 💬", "Diskusi ide berita industri 💬", "Bahas keyword SEO bareng tim 💬"],
+          walk: ["Jalan-jalan keliling kantor 🚶", "Regangkan kaki sebentar 🚶", "Cek suasana ruangan kantor 🚶"],
+        };
+
+        function assignNextIdleActivity(rig: any, nowMs: number) {
+          rig.nextSwitchAt = nowMs + 7000 + Math.random() * 8000;
+          if (rig.agent.isCeo) {
+            // CEO bergantian antara duduk santai, ngopi di meja, dan berjalan santai di Ruang CEO
+            const ceoActs = ["relax", "coffee", "walk"];
+            rig.activity = ceoActs[Math.floor(Math.random() * ceoActs.length)];
+            if (rig.activity === "walk") {
+              rig.targetX = (Math.random() - 0.5) * 5.2;
+              rig.targetZ = -6.6 - Math.random() * 1.4;
+            } else {
+              rig.targetX = rig.homeX;
+              rig.targetZ = rig.homeZ;
+            }
+            return;
+          }
+
+          const acts = ["relax", "coffee", "chat", "walk"];
+          const next = acts[Math.floor(Math.random() * acts.length)];
+          rig.activity = next;
+
+          if (next === "relax") {
+            rig.targetX = rig.homeX;
+            rig.targetZ = rig.homeZ;
+          } else if (next === "coffee") {
+            // 50% ngopi di pantry, 50% ngopi santai di meja sendiri
+            if (Math.random() < 0.55) {
+              rig.targetX = -9.2 + (Math.random() - 0.5) * 1.2;
+              rig.targetZ = -3.0 + (Math.random() - 0.5) * 1.6;
+            } else {
+              rig.targetX = rig.homeX;
+              rig.targetZ = rig.homeZ;
+            }
+          } else if (next === "chat") {
+            const chatSpots = [
+              { x: -7.6, z: -6.2, lx: -8.6, lz: -7.4 },
+              { x: -1.1, z: -0.6, lx: 1.1, lz: -0.6 },
+              { x: 1.1, z: -0.6, lx: -1.1, lz: -0.6 },
+              { x: 0.0, z: 4.3, lx: 0.0, lz: 1.8 },
+            ];
+            const spot = chatSpots[Math.floor(Math.random() * chatSpots.length)];
+            rig.targetX = spot.x + (Math.random() - 0.5) * 0.7;
+            rig.targetZ = spot.z + (Math.random() - 0.5) * 0.7;
+            rig.chatLookX = spot.lx;
+            rig.chatLookZ = spot.lz;
+          } else {
+            const wp = OFFICE_WAYPOINTS[Math.floor(Math.random() * OFFICE_WAYPOINTS.length)];
+            rig.targetX = wp.x + (Math.random() - 0.5) * 1.4;
+            rig.targetZ = wp.z + (Math.random() - 0.5) * 1.4;
+          }
+        }
+
         // Main 60fps 3D Animation Loop
         const animate = (nowMs: number) => {
           officeRafId = requestAnimationFrame(animate);
@@ -2319,25 +2413,111 @@ import "../../styles/global.css";
 
             const sched = getCurrentScheduledCycleWib();
             const effectiveCycle = officeMode === "auto" ? sched.cycle : officeMode;
+            const isWorkTime = effectiveCycle !== null;
 
             const modeBadge = document.getElementById("office-mode-badge");
             if (modeBadge) {
               const badgeText = officeMode === "auto"
-                ? (sched.cycle ? sched.label : `🏢 KANTOR AI LIVE • Jadwal AI: ${sched.nextLabel}`)
-                : `🎬 SIMULASI VISUAL (${officeMode} WIB • 0 Token AI)`;
+                ? (sched.cycle ? sched.label : `☕ SANTAI DI KANTOR • Jadwal AI: ${sched.nextLabel}`)
+                : `🎬 SIMULASI KERJA (${officeMode} WIB • 0 Token AI)`;
               if (modeBadge.dataset.last !== badgeText) {
                 modeBadge.dataset.last = badgeText;
-                modeBadge.innerHTML = `<span class="dot-live" style="background:#22c55e;"></span> ${escapeHtml(badgeText)}`;
+                modeBadge.innerHTML = `<span class="dot-live" style="background:${isWorkTime ? "#22c55e" : "#f59e0b"};"></span> ${escapeHtml(badgeText)}`;
               }
             }
 
-            // Animasi 3D Roblox tetap bergerak aktif & hidup terus (100% visual, 0 token AI)
+            // Animate setiap karakter Roblox secara bervariasi!
             Object.values(agentRigs).forEach((rig: any, idx: number) => {
               const { roblox, selRing, agent } = rig;
-              roblox.leftArm.rotation.x = -1.05 + Math.sin(t * 11 + idx * 1.4) * 0.16;
-              roblox.rightArm.rotation.x = -1.05 + Math.cos(t * 11 + idx * 1.4) * 0.16;
-              roblox.head.rotation.y = Math.sin(t * 1.6 + idx * 2.1) * 0.18;
-              roblox.head.rotation.x = Math.sin(t * 2.4 + idx) * 0.06;
+
+              if (isWorkTime) {
+                rig.targetX = rig.homeX;
+                rig.targetZ = rig.homeZ;
+                rig.activity = "work";
+              } else if (nowMs > rig.nextSwitchAt) {
+                assignNextIdleActivity(rig, nowMs);
+              }
+
+              // Gerakkan karakter menuju target (berjalan jika jauh dari target)
+              const dx = rig.targetX - roblox.group.position.x;
+              const dz = rig.targetZ - roblox.group.position.z;
+              const dist = Math.hypot(dx, dz);
+              const atHome = Math.hypot(rig.homeX - roblox.group.position.x, rig.homeZ - roblox.group.position.z) < 0.25;
+
+              if (dist > 0.14) {
+                // Sedang berjalan-jalan (classic Roblox walk animation!)
+                const speed = isWorkTime ? 0.085 : 0.042;
+                roblox.group.position.x += (dx / dist) * Math.min(speed, dist);
+                roblox.group.position.z += (dz / dist) * Math.min(speed, dist);
+                roblox.group.position.y = (agent.isCeo ? 0.29 : 0.05) + Math.abs(Math.sin(t * 9 + idx)) * 0.07;
+                roblox.group.rotation.y = Math.atan2(dx, dz);
+
+                const swing = Math.sin(t * 9 + idx) * 0.65;
+                roblox.leftArm.rotation.x = swing;
+                roblox.rightArm.rotation.x = -swing;
+                roblox.leftLeg.rotation.x = -swing;
+                roblox.rightLeg.rotation.x = swing;
+                roblox.cup.visible = false;
+              } else {
+                // Sudah sampai di posisi tujuan
+                roblox.group.position.y = rig.homeY;
+                const seated = atHome && (rig.activity === "work" || rig.activity === "relax" || rig.activity === "coffee");
+
+                if (seated) {
+                  roblox.group.rotation.y = 0;
+                  roblox.leftLeg.rotation.x = -Math.PI / 2.2;
+                  roblox.rightLeg.rotation.x = -Math.PI / 2.2;
+
+                  if (rig.activity === "work") {
+                    // Mengetik cepat di keyboard
+                    roblox.leftArm.rotation.x = -1.05 + Math.sin(t * 11 + idx * 1.4) * 0.16;
+                    roblox.rightArm.rotation.x = -1.05 + Math.cos(t * 11 + idx * 1.4) * 0.16;
+                    roblox.head.rotation.y = Math.sin(t * 1.8 + idx) * 0.14;
+                    roblox.cup.visible = false;
+                  } else if (rig.activity === "coffee") {
+                    // Duduk sambil ngopi (angkat cangkir ke mulut berkala!)
+                    const sip = (Math.sin(t * 2.2 + idx) + 1) * 0.5;
+                    roblox.leftArm.rotation.x = -0.35;
+                    roblox.rightArm.rotation.x = -0.95 - sip * 0.95;
+                    roblox.head.rotation.x = -sip * 0.14;
+                    roblox.head.rotation.y = Math.sin(t * 0.9 + idx) * 0.18;
+                    roblox.cup.visible = true;
+                  } else {
+                    // Duduk santai bersandar
+                    roblox.leftArm.rotation.x = -0.35 + Math.sin(t * 1.5 + idx) * 0.06;
+                    roblox.rightArm.rotation.x = -0.35 - Math.sin(t * 1.5 + idx) * 0.06;
+                    roblox.head.rotation.y = Math.sin(t * 0.8 + idx * 1.7) * 0.35;
+                    roblox.head.rotation.x = Math.sin(t * 1.2 + idx) * 0.08;
+                    roblox.cup.visible = false;
+                  }
+                } else {
+                  // Berdiri di Pantry / Area Ngobrol / Keliling
+                  roblox.leftLeg.rotation.x = 0;
+                  roblox.rightLeg.rotation.x = 0;
+                  if (rig.activity === "coffee") {
+                    const sip = (Math.sin(t * 2.4 + idx) + 1) * 0.5;
+                    roblox.leftArm.rotation.x = 0.08;
+                    roblox.rightArm.rotation.x = -0.85 - sip * 0.95;
+                    roblox.head.rotation.y = Math.sin(t * 1.1 + idx) * 0.25;
+                    roblox.cup.visible = true;
+                  } else if (rig.activity === "chat") {
+                    // Mengobrol ekspresif: menghadap lawan bicara, angguk & gerak tangan
+                    roblox.group.rotation.y = Math.atan2(rig.chatLookX - roblox.group.position.x, rig.chatLookZ - roblox.group.position.z);
+                    roblox.leftArm.rotation.x = -0.45 + Math.sin(t * 5.2 + idx) * 0.32;
+                    roblox.rightArm.rotation.x = -0.45 + Math.cos(t * 4.8 + idx) * 0.32;
+                    roblox.head.rotation.x = Math.sin(t * 4.0 + idx) * 0.14;
+                    roblox.head.rotation.y = Math.sin(t * 1.8 + idx) * 0.2;
+                    roblox.cup.visible = false;
+                  } else {
+                    // Berhenti sejenak lihat whiteboard/TV sebelum jalan lagi
+                    roblox.leftArm.rotation.x = Math.sin(t * 1.4 + idx) * 0.08;
+                    roblox.rightArm.rotation.x = -Math.sin(t * 1.4 + idx) * 0.08;
+                    roblox.head.rotation.y = Math.sin(t * 1.3 + idx) * 0.35;
+                    roblox.cup.visible = false;
+                  }
+                }
+              }
+
               selRing.visible = agent.id === selectedAgentId;
               if (selRing.visible) {
                 const s = 1 + Math.sin(t * 5) * 0.06;
@@ -2347,12 +2527,12 @@ import "../../styles/global.css";
 
             // Blink Server Rack LEDs
             serverLeds.forEach((led, idx) => {
-              const on = Math.sin(t * 6 + idx * 1.7) > 0;
+              const on = Math.sin(t * (isWorkTime ? 6 : 2.5) + idx * 1.7) > 0;
               led.material.emissiveIntensity = on ? 1.2 : 0.15;
             });
 
             // Walking Roblox Courier Bot selalu patroli keliling kantor
-            courierT += 0.0045;
+            courierT += 0.0042;
             if (courierT >= 1) {
               courierT = 0;
               courierFrom = courierTo;
@@ -2371,8 +2551,8 @@ import "../../styles/global.css";
             courierRig.leftLeg.rotation.x = -swing;
             courierRig.rightLeg.rotation.x = swing;
 
-            // Spawn & move 3D Data Orbs selalu aktif menghidupkan suasana kantor
-            if (nowMs - lastOrbSpawn > 950 && orbs.length < 12) {
+            // Bola paket data 3D meluncur saat jam jadwal / simulasi
+            if (isWorkTime && nowMs - lastOrbSpawn > 950 && orbs.length < 12) {
               lastOrbSpawn = nowMs;
               spawnDataOrb(effectiveCycle);
             }
@@ -2392,14 +2572,24 @@ import "../../styles/global.css";
               o.mesh.position.copy(pos);
             }
 
-            // Switch floating speech bubble periodically
+            // Balon teks dinamis sesuai aktivitas karakter saat ini (kerja vs ngopi/ngobrol/santai/jalan)
             if (nowMs - lastBubbleTime > 3800) {
               lastBubbleTime = nowMs;
               const picked = OFFICE_AGENTS[Math.floor(Math.random() * OFFICE_AGENTS.length)];
-              const txt = picked.id === "datamanager" && liveJobsCount > 0
-                ? `Sync ${liveJobsCount} loker & ${liveNewsCount} berita!`
-                : picked.tasks[Math.floor(Math.random() * picked.tasks.length)];
+              const rig = agentRigs[picked.id];
+              let txt = "";
+              if (isWorkTime) {
+                txt = picked.id === "datamanager" && liveJobsCount > 0
+                  ? `Sync ${liveJobsCount} loker & ${liveNewsCount} berita!`
+                  : picked.tasks[Math.floor(Math.random() * picked.tasks.length)];
+              } else {
+                const actList = IDLE_BUBBLES[rig?.activity || "relax"] || IDLE_BUBBLES.relax;
+                txt = actList[Math.floor(Math.random() * actList.length)];
+              }
               setBubble(picked.id, txt);
+              if (rig) {
+                bubbleSprite.position.set(rig.roblox.group.position.x, 4.15, rig.roblox.group.position.z);
+              }
             }
 
             // Gentle float on bubble
