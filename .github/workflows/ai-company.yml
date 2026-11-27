@@ -2,12 +2,16 @@ name: InfoLokerKita AI Company Autonomous Runner
 
 on:
   schedule:
-    # 05:00 WIB = 22:00 UTC (Siklus Rekrutmen & Kurasi Lowongan)
+    # 05:00 WIB = 22:00 UTC (1x/hari: 3-5 Loker Perusahaan Bonafit)
     - cron: "0 22 * * *"
-    # 07:00 WIB = 00:00 UTC (Siklus Redaksi Berita & Thumbnail)
+    # 07:00 WIB = 00:00 UTC (Berita Industri Pagi + SEO)
     - cron: "0 0 * * *"
-    # 08:00 WIB = 01:00 UTC (Siklus Pengarsipan, Audit, & Laporan Harian CEO)
+    # 08:00 WIB = 01:00 UTC (Audit Sistem & Laporan Harian CEO)
     - cron: "0 1 * * *"
+    # 12:00 WIB = 05:00 UTC (Berita Industri Siang + SEO)
+    - cron: "0 5 * * *"
+    # 17:00 WIB = 10:00 UTC (Berita Industri Sore + SEO)
+    - cron: "0 10 * * *"
   workflow_dispatch:
     inputs:
       cycle:
@@ -19,6 +23,8 @@ on:
           - all
           - "0500"
           - "0700"
+          - "1200"
+          - "1700"
           - "0800"
 
 permissions:
@@ -59,6 +65,8 @@ jobs:
               "0 22 * * *") CYCLE="0500" ;;
               "0 0 * * *")  CYCLE="0700" ;;
               "0 1 * * *")  CYCLE="0800" ;;
+              "0 5 * * *")  CYCLE="1200" ;;
+              "0 10 * * *") CYCLE="1700" ;;
               *)            CYCLE="all"  ;;
             esac
           fi

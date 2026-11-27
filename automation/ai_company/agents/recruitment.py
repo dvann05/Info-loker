@@ -11,14 +11,104 @@ from automation.ai_company.core.database import local_db, supabase_client
 API_KARIRHUB = "https://api.kemnaker.go.id/karirhub/vacancy/v2/published-industrial-vacancies"
 REGION_FILE = PROJECT_ROOT / "automation" / "data" / "karirhub_regions.json"
 
+# Daftar perusahaan bonafit / multinasional / manufaktur besar / BUMN / Tbk prioritas utama
+BONAFIDE_BRANDS = (
+    "mattel", "epson", "yamaha", "honda", "toyota", "astra", "daihatsu", "suzuki",
+    "mitsubishi", "hino", "kawasaki", "denso", "aisin", "panasonic", "samsung",
+    "lg electronics", "sony", "sharp", "canon", "omron", "schneider", "siemens",
+    "bosch", "hitachi", "bridgestone", "goodyear", "hankook", "gajah tunggal",
+    "unilever", "indofood", "mayora", "wings", "nestle", "danone", "kalbe",
+    "dexa medica", "bio farma", "kimia farma", "pertamina", "pln", "telkom",
+    "bank mandiri", "bri", "bni", "bca", "btn", "freeport", "vale", "antam",
+    "bukit asam", "krakatau steel", "semen indonesia", "gudang garam", "djarum",
+    "sampoerna", "sinarmas", "sinar mas", "wilmar", "charoen pokphand", "japfa",
+    "paragon", "alfamart", "indomarco", "indomaret", "jne", "pos indonesia",
+    "garuda indonesia", "kereta api", "pelindo", "angkasa pura", "pupuk indonesia",
+    "pindad", "dirgantara indonesia", "pal indonesia", "komatsu", "united tractors",
+    "pamapersada", "adaro", "medco", "chandra asri", "barito", "hyundai", "wuling",
+    "byd", "michelin", "yazaki", "sumitomo", "kyb", "kayaba", "showa", "ntn",
+    "nsk", "nikon", "fujitsu", "toshiba", "daikin", "sanyo", "polytron", "miyako",
+    "chiyoda", "jfe", "nippon", "mitsui", "marubeni", "itochu", "ajinomoto",
+    "yakult", "pocari", "amerta indah otsuka", "otsuka", "kao", "shiseido",
+    "l'oreal", "loreal", "procter", "p&g", "reckitt", "mondelez", "kraft",
+    "coca-cola", "pepsico", "frisian flag", "ultramilk", "ultrajaya", "garudafood",
+    "nabati", "kaldu sari nabati", "sido muncul", "combiphar", "sanbe", "soho",
+    "nutrifood", "torabika", "kapal api", "santos jaya", "tirta investama",
+    "aqua", "cleopure", "mandom", "kino", "unicharm", "softex", "kimberly",
+    "app sinarmas", "indah kiat", "pabrik kertas tjiwi", "april group", "riau andalan",
+    "muliaglass", "asahimas", "nippon paint", "avian", "dulux", "akzonobel",
+    "holcim", "indocement", "solusi bangun", "wijaya karya", "wika", "adhi karya",
+    "pp persero", "hutama karya", "waskita", "jasa marga", "pegadaian", "taspen",
+    "bpjs", "asuransi jasindo", "bumn",
+)
+
+BONAFIDE_CORPORATE_KEYWORDS = (
+    "tbk", "persero", "manufacturing", "motor", "electronics", "precision",
+    "industrial", "industries", "automotive", "pharma", "pharmaceutical",
+    "chemical", "steel", "energy", "mining", "logistics", "telekomunikasi",
+    "bank ", "perbankan", "asuransi", "teknologi", "semiconductor", "automation",
+)
+
+EXCLUDED_SMALL_ENTITIES = (
+    "cv ", "cv.", "ud ", "ud.", "toko ", "warung ", "kedai ", "kios ",
+    "warkop", "laundry", "barbershop", "salon ", "counter ", "konter ",
+    "outlet ", "umkm", "perorangan", "rumahan",
+)
+
 
 class AIRecruitmentAgent:
-    """Divisi AI Recruitment: Mencari lowongan terpercaya dari Karirhub dan sumber resmi."""
+    """Divisi AI Recruitment: Mencari 3-5 lowongan perusahaan bonafit/besar dari Karirhub & sumber resmi."""
 
     def __init__(self):
         self.name = "ai_recruitment"
-        self.role = "Spesialis Rekrutmen & Kurasi Loker"
+        self.role = "Spesialis Rekrutmen & Kurasi Loker Bonafit"
         self._regions_cache: Dict[str, Dict[str, str]] = {}
+
+    @staticmethod
+    def score_bonafide_company(company_name: str, item: Dict[str, Any]) -> Tuple[int, str]:
+        """Menilai bobot/bonafiditas perusahaan secara deterministik (hemat token AI)."""
+        name_clean = str(company_name or "").strip()
+        lower = name_clean.lower()
+
+        if not name_clean:
+            return 0, "empty"
+
+        for excl in EXCLUDED_SMALL_ENTITIES:
+            if lower.startswith(excl) or f" {excl}" in lower:
+                return 0, "small_entity"
+
+        score = 0
+        tier = "standard"
+
+        # Prioritas 1: Brand multinasional / perusahaan besar / BUMN ternama
+        for brand in BONAFIDE_BRANDS:
+            if brand in lower:
+                score += 100
+                tier = "tier1_major_brand"
+                break
+
+        # Prioritas 2: Entitas PT / Tbk / Persero / Industri besar
+        if lower.startswith("pt ") or lower.startswith("pt.") or " pt " in lower:
+            score += 20
+        if "tbk" in lower or "(persero)" in lower or "persero" in lower:
+            score += 45
+            if tier == "standard":
+                tier = "tier1_tbk_bumn"
+
+        for kw in BONAFIDE_CORPORATE_KEYWORDS:
+            if kw in lower:
+                score += 15
+                if tier == "standard":
+                    tier = "tier2_industrial_corp"
+                break
+
+        # Bonus jika punya logo resmi & kuota/gaji jelas
+        if item.get("company_logo_uri"):
+            score += 10
+        if item.get("min_salary_amount") or item.get("max_salary_amount"):
+            score += 5
+
+        return score, tier
 
     def _load_regions(self) -> Dict[str, Dict[str, str]]:
         if self._regions_cache:
@@ -101,20 +191,22 @@ class AIRecruitmentAgent:
             local_db.log(self.name, f"Gagal memuat data eksisting: {e}", level="WARN")
             return slugs, pairs
 
-    def discover_vacancies(self, target_count: int = 20, max_pages: int = 5) -> Dict[str, Any]:
-        """Menjalankan proses pencarian lowongan kerja terpercaya."""
+    def discover_vacancies(self, target_count: int = 5, max_pages: int = 12) -> Dict[str, Any]:
+        """Menjalankan pencarian lowongan kerja khusus perusahaan bonafit/berbobot (3-5 loker/hari, hemat AI)."""
         start_time = time.time()
-        local_db.log(self.name, f"Memulai pencarian lowongan kerja (target: {target_count})...")
+        safe_target = max(3, min(int(target_count or 5), 5))
+        local_db.log(self.name, f"Memulai pencarian lowongan perusahaan bonafit (target: {safe_target}, max hal: {max_pages})...")
 
         existing_slugs, existing_pairs = self.get_existing_records()
-        discovered = []
+        scored_candidates: List[Tuple[int, Dict[str, Any]]] = []
         skipped_duplicate = 0
+        skipped_non_bonafide = 0
         pages_checked = 0
         company_batch_counts: Dict[str, int] = {}
 
         for page in range(1, max_pages + 1):
             pages_checked += 1
-            items = self.fetch_karirhub_page(page=page, limit=20)
+            items = self.fetch_karirhub_page(page=page, limit=25)
             if not items:
                 break
 
@@ -126,12 +218,18 @@ class AIRecruitmentAgent:
                 if not title or not company or not job_id:
                     continue
 
+                # 0. Filter ketat perusahaan bonafit / berbobot (minimal skor 35: PT + industri/Tbk/brand besar)
+                bonafide_score, bonafide_tier = self.score_bonafide_company(company, item)
+                if bonafide_score < 35:
+                    skipped_non_bonafide += 1
+                    continue
+
                 norm_title = re.sub(r"[^a-z0-9]", "", title.lower())
                 norm_company = re.sub(r"[^a-z0-9]", "", company.lower())
                 pair_key = (norm_title, norm_company)
 
-                # 1. Anti-Flood: Maksimal 2 lowongan per perusahaan dalam satu batch
-                if company_batch_counts.get(norm_company, 0) >= 2:
+                # 1. Anti-Flood: Maksimal 1 lowongan per perusahaan dalam batch harian 3-5 loker agar variatif
+                if company_batch_counts.get(norm_company, 0) >= 1:
                     skipped_duplicate += 1
                     continue
 
@@ -153,7 +251,7 @@ class AIRecruitmentAgent:
                 existing_pairs.add(pair_key)
                 existing_slugs.add(clean_slug)
 
-                discovered.append({
+                scored_candidates.append((bonafide_score, {
                     "raw_id": job_id,
                     "title": title,
                     "company_name": company,
@@ -171,23 +269,30 @@ class AIRecruitmentAgent:
                     "industry": item.get("industry_name"),
                     "quota": item.get("available_quota") or item.get("quota"),
                     "slug": clean_slug,
-                })
+                    "bonafide_score": bonafide_score,
+                    "bonafide_tier": bonafide_tier,
+                }))
 
-                if len(discovered) >= target_count:
-                    break
-
-            if len(discovered) >= target_count:
+            # Jika sudah terkumpul minimal 2x target perusahaan tier-1, hentikan scan lebih awal
+            tier1_found = sum(1 for sc, _ in scored_candidates if sc >= 100)
+            if tier1_found >= safe_target:
                 break
+
+        # Urutkan dari perusahaan paling berbobot/bonafit, ambil tepat 3-5 terbaik
+        scored_candidates.sort(key=lambda pair: pair[0], reverse=True)
+        discovered = [cand for _, cand in scored_candidates[:safe_target]]
 
         duration = round(time.time() - start_time, 2)
         local_db.log(
             self.name,
-            f"Pencarian selesai dalam {duration}s. Ditemukan {len(discovered)} kandidat baru, {skipped_duplicate} duplikat diabaikan."
+            f"Pencarian loker bonafit selesai dalam {duration}s. Dipilih {len(discovered)} loker terbaik, "
+            f"{skipped_non_bonafide} non-bonafit disaring, {skipped_duplicate} duplikat diabaikan."
         )
 
         return {
             "status": "success",
             "candidates_found": len(discovered),
+            "skipped_non_bonafide": skipped_non_bonafide,
             "skipped_duplicates": skipped_duplicate,
             "pages_scanned": pages_checked,
             "duration_seconds": duration,

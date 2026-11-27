@@ -62,17 +62,24 @@ class AISEOSpecialistAgent:
         return links
 
     def optimize_article(self, article: Dict[str, Any]) -> Dict[str, Any]:
-        """Audit dan optimasi SEO menyeluruh pada artikel berita."""
+        """Audit dan optimasi SEO menyeluruh pada artikel berita industri."""
         title = article.get("title", "")
         content = article.get("content", "")
-        category = article.get("category", "Dunia Kerja")
+        category = article.get("category", "Industri & Manufaktur")
 
         kw_data = self.extract_keywords(title, content)
         meta = self.generate_meta_tags(title, category, kw_data["primary_keyword"])
         links = self.generate_internal_links(category)
+        keywords_list = [kw_data["primary_keyword"]] + kw_data["secondary_keywords"] + [
+            "berita industri indonesia",
+            "info loker perusahaan bonafit",
+            "dunia kerja manufaktur",
+        ]
+        unique_keywords = list(dict.fromkeys(k for k in keywords_list if k))[:8]
 
-        # Append internal link recommendation to content footer if not present
         optimized_content = content
+        if "Kata Kunci Terkait:" not in optimized_content:
+            optimized_content += f"\n\n**Kata Kunci Terkait:** {', '.join(unique_keywords)}"
         if "Tautan Rekomendasi Terkait" not in optimized_content:
             optimized_content += "\n\n**Tautan Rekomendasi Terkait:**\n"
             for link in links:
@@ -81,9 +88,9 @@ class AISEOSpecialistAgent:
         article["content"] = optimized_content
         article["meta_title"] = meta["meta_title"]
         article["meta_description"] = meta["meta_description"]
-        article["seo_keywords"] = [kw_data["primary_keyword"]] + kw_data["secondary_keywords"]
+        article["seo_keywords"] = unique_keywords
 
-        local_db.log(self.name, f"Optimasi SEO selesai untuk artikel: {title[:40]}...")
+        local_db.log(self.name, f"Optimasi SEO selesai untuk artikel: {title[:40]}... (kw: {', '.join(unique_keywords[:3])})")
         return article
 
     def audit_job_seo(self, job: Dict[str, Any]) -> Dict[str, Any]:

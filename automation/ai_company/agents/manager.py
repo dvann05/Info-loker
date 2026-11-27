@@ -22,8 +22,8 @@ class AIManagerAgent:
         self.name = "ai_manager"
         self.role = "Direktur Operasional (COO)"
 
-    def run_recruitment_pipeline(self, target_count: int = 10) -> Dict[str, Any]:
-        """Orkestrasi alur: AI Recruitment -> AI Verification -> AI Data Manager."""
+    def run_recruitment_pipeline(self, target_count: int = 5) -> Dict[str, Any]:
+        """Orkestrasi alur: AI Recruitment (3-5 loker bonafit) -> AI Verification -> AI Data Manager."""
         task_id = task_queue.create_task(
             agent_name=self.name,
             title=f"Siklus Rekrutmen & Kurasi Lowongan (Target: {target_count})",
@@ -219,7 +219,7 @@ Operasional perusahaan digital InfoLokerKita hari ini berjalan di bawah pengawas
         local_db.log(self.name, f"Menerima instruksi langsung dari CEO: '{command}'")
 
         if "loker" in cmd_lower or "rekrutmen" in cmd_lower or "lowongan" in cmd_lower:
-            return self.run_recruitment_pipeline(target_count=10)
+            return self.run_recruitment_pipeline(target_count=5)
         elif "berita" in cmd_lower or "news" in cmd_lower or "artikel" in cmd_lower:
             return self.run_newsroom_pipeline(article_count=1)
         elif "arsip" in cmd_lower or "expired" in cmd_lower or "kedaluwarsa" in cmd_lower:

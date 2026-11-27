@@ -43,30 +43,34 @@ class AutomationCenter:
             pass
 
     def run_morning_recruitment_cycle(self) -> Dict[str, Any]:
-        """Siklus 05.00 WIB: Recruitment -> Verification -> Data Manager."""
+        """Siklus 05.00 WIB (1x/hari): Recruitment (3-5 loker perusahaan bonafit) -> Verification -> Data Manager."""
         if not self.acquire_lock():
             local_db.log("scheduler", "Eksekusi siklus 05.00 WIB dilewati: Proses lain sedang berjalan.", level="WARN")
             return {"status": "skipped", "reason": "lock_active"}
 
         try:
-            local_db.log("scheduler", "Memulai Siklus Otomatis 05.00 WIB (Pencarian & Kurasi Loker)...")
-            res = ai_manager.run_recruitment_pipeline(target_count=15)
+            local_db.log("scheduler", "Memulai Siklus Otomatis 05.00 WIB (3-5 Loker Perusahaan Bonafit)...")
+            res = ai_manager.run_recruitment_pipeline(target_count=5)
+            return res
+        finally:
+            self.release_lock()
+
+    def run_newsroom_cycle(self, slot_label: str = "Pagi (07.00 WIB)") -> Dict[str, Any]:
+        """Siklus Berita Industri (3x/hari: Pagi 07:00, Siang 12:00, Sore 17:00 WIB) — 1 artikel berbobot + SEO."""
+        if not self.acquire_lock():
+            local_db.log("scheduler", f"Eksekusi siklus berita {slot_label} dilewati: Proses lain sedang berjalan.", level="WARN")
+            return {"status": "skipped", "reason": "lock_active"}
+
+        try:
+            local_db.log("scheduler", f"Memulai Siklus Berita Industri {slot_label} (1 Artikel SEO Hemat AI)...")
+            res = ai_manager.run_newsroom_pipeline(article_count=1)
             return res
         finally:
             self.release_lock()
 
     def run_morning_newsroom_cycle(self) -> Dict[str, Any]:
-        """Siklus 07.00 WIB: Newsroom -> SEO -> Designer -> Data Manager."""
-        if not self.acquire_lock():
-            local_db.log("scheduler", "Eksekusi siklus 07.00 WIB dilewati: Proses lain sedang berjalan.", level="WARN")
-            return {"status": "skipped", "reason": "lock_active"}
-
-        try:
-            local_db.log("scheduler", "Memulai Siklus Otomatis 07.00 WIB (Redaksi Berita & Thumbnail)...")
-            res = ai_manager.run_newsroom_pipeline(article_count=1)
-            return res
-        finally:
-            self.release_lock()
+        """Alias siklus berita pagi 07.00 WIB."""
+        return self.run_newsroom_cycle("Pagi (07.00 WIB)")
 
     def run_morning_audit_cycle(self) -> Dict[str, Any]:
         """Siklus 08.00 WIB: Auditor -> AI Manager (Laporan Harian CEO)."""

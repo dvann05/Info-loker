@@ -45,7 +45,11 @@ def cmd_run(cycle: str = "all"):
     if cycle == "0500":
         res = automation_center.run_morning_recruitment_cycle()
     elif cycle == "0700":
-        res = automation_center.run_morning_newsroom_cycle()
+        res = automation_center.run_newsroom_cycle("Pagi (07.00 WIB)")
+    elif cycle == "1200":
+        res = automation_center.run_newsroom_cycle("Siang (12.00 WIB)")
+    elif cycle == "1700":
+        res = automation_center.run_newsroom_cycle("Sore (17.00 WIB)")
     elif cycle == "0800":
         res = automation_center.run_morning_audit_cycle()
     else:
