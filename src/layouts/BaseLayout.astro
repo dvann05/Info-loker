@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import MonetagBanner from "../components/MonetagBanner.astro";
 import {
   DEFAULT_OG_IMAGE,
   SITE_URL,
@@ -103,6 +104,8 @@ const websiteSchema = {
 
   <body>
     <slot />
+
+    <MonetagBanner />
 
     <nav class="mobile-bottom-nav" aria-label="Navigasi Bawah">
       <a href="/" class="mobile-nav-item" aria-label="Beranda">
