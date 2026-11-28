@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   import-karirhub:
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_karirhub_import == true)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_karirhub_import == true
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

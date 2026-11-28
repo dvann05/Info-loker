@@ -619,7 +619,7 @@ def archive_expired_jobs(now):
         SUPABASE + "/rest/v1/jobs?" + query,
         method="PATCH",
         data={
-            "status": "archived",
+            "status": "expired",
             "updated_at": now_wib.isoformat(),
         },
         extra_headers={

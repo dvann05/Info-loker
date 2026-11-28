@@ -56,6 +56,81 @@ EXCLUDED_SMALL_ENTITIES = (
 )
 
 
+# Posisi yang menjadi fokus utama InfoLoker.
+TARGET_ROLE_KEYWORDS = (
+    "operator produksi",
+    "production operator",
+    "operator mesin",
+    "operator cnc",
+    "operator printing",
+    "operator warehouse",
+    "operator forklift",
+    "operator assembly",
+    "operator packing",
+    "operator injection",
+    "operator molding",
+    "operator",
+    "produksi",
+    "production",
+    "cnc",
+    "machining",
+    "printing",
+    "percetakan",
+    "assembly",
+    "assembler",
+    "perakitan",
+    "quality control",
+    "quality assurance",
+    "qc inspector",
+    "qc",
+    "maintenance",
+    "engineering",
+    "engineer",
+    "teknisi",
+    "technician",
+    "technician",
+    "warehouse",
+    "gudang",
+    "ppic",
+    "forklift",
+    "molding",
+    "injection",
+    "tooling",
+    "utility",
+)
+
+def is_target_role(title: str) -> bool:
+    normalized = re.sub(
+        r"[^a-z0-9]+", " ", str(title or "").lower()
+    ).strip()
+
+    if not normalized:
+        return False
+
+    # Operator harus punya konteks pekerjaan yang jelas.
+    if normalized == "operator":
+        return False
+
+    if normalized.startswith("operator "):
+        return any(
+            word in normalized
+            for word in (
+                "produksi", "production", "mesin", "machine",
+                "cnc", "printing", "assembly", "packing",
+                "warehouse", "forklift", "injection", "molding"
+            )
+        )
+
+    return any(
+        re.search(
+            r"(?<![a-z0-9])" + re.escape(keyword) + r"(?![a-z0-9])",
+            normalized
+        )
+        for keyword in TARGET_ROLE_KEYWORDS
+        if keyword != "operator"
+    )
+
+
 class AIRecruitmentAgent:
     """Divisi AI Recruitment: Mencari 3-5 lowongan perusahaan bonafit/besar dari Karirhub & sumber resmi."""
 
@@ -201,6 +276,7 @@ class AIRecruitmentAgent:
         scored_candidates: List[Tuple[int, Dict[str, Any]]] = []
         skipped_duplicate = 0
         skipped_non_bonafide = 0
+        skipped_non_target_role = 0
         pages_checked = 0
         company_batch_counts: Dict[str, int] = {}
 
@@ -218,7 +294,12 @@ class AIRecruitmentAgent:
                 if not title or not company or not job_id:
                     continue
 
-                # 0. Filter ketat perusahaan bonafit / berbobot (minimal skor 35: PT + industri/Tbk/brand besar)
+                # 0. Filter posisi sesuai kategori InfoLoker.
+                if not is_target_role(title):
+                    skipped_non_target_role += 1
+                    continue
+
+                # 1. Filter perusahaan bonafit.
                 bonafide_score, bonafide_tier = self.score_bonafide_company(company, item)
                 if bonafide_score < 35:
                     skipped_non_bonafide += 1
@@ -286,13 +367,16 @@ class AIRecruitmentAgent:
         local_db.log(
             self.name,
             f"Pencarian loker bonafit selesai dalam {duration}s. Dipilih {len(discovered)} loker terbaik, "
-            f"{skipped_non_bonafide} non-bonafit disaring, {skipped_duplicate} duplikat diabaikan."
+            f"{skipped_non_target_role} posisi tidak relevan disaring, "
+            f"{skipped_non_bonafide} perusahaan tidak lolos, "
+            f"{skipped_duplicate} duplikat diabaikan."
         )
 
         return {
             "status": "success",
             "candidates_found": len(discovered),
             "skipped_non_bonafide": skipped_non_bonafide,
+            "skipped_non_target_role": skipped_non_target_role,
             "skipped_duplicates": skipped_duplicate,
             "pages_scanned": pages_checked,
             "duration_seconds": duration,
