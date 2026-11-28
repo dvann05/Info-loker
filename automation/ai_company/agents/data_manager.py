@@ -308,7 +308,7 @@ class AIDataManagerAgent:
                     updated_rows = supabase_client.update_rows(
                         "jobs",
                         filter_query,
-                        {"status": "archived", "updated_at": now_iso},
+                        {"status": "expired", "updated_at": now_iso},
                     )
                     archived_count += len(updated_rows) if updated_rows else len(chunk)
                 except Exception as patch_err:
