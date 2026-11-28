@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import MonetagBanner from "../../components/MonetagBanner.astro";
 import { supabase } from "../../lib/supabase";
 import {
   DEFAULT_OG_IMAGE,
@@ -281,6 +282,8 @@ const breadcrumbSchema = article ? buildBreadcrumbJsonLd([
             />
           </figure>
         )}
+
+        <MonetagBanner />
 
         <div
           class="article-content"

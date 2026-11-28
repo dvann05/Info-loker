@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import MonetagBanner from "../../components/MonetagBanner.astro";
 ---
 <BaseLayout
   title="Detail Lowongan Kerja | Info Loker Kita"
@@ -26,6 +27,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <article class="job-card">
         <p id="status" role="status">Memuat detail lowongan...</p>
         <div id="job-detail"></div>
+      <MonetagBanner />
       </article>
 
       <section class="similar-jobs-section" id="similar-jobs-section" hidden>
